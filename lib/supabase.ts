@@ -28,6 +28,7 @@ const mockClient = {
         insert: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } }),
     }),
     auth: undefined // ensuring 'auth' in client is false
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } as any
 
 export const supabase = client || mockClient

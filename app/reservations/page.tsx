@@ -7,8 +7,7 @@ import { tr } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 // Icons
 import {
-    Calendar as CalendarIcon, Phone, User, ChevronRight, MessageCircle, Edit,
-    CalendarDays, Copy, Check, X, Sparkles, Pin, Clock, Archive
+    Calendar as CalendarIcon, CalendarDays, Copy, Check, ChevronRight, MessageCircle, Edit, User
 } from "lucide-react"
 // UI Components
 import { Button } from "@/components/ui/button"

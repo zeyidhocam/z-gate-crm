@@ -4,7 +4,6 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LayoutDashboard, Users, Bell, BrainCircuit, Settings, Calendar } from 'lucide-react'
-import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { useSettings } from '@/components/providers/settings-provider'
 

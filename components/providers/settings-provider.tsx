@@ -13,8 +13,8 @@ interface UIConfig {
 
 const DEFAULT_CONFIG: UIConfig = {
     theme: 'modern-purple',
-    appName: 'Oracle CRM',
-    sidebarTitle: 'Rezervasyon CRM',
+    appName: 'Z-Gate CRM',
+    sidebarTitle: 'Z-Gate',
     logoUrl: null,
     isSidebarCollapsed: false
 }

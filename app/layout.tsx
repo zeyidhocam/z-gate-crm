@@ -8,7 +8,7 @@ import { Sidebar } from '@/components/Sidebar'
 import { SettingsProvider } from '@/components/providers/settings-provider'
 
 export const metadata: Metadata = {
-  title: 'Oracle CRM',
+  title: 'Z-Gate CRM',
   description: 'Premium dark dashboard for offline reservation management',
 }
 

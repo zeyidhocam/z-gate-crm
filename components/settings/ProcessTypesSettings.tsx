@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useEffect } from "react"
-import { Plus, Edit2, Trash2, GripVertical, Check, Palette, DollarSign } from "lucide-react"
+import { Plus, Edit2, Trash2, GripVertical, DollarSign } from "lucide-react"
 import * as Icons from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
@@ -16,11 +16,6 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog"
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
 } from "@/components/ui/select"
 import { ScrollArea } from "@/components/ui/scroll-area"
 
@@ -56,28 +51,27 @@ export function ProcessTypesSettings() {
     const [selectedColor, setSelectedColor] = useState(AVAILABLE_COLORS[0])
 
     useEffect(() => {
+        const fetchItems = async () => {
+            setLoading(true)
+            const { data, error } = await supabase
+                .from('process_types')
+                .select('*')
+                .order('created_at', { ascending: true }) // In real app, order by rank
+
+            if (!error && data) {
+                setItems(data)
+            } else {
+                // Mock Data if Supabase is empty or unconnected
+                setItems([
+                    { id: '1', name: 'Bağlama', default_fee: 3500, icon: 'Link', color: '#7C3AED' },
+                    { id: '2', name: 'Geri Getirme', default_fee: 4200, icon: 'Undo2', color: '#22D3EE' },
+                    { id: '3', name: 'Rızık Açma', default_fee: 2800, icon: 'Sun', color: '#F59E0B' },
+                ])
+            }
+            setLoading(false)
+        }
         fetchItems()
     }, [])
-
-    const fetchItems = async () => {
-        setLoading(true)
-        const { data, error } = await supabase
-            .from('process_types')
-            .select('*')
-            .order('created_at', { ascending: true }) // In real app, order by rank
-
-        if (!error && data) {
-            setItems(data)
-        } else {
-            // Mock Data if Supabase is empty or unconnected
-            setItems([
-                { id: '1', name: 'Bağlama', default_fee: 3500, icon: 'Link', color: '#7C3AED' },
-                { id: '2', name: 'Geri Getirme', default_fee: 4200, icon: 'Undo2', color: '#22D3EE' },
-                { id: '3', name: 'Rızık Açma', default_fee: 2800, icon: 'Sun', color: '#F59E0B' },
-            ])
-        }
-        setLoading(false)
-    }
 
     const handleOpenDialog = (item?: ProcessType) => {
         if (item) {
@@ -109,6 +103,7 @@ export function ProcessTypesSettings() {
             setItems(items.map(i => i.id === editingItem.id ? { ...i, ...newItem } : i))
         } else {
             // Create (Mocked for now)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             setItems([...items, { id: Date.now().toString(), ...newItem } as any])
         }
         setDialogOpen(false)
@@ -138,6 +133,7 @@ export function ProcessTypesSettings() {
                     <p className="text-slate-500 text-center py-8">Yükleniyor...</p>
                 ) : (
                     items.map((item) => {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         const IconComponent = (Icons as any)[item.icon] || Icons.HelpCircle
                         return (
                             <div key={item.id} className="flex items-center gap-4 p-4 bg-slate-950/50 border border-slate-800 rounded-xl group hover:border-purple-500/30 transition-all">
@@ -203,6 +199,7 @@ export function ProcessTypesSettings() {
                             <ScrollArea className="h-[120px] rounded-md border border-slate-800 bg-slate-950 p-4">
                                 <div className="flex flex-wrap gap-2">
                                     {AVAILABLE_ICONS.map(icon => {
+                                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                         const IconComp = (Icons as any)[icon] || Icons.HelpCircle
                                         const isSelected = selectedIcon === icon
                                         return (

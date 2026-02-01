@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search, Filter, Phone, Calendar as CalendarIcon, User, RefreshCw, ChevronRight, MessageCircle, Edit, CalendarDays, Copy, Check, X, Sparkles, Pin, Clock, Archive, Plus } from "lucide-react"
+import { Search, ChevronRight, MessageCircle, Edit, CalendarDays, Copy, Check, Sparkles, Pin, Clock, Archive, Plus, User } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { cn } from "@/lib/utils"
 // UI Components
@@ -11,9 +11,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"
 import { Calendar } from "@/components/ui/calendar"
-import { format } from "date-fns"
 import { tr } from "date-fns/locale"
-import { Badge } from "@/components/ui/badge"
 import { JsonImportDialog } from "@/components/JsonImportDialog"
 
 // Database Type
@@ -44,13 +42,16 @@ const ORDERED_CATEGORIES: CategoryType[] = ['Yeni', 'Sabit', 'Takip', 'Arşiv']
 
 export default function LeadsPage() {
     const [leads, setLeads] = useState<Lead[]>([])
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
 
     // UI State
     const [copiedText, setCopiedText] = useState<string | null>(null)
     const [reservationDate, setReservationDate] = useState<Date | undefined>(new Date())
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [isReservationOpen, setIsReservationOpen] = useState(false)
 
     // Expanded states for categories

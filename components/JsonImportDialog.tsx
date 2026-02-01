@@ -78,10 +78,13 @@ export function JsonImportDialog({ onSuccess }: JsonImportDialogProps) {
                 setSuccess(null)
             }, 2000)
 
-        } catch (err: any) {
+
+
+        } catch (err: unknown) {
             console.error(err)
 
-            let errorMessage = err.message || "Bilinmeyen bir hata oluştu"
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            let errorMessage = (err as any)?.message || "Bilinmeyen bir hata oluştu"
 
             // Check for missing table error
             if (errorMessage.includes("Could not find the table") || errorMessage.includes("relation") && errorMessage.includes("does not exist")) {

@@ -1,11 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Settings, BrainCircuit, List, Save, Shield, Palette, Layout, RotateCcw } from "lucide-react"
+import { Settings, BrainCircuit, List, Save, Shield, Palette, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import {
     Select,
@@ -14,12 +12,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+
 import { ProcessTypesSettings } from "@/components/settings/ProcessTypesSettings"
 import { useSettings } from "@/components/providers/settings-provider"
-import { toast } from "sonner" // Assuming sonner is installed, or valid alt. If not, fallback to alert.
+
 
 export default function SettingsPage() {
     const { config, updateConfig, resetToDefaults } = useSettings()
@@ -27,8 +25,11 @@ export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState("appearance")
 
     // Local state for AI (Mock)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [apiKey, setApiKey] = useState("sk-or-...")
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [model, setModel] = useState("openai/gpt-4o")
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [prompt, setPrompt] = useState("")
 
     const handleSaveGlobal = async () => {
@@ -106,7 +107,7 @@ export default function SettingsPage() {
                                         value={config.sidebarTitle}
                                         onChange={(e) => updateConfig({ sidebarTitle: e.target.value })}
                                         className="bg-slate-950 border-slate-700"
-                                        placeholder="Örn: Oracle CRM"
+                                        placeholder="Örn: Z-Gate CRM"
                                     />
                                     <p className="text-xs text-slate-500">Sol menünün en üstünde görünen marka ismi.</p>
                                 </div>
@@ -117,7 +118,7 @@ export default function SettingsPage() {
                                         value={config.appName}
                                         onChange={(e) => updateConfig({ appName: e.target.value })}
                                         className="bg-slate-950 border-slate-700"
-                                        placeholder="Oracle CRM"
+                                        placeholder="Z-Gate CRM"
                                     />
                                 </div>
 
@@ -136,7 +137,8 @@ export default function SettingsPage() {
                                     <Label className="text-slate-200">Renk Teması</Label>
                                     <Select
                                         value={config.theme}
-                                        onValueChange={(val: any) => updateConfig({ theme: val })}
+                                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                        onValueChange={(val: string) => updateConfig({ theme: val as any })}
                                     >
                                         <SelectTrigger className="bg-slate-950 border-slate-700">
                                             <SelectValue />
@@ -176,7 +178,7 @@ export default function SettingsPage() {
                         <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
                             <div>
                                 <h2 className="text-lg font-semibold text-purple-400 mb-1">Yapay Zeka Konfigürasyonu</h2>
-                                <p className="text-slate-400 text-sm">Zeyid Hoca'nın beynini buradan yönetebilirsin.</p>
+                                <p className="text-slate-400 text-sm">Zeyid Hocanın beynini buradan yönetebilirsin.</p>
                             </div>
                             <Separator className="bg-slate-800" />
                             {/* ... existing AI settings ... */}

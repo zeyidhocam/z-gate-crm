@@ -2,7 +2,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { CalendarCheck, Calendar, CalendarDays, CalendarRange, CalendarX, ArrowRight, User, Phone, Tag } from 'lucide-react'
+import { CalendarCheck, Calendar, CalendarDays, CalendarRange, CalendarX, User, Phone } from 'lucide-react'
 import { KPICard } from '@/components/KPICard'
 import { supabase } from '@/lib/supabase'
 import { format, isSameDay, isThisWeek, isThisMonth, parseISO, startOfDay, isAfter } from 'date-fns'
