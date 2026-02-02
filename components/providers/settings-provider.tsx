@@ -9,6 +9,8 @@ interface UIConfig {
     sidebarTitle: string
     logoUrl: string | null
     isSidebarCollapsed: boolean
+    whatsappNumber?: string
+    fontSize?: 'normal' | 'large'
 }
 
 const DEFAULT_CONFIG: UIConfig = {
@@ -36,9 +38,22 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         fetchSettings()
     }, [])
 
+    // Apply theme to body/html
+    useEffect(() => {
+        const root = document.documentElement
+        root.classList.remove('modern-purple', 'ocean-blue', 'forest-green', 'sunset-orange')
+        if (config.theme) root.classList.add(config.theme)
+
+        if (config.fontSize === 'large') {
+            root.style.fontSize = '18px'
+        } else {
+            root.style.fontSize = ''
+        }
+    }, [config.theme, config.fontSize])
+
     const fetchSettings = async () => {
         setIsLoading(true)
-        if (!('auth' in supabase)) {
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
             // Mock mode
             const saved = localStorage.getItem('ui_config')
             if (saved) setConfig(JSON.parse(saved))
@@ -48,12 +63,23 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
         try {
             const { data, error } = await supabase
-                .from('settings')
-                .select('ui_config')
+                .from('system_settings')
+                .select('*')
                 .single()
 
-            if (data?.ui_config) {
-                setConfig({ ...DEFAULT_CONFIG, ...data.ui_config })
+            if (data) {
+                setConfig({
+                    theme: data.theme_preference || 'modern-purple',
+                    appName: data.site_title || 'Z-Gate CRM',
+                    sidebarTitle: data.site_title?.split(' ')[0] || 'Z-Gate', // Simple logic for sidebar title
+                    logoUrl: data.logo_url || null,
+                    isSidebarCollapsed: false,
+                    whatsappNumber: data.whatsapp_number,
+                    fontSize: data.font_size
+                } as any)
+            } else if (error && error.code === 'PGRST116') {
+                // No rows, try to insert default
+                await supabase.from('system_settings').insert([{ site_title: 'Z-Gate CRM' }])
             }
         } catch (error) {
             console.error('Error fetching settings:', error)
@@ -66,41 +92,33 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         const newConfig = { ...config, ...updates }
         setConfig(newConfig) // Optimistic update
 
-        if (!('auth' in supabase)) {
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
             localStorage.setItem('ui_config', JSON.stringify(newConfig))
             return
         }
 
         try {
-            // First check if row exists, if not insert
-            const { count } = await supabase.from('settings').select('*', { count: 'exact', head: true })
+            const dbUpdates: any = {}
+            if (updates.theme) dbUpdates.theme_preference = updates.theme
+            if (updates.appName) dbUpdates.site_title = updates.appName
+            if (updates.logoUrl !== undefined) dbUpdates.logo_url = updates.logoUrl
+            if ((updates as any).whatsappNumber !== undefined) dbUpdates.whatsapp_number = (updates as any).whatsappNumber
+            if ((updates as any).fontSize !== undefined) dbUpdates.font_size = (updates as any).fontSize
 
-            if (count === 0) {
-                await supabase.from('settings').insert([{ ui_config: newConfig }])
-            } else {
-                // Assuming single row for global settings
-                // For multi-user, we'd use user_id, but here it's global app config as requested
+            if (Object.keys(dbUpdates).length > 0) {
                 await supabase
-                    .from('settings')
-                    .update({ ui_config: newConfig })
-                    .not('id', 'is', null) // Update all/first row
+                    .from('system_settings')
+                    .update(dbUpdates)
+                    .gt('id', 0) // Update all rows (should be only one) or use single ID if we tracked it
             }
         } catch (error) {
             console.error('Error saving settings:', error)
-            // Revert on error could go here
         }
     }
 
     const resetToDefaults = async () => {
         setConfig(DEFAULT_CONFIG)
-        if ('auth' in supabase) {
-            await supabase
-                .from('settings')
-                .update({ ui_config: DEFAULT_CONFIG })
-                .not('id', 'is', null)
-        } else {
-            localStorage.removeItem('ui_config')
-        }
+        // Reset DB logic if needed, but usually we just want to reset local state or specific fields
     }
 
     return (

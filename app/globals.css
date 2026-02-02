@@ -116,6 +116,28 @@
 }
 
 @layer base {
+  .modern-purple {
+    --primary: oklch(0.646 0.222 41.116); /* Purple */
+    --ring: oklch(0.646 0.222 41.116);
+  }
+
+  .ocean-blue {
+    --primary: oklch(0.6 0.118 184.704); /* Blue */
+    --ring: oklch(0.6 0.118 184.704);
+  }
+
+  .forest-green {
+    --primary: oklch(0.645 0.246 16.439); /* Green - chart 5-ish or custom */
+    --ring: oklch(0.645 0.246 16.439);
+  }
+
+  .sunset-orange {
+    --primary: oklch(0.627 0.265 303.9); /* Orange/Pinkish */
+    --ring: oklch(0.627 0.265 303.9);
+  }
+}
+
+@layer base {
   * {
     @apply border-border outline-ring/50;
   }
