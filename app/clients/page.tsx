@@ -51,16 +51,22 @@ type CategoryType = keyof typeof CATEGORIES
 
 const ORDERED_CATEGORIES: CategoryType[] = ['Yeni', 'Sabit', 'Takip', 'Arşiv', 'Rezervasyon']
 
+
+// Additional imports
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
 export default function ClientsPage() {
     const [clients, setClients] = useState<Client[]>([])
+    const [processTypes, setProcessTypes] = useState<{ id: number, name: string }[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
 
     // UI State
     const [copiedText, setCopiedText] = useState<string | null>(null)
     const [reservationDate, setReservationDate] = useState<Date | undefined>(new Date())
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [selectedClientId, setSelectedClientId] = useState<string | null>(null)
+    const [editingClient, setEditingClient] = useState<Client | null>(null) // For Edit Dialog
 
     // Expanded states for categories
     const [expanded, setExpanded] = useState<Record<string, boolean>>({
@@ -71,39 +77,30 @@ export default function ClientsPage() {
         'Arşiv': false
     })
 
+    useEffect(() => {
+        fetchClients()
+        fetchProcessTypes()
+    }, [])
+
     const fetchClients = async () => {
         setLoading(true)
-
-        // Supabase Check
-        if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-            console.warn("Supabase not configured")
-            setLoading(false)
-            return
-        }
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return
 
         const { data, error } = await supabase
             .from('clients')
-            .select(`
-                *,
-                process_types ( name ),
-                magic_types ( name, risk_level )
-            `)
+            .select(`*, process_types ( name ), magic_types ( name, risk_level )`)
             .order('created_at', { ascending: false })
 
-        if (error) {
-            console.error('Error fetching clients:', error)
-            setLoading(false)
-            return
-        }
+        if (error) console.error('Error fetching clients:', error)
+        else setClients(data as any || []) // eslint-disable-next-line @typescript-eslint/no-explicit-any
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setClients(data as any || [])
         setLoading(false)
     }
 
-    useEffect(() => {
-        fetchClients()
-    }, [])
+    const fetchProcessTypes = async () => {
+        const { data } = await supabase.from('process_types').select('id, name')
+        if (data) setProcessTypes(data)
+    }
 
     const toggleCategory = (cat: string) => {
         setExpanded(prev => ({ ...prev, [cat]: !prev[cat] }))
@@ -124,23 +121,17 @@ export default function ClientsPage() {
 
     const handleReservation = async (clientId: string, date: Date | undefined) => {
         if (!date) return
-
         try {
             const { error } = await supabase
                 .from('clients')
-                .update({
-                    reservation_at: date.toISOString(),
-                    status: 'Rezervasyon'
-                })
+                .update({ reservation_at: date.toISOString(), status: 'Rezervasyon' })
                 .eq('id', clientId)
 
-            if (error) throw error
-
-            // Optimistic update
-            setClients(prev => prev.map(c => c.id === clientId ? { ...c, status: 'Rezervasyon', reservation_at: date.toISOString() } : c))
-
-            // Close popover logic handled by UI state reset implies success
-            setReservationDate(undefined)
+            if (!error) {
+                // Optimistic Update
+                setClients(prev => prev.map(c => c.id === clientId ? { ...c, status: 'Rezervasyon', reservation_at: date!.toISOString() } : c))
+                setReservationDate(undefined)
+            }
         } catch (error) {
             console.error('Error creating reservation:', error)
         }
@@ -148,9 +139,31 @@ export default function ClientsPage() {
 
     const updateStatus = async (id: string, newStatus: string) => {
         setClients(prev => prev.map(c => c.id === id ? { ...c, status: newStatus } : c))
-
         await supabase.from('clients').update({ status: newStatus }).eq('id', id)
     }
+
+    // EDIT CLIENT HANDLER
+    const handleSaveEdit = async (updatedClient: Partial<Client>) => {
+        if (!editingClient) return
+
+        try {
+            const { error } = await supabase
+                .from('clients')
+                .update(updatedClient)
+                .eq('id', editingClient.id)
+
+            if (error) throw error
+
+            // Optimistic Update
+            setClients(prev => prev.map(c => c.id === editingClient.id ? { ...c, ...updatedClient } : c))
+            setEditingClient(null) // Close Dialog
+            window.location.reload() // Reload to fetch relations if needed, or we can fetch single
+
+        } catch (error) {
+            console.error('Error updating client:', error)
+        }
+    }
+
 
     const filteredClients = clients.filter(client =>
         (client.full_name && client.full_name.toLowerCase().includes(search.toLowerCase())) ||
@@ -161,7 +174,7 @@ export default function ClientsPage() {
     )
 
     return (
-        <div className="p-8 max-w-[1600px] mx-auto space-y-8">
+        <div className="p-8 max-w-[1700px] mx-auto space-y-8">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-800 pb-6">
                 <div>
@@ -227,12 +240,13 @@ export default function ClientsPage() {
 
                             <CollapsibleContent>
                                 <div className="px-4 pb-4 space-y-1">
-                                    {/* Header Row */}
-                                    <div className="flex items-center gap-6 px-6 py-2 border-b border-slate-800/50 mb-3 text-sm font-black text-slate-400 uppercase tracking-wide">
-                                        <div className="w-[200px] shrink-0">İsim & Telefon</div>
-                                        <div className="w-[180px] shrink-0">İşlem & Fiyat</div>
-                                        <div className="w-[140px] shrink-0">Durum</div>
+                                    {/* Header Row - WIDER COLUMNS */}
+                                    <div className="flex items-center gap-8 px-6 py-2 border-b border-slate-800/50 mb-3 text-sm font-black text-slate-400 uppercase tracking-wide">
+                                        <div className="w-[240px] shrink-0">İsim & Telefon</div>
+                                        <div className="w-[200px] shrink-0">İşlem & Fiyat</div>
+                                        <div className="w-[160px] shrink-0">Durum</div>
                                         <div className="flex-1 pl-4">Notlar (Detay)</div>
+                                        <div className="w-[120px] shrink-0 text-right">İşlemler</div>
                                     </div>
 
                                     {categoryItems.length === 0 ? (
@@ -241,18 +255,18 @@ export default function ClientsPage() {
                                         categoryItems.map(client => (
                                             <div
                                                 key={client.id}
-                                                className="flex items-center gap-6 px-6 py-4 rounded-lg hover:bg-slate-800/60 transition-all duration-200 hover:scale-[1.01] hover:shadow-md border border-transparent hover:border-slate-800/50 group bg-slate-900/20"
+                                                className="flex items-center gap-8 px-6 py-4 rounded-lg hover:bg-slate-800/60 transition-all duration-200 hover:scale-[1.01] hover:shadow-md border border-transparent hover:border-slate-800/50 group bg-slate-900/20"
                                             >
                                                 {/* Name & Phone */}
-                                                <div className="w-[200px] shrink-0 flex flex-col justify-center gap-1">
-                                                    <div className="text-[14px] font-bold text-slate-200 truncate leading-tight">
+                                                <div className="w-[240px] shrink-0 flex flex-col justify-center gap-1">
+                                                    <div className="text-[15px] font-bold text-slate-200 truncate leading-tight">
                                                         {client.full_name || client.name || 'İsimsiz'}
                                                     </div>
-                                                    <div className="text-[12px] font-semibold text-slate-500/90 truncate font-sans">{client.phone || '-'}</div>
+                                                    <div className="text-[13px] font-semibold text-slate-500/90 truncate font-sans">{client.phone || '-'}</div>
                                                 </div>
 
                                                 {/* Process & Price Agreed */}
-                                                <div className="w-[180px] shrink-0 flex flex-col justify-center gap-1.5">
+                                                <div className="w-[200px] shrink-0 flex flex-col justify-center gap-1.5">
                                                     <div className="text-[13px] font-bold text-slate-300 truncate opacity-90">
                                                         {client.process_types?.name || client.process_name || 'İşlem Yok'}
                                                     </div>
@@ -262,7 +276,7 @@ export default function ClientsPage() {
                                                 </div>
 
                                                 {/* Status Selector */}
-                                                <div className="w-[140px] shrink-0">
+                                                <div className="w-[160px] shrink-0">
                                                     <Popover>
                                                         <PopoverTrigger asChild>
                                                             <button className={cn("text-[10px] font-black px-2.5 py-1 rounded-md border border-slate-800/50 hover:border-slate-700 hover:bg-slate-800 transition-all flex w-fit items-center gap-2 shadow-sm", config.color, config.bg)}>
@@ -292,8 +306,8 @@ export default function ClientsPage() {
                                                 <div className="flex-1 min-w-0 flex items-center gap-6 pl-2">
                                                     <Dialog>
                                                         <DialogTrigger asChild>
-                                                            <button className="text-[10px] font-semibold text-slate-500/80 hover:text-slate-300 transition-colors text-left truncate w-[260px] opacity-90 cursor-pointer flex items-center gap-2">
-                                                                <Info size={12} />
+                                                            <button className="text-[11px] font-semibold text-slate-500/80 hover:text-slate-300 transition-colors text-left truncate w-[300px] opacity-90 cursor-pointer flex items-center gap-2">
+                                                                <Info size={14} />
                                                                 {client.notes || client.ai_summary || 'Not/Detay yok...'}
                                                             </button>
                                                         </DialogTrigger>
@@ -336,7 +350,7 @@ export default function ClientsPage() {
                                                     </Dialog>
 
                                                     {/* Actions */}
-                                                    <div className="flex gap-2 shrink-0 ml-auto">
+                                                    <div className="flex gap-2 shrink-0 ml-auto w-[120px] justify-end">
                                                         <Popover>
                                                             <PopoverTrigger asChild>
                                                                 <Button variant="ghost" size="icon" className="h-9 w-9 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg transition-all" title="Randevu Oluştur">
@@ -368,7 +382,15 @@ export default function ClientsPage() {
                                                         >
                                                             <MessageCircle size={18} />
                                                         </Button>
-                                                        <Button variant="ghost" size="icon" className="h-9 w-9 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 rounded-lg transition-all" title="Düzenle">
+
+                                                        {/* EDIT BUTTON */}
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() => setEditingClient(client)}
+                                                            className="h-9 w-9 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 rounded-lg transition-all"
+                                                            title="Düzenle"
+                                                        >
                                                             <Edit size={18} />
                                                         </Button>
                                                     </div>
@@ -382,6 +404,80 @@ export default function ClientsPage() {
                     )
                 })}
             </div >
+
+            {/* EDIT DIALOG */}
+            <Dialog open={!!editingClient} onOpenChange={(open) => !open && setEditingClient(null)}>
+                <DialogContent className="bg-[#0F111A] border-slate-800 text-slate-200 max-w-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-xl font-bold bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent flex items-center gap-2">
+                            <Edit size={22} className="text-orange-400" />
+                            Müşteri Düzenle
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    {editingClient && (
+                        <div className="grid grid-cols-2 gap-6 py-4">
+                            <div className="space-y-2">
+                                <Label className="text-slate-500 text-xs font-bold uppercase">İsim Soyisim</Label>
+                                <Input
+                                    value={editingClient.full_name || ''}
+                                    onChange={(e) => setEditingClient({ ...editingClient, full_name: e.target.value })}
+                                    className="bg-slate-900 border-slate-800 focus:border-orange-500/50"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-slate-500 text-xs font-bold uppercase">Telefon</Label>
+                                <Input
+                                    value={editingClient.phone || ''}
+                                    onChange={(e) => setEditingClient({ ...editingClient, phone: e.target.value })}
+                                    className="bg-slate-900 border-slate-800 focus:border-orange-500/50"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-slate-500 text-xs font-bold uppercase">Anlaşılan Fiyat (TL)</Label>
+                                <Input
+                                    type="number"
+                                    value={editingClient.price_agreed || ''}
+                                    onChange={(e) => setEditingClient({ ...editingClient, price_agreed: Number(e.target.value) })}
+                                    className="bg-slate-900 border-slate-800 focus:border-orange-500/50"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label className="text-slate-500 text-xs font-bold uppercase">İşlem Türü</Label>
+                                <Select
+                                    value={editingClient.process_type_id?.toString()}
+                                    onValueChange={(val) => setEditingClient({ ...editingClient, process_type_id: Number(val) })}
+                                >
+                                    <SelectTrigger className="bg-slate-900 border-slate-800">
+                                        <SelectValue placeholder="İşlem seç..." />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-slate-900 border-slate-800">
+                                        {processTypes.map(pt => (
+                                            <SelectItem key={pt.id} value={pt.id.toString()}>{pt.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="col-span-2 space-y-2">
+                                <Label className="text-slate-500 text-xs font-bold uppercase">Notlar & Detaylar</Label>
+                                <Textarea
+                                    value={editingClient.notes || ''}
+                                    onChange={(e) => setEditingClient({ ...editingClient, notes: e.target.value })}
+                                    className="bg-slate-900 border-slate-800 focus:border-orange-500/50 min-h-[120px]"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setEditingClient(null)} className="hover:bg-slate-900 hover:text-white">İptal</Button>
+                        <Button onClick={() => editingClient && handleSaveEdit(editingClient)} className="bg-orange-500 hover:bg-orange-600 text-white">Kaydet</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div >
     )
 }
