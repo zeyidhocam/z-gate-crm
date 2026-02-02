@@ -23,11 +23,11 @@ export function Sidebar() {
     ]
 
     return (
-        <div className="w-[240px] h-screen bg-gradient-to-b from-slate-900/80 via-slate-900/60 to-slate-950/80 backdrop-blur-xl border-r border-white/5 p-5 flex flex-col">
+        <div className="w-[240px] h-screen bg-gradient-to-b from-slate-900/90 via-slate-900/80 to-slate-950/90 backdrop-blur-xl border-r border-purple-500/10 p-5 flex flex-col">
             {/* Logo / App Name */}
             <div className="mb-8 px-3">
                 <h1
-                    className="text-xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-500 bg-clip-text text-transparent truncate"
+                    className="text-xl font-extrabold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-500 bg-clip-text text-transparent truncate tracking-tight"
                     title={config.appName}
                 >
                     {config.appName}
@@ -35,7 +35,7 @@ export function Sidebar() {
             </div>
 
             {/* Navigation Items */}
-            <nav className="flex flex-col gap-1.5">
+            <nav className="flex flex-col gap-2">
                 {items.map((item) => {
                     const isActive = pathname === item.path || (item.path !== '/' && pathname.startsWith(item.path))
 
@@ -45,32 +45,30 @@ export function Sidebar() {
                             href={item.path}
                             className={twMerge(
                                 "group relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 ease-out",
-                                "hover:bg-white/5 hover:shadow-lg hover:shadow-purple-500/5 hover:scale-[1.02]",
+                                "hover:bg-purple-500/10 hover:shadow-lg hover:shadow-purple-500/10 hover:scale-[1.02]",
                                 "active:scale-[0.98]",
-                                isActive && "bg-gradient-to-r from-purple-500/20 via-pink-500/10 to-transparent border-l-2 border-purple-400 shadow-lg shadow-purple-500/10"
+                                isActive && "bg-gradient-to-r from-purple-500/25 via-pink-500/15 to-transparent border-l-2 border-purple-400 shadow-lg shadow-purple-500/20"
                             )}
                         >
-                            {/* Hover glow effect */}
-                            <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-500/0 via-pink-500/0 to-purple-500/0 opacity-0 group-hover:opacity-100 group-hover:from-purple-500/10 group-hover:via-pink-500/5 group-hover:to-transparent transition-all duration-300" />
-
                             {/* Icon */}
                             <item.icon
-                                size={20}
+                                size={22}
+                                strokeWidth={2.5}
                                 className={twMerge(
-                                    "relative z-10 transition-all duration-300",
+                                    "transition-all duration-300",
                                     isActive
-                                        ? "text-purple-400 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]"
-                                        : "text-slate-500 group-hover:text-purple-400 group-hover:drop-shadow-[0_0_6px_rgba(168,85,247,0.3)]"
+                                        ? "text-purple-400 drop-shadow-[0_0_10px_rgba(168,85,247,0.6)]"
+                                        : "text-slate-400 group-hover:text-purple-400 group-hover:drop-shadow-[0_0_8px_rgba(168,85,247,0.4)]"
                                 )}
                             />
 
-                            {/* Label with gradient on active/hover */}
+                            {/* Label - BOLD and bright */}
                             <span
                                 className={twMerge(
-                                    "relative z-10 font-medium transition-all duration-300",
+                                    "font-bold text-[15px] tracking-wide transition-all duration-300",
                                     isActive
-                                        ? "bg-gradient-to-r from-purple-300 via-pink-300 to-purple-400 bg-clip-text text-transparent"
-                                        : "text-slate-500 group-hover:bg-gradient-to-r group-hover:from-purple-300 group-hover:via-pink-300 group-hover:to-purple-400 group-hover:bg-clip-text group-hover:text-transparent"
+                                        ? "text-white drop-shadow-[0_0_10px_rgba(168,85,247,0.4)]"
+                                        : "text-slate-300 group-hover:text-white"
                                 )}
                             >
                                 {item.label}
@@ -78,7 +76,7 @@ export function Sidebar() {
 
                             {/* Active indicator dot */}
                             {isActive && (
-                                <div className="absolute right-3 w-1.5 h-1.5 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 shadow-lg shadow-purple-400/50 animate-pulse" />
+                                <div className="absolute right-3 w-2 h-2 rounded-full bg-gradient-to-r from-purple-400 to-pink-400 shadow-lg shadow-purple-400/60 animate-pulse" />
                             )}
                         </Link>
                     )
