@@ -16,7 +16,7 @@ export function Sidebar() {
     const items = [
         { label: 'Ana Sayfa', icon: LayoutDashboard, path: '/' },
         { label: 'Rezervasyonlar', icon: Calendar, path: '/reservations' },
-        { label: 'Kayıtlar', icon: Users, path: '/leads' },
+        { label: 'Müşteriler', icon: Users, path: '/clients' },
         { label: 'Hatırlatmalar', icon: Bell, path: '/reminders' },
         { label: 'Bakım Yap', icon: BrainCircuit, path: '/analysis' },
         { label: 'Ayarlar', icon: Settings, path: '/settings' },
