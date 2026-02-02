@@ -39,7 +39,7 @@ export function AppearanceSettings() {
                 <div className="space-y-8">
                     <div className="space-y-4">
                         <Label className="flex items-center gap-2 text-slate-200">
-                            <Palette size={16} className="text-purple-400" /> Renk Teması
+                            <Palette size={16} className="text-primary" /> Renk Teması
                         </Label>
                         <Select
                             value={config.theme}
@@ -61,7 +61,7 @@ export function AppearanceSettings() {
                     <div className="flex items-center justify-between p-5 bg-slate-950/50 rounded-xl border border-slate-800">
                         <div className="space-y-0.5">
                             <Label className="flex items-center gap-2 text-base text-slate-200">
-                                <LayoutTemplate size={16} className="text-blue-400" /> Panel Genişliği
+                                <LayoutTemplate size={16} className="text-primary" /> Panel Genişliği
                             </Label>
                             <p className="text-xs text-slate-500">İçeriği ortala veya tam ekran yay.</p>
                         </div>
@@ -119,7 +119,7 @@ export function AppearanceSettings() {
                             <Label className="flex items-center gap-2 text-slate-200">
                                 <Monitor size={16} className="text-slate-400" /> Yazı Boyutu (Scale)
                             </Label>
-                            <span className="text-xs text-purple-400 font-bold uppercase">{config.fontScale}</span>
+                            <span className="text-xs text-primary font-bold uppercase">{config.fontScale}</span>
                         </div>
                         <Slider
                             defaultValue={[getSliderValue(config.fontScale)]}

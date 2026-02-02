@@ -102,12 +102,12 @@ export function ServiceSettings() {
             <Separator className="bg-slate-800" />
 
             {/* Quick Add Form */}
-            <div className="flex gap-4 p-4 bg-purple-500/5 border border-purple-500/20 rounded-xl items-end">
+            <div className="flex gap-4 p-4 bg-primary/5 border border-primary/20 rounded-xl items-end">
                 <div className="flex-1 space-y-1">
-                    <span className="text-xs font-medium text-purple-300 ml-1">Yeni Hizmet Adı</span>
+                    <span className="text-xs font-medium text-primary ml-1">Yeni Hizmet Adı</span>
                     <Input
                         placeholder="Örn: Cilt Bakımı"
-                        className="bg-slate-950 border-slate-700 focus:border-purple-500"
+                        className="bg-slate-950 border-slate-700 focus:border-primary"
                         value={newItem.name}
                         onChange={e => setNewItem({ ...newItem, name: e.target.value })}
                         onKeyDown={(e) => {
@@ -116,11 +116,11 @@ export function ServiceSettings() {
                     />
                 </div>
                 <div className="w-32 space-y-1">
-                    <span className="text-xs font-medium text-purple-300 ml-1">Fiyat (TL)</span>
+                    <span className="text-xs font-medium text-primary ml-1">Fiyat (TL)</span>
                     <Input
                         placeholder="0"
                         type="number"
-                        className="bg-slate-950 border-slate-700 focus:border-purple-500"
+                        className="bg-slate-950 border-slate-700 focus:border-primary"
                         value={newItem.price}
                         onChange={e => setNewItem({ ...newItem, price: e.target.value })}
                         onKeyDown={(e) => {
@@ -128,7 +128,7 @@ export function ServiceSettings() {
                         }}
                     />
                 </div>
-                <Button onClick={handleAddItem} className="bg-purple-600 hover:bg-purple-700 text-white gap-2">
+                <Button onClick={handleAddItem} className="bg-primary hover:bg-primary/90 text-primary-foreground gap-2">
                     <Plus size={18} /> Ekle
                 </Button>
             </div>

@@ -25,7 +25,7 @@ export function Sidebar() {
     return (
         <div className="w-[240px] h-screen bg-slate-900/50 border-r border-slate-700 p-5 flex flex-col text-slate-100">
             <div className="mb-6 px-3">
-                <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent truncate" title={config.appName}>
+                <h1 className="text-xl font-bold text-primary truncate" title={config.appName}>
                     {config.appName}
                 </h1>
             </div>
@@ -40,12 +40,12 @@ export function Sidebar() {
                             href={item.path}
                             className={twMerge(
                                 "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 border border-transparent",
-                                "hover:bg-purple-500/10 hover:border-purple-500/20",
-                                isActive && "bg-purple-500/20 border-purple-500 text-white shadow-sm shadow-purple-500/10"
+                                "hover:bg-primary/10 hover:border-primary/20 hover:text-primary",
+                                isActive && "bg-primary/15 border-primary/50 text-white shadow-sm shadow-primary/10"
                             )}
                         >
-                            <item.icon size={20} className={isActive ? "text-purple-400" : "text-slate-400"} />
-                            <span className={isActive ? "text-purple-100 font-medium" : "text-slate-400"}>
+                            <item.icon size={20} className={isActive ? "text-primary" : "text-slate-400 group-hover:text-primary"} />
+                            <span className={isActive ? "text-primary-foreground font-medium" : "text-slate-400"}>
                                 {item.label}
                             </span>
                         </Link>
