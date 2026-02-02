@@ -24,5 +24,11 @@ WHERE NOT EXISTS (SELECT 1 FROM system_settings);
 -- 4. Yetkileri Aç (RLS)
 ALTER TABLE system_settings ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Herkes Okuyabilir" ON system_settings FOR SELECT USING (true);
-CREATE POLICY "Admin Düzenleyebilir" ON system_settings FOR ALL USING (auth.role() = 'authenticated');
+-- Politikalar zaten varsa hata vermemesi için önce sil
+DROP POLICY IF EXISTS "Herkes Okuyabilir" ON system_settings;
+DROP POLICY IF EXISTS "Admin Düzenleyebilir" ON system_settings;
+DROP POLICY IF EXISTS "Public Read" ON system_settings;
+DROP POLICY IF EXISTS "Admin Write" ON system_settings;
+
+CREATE POLICY "Public Read" ON system_settings FOR SELECT USING (true);
+CREATE POLICY "Admin Write" ON system_settings FOR ALL USING (auth.role() = 'authenticated');

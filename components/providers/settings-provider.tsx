@@ -47,9 +47,26 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const root = document.documentElement
 
+        // 1. Set Theme Attribute matches [data-theme='name'] selectors in globals.css
+        root.setAttribute('data-theme', config.theme)
 
+        // 2. FORCE GLobal Variables (Fallback for CSS issues) across all components
+        const gradients: Record<string, string[]> = {
+            'zeyid-moru': ['#0F111A', '#1a1033', '#2D0F35'],
+            'gece-mavisi': ['#020617', '#0f172a', '#1e3a8a'],
+            'mistik-zumrut': ['#022c22', '#064e3b', '#065f46'],
+            'bordo-asalet': ['#450a0a', '#7f1d1d', '#991b1b'],
+            'minimal-siyah': ['#000000', '#171717', '#262626'],
+            // Fallbacks
+            'modern-purple': ['#0F111A', '#1a1033', '#2D0F35'],
+            'ocean-blue': ['#020617', '#0f172a', '#1e3a8a'],
+        }
+        const activeGradient = gradients[config.theme] || gradients['zeyid-moru']
+        root.style.setProperty('--gradient-start', activeGradient[0])
+        root.style.setProperty('--gradient-via', activeGradient[1])
+        root.style.setProperty('--gradient-end', activeGradient[2])
 
-        // 2. Font Scale
+        // 3. Font Scale
         const scales: Record<string, string> = {
             'small': '14px',
             'medium': '16px',
