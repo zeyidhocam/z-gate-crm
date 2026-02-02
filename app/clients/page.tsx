@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"
 import { Calendar } from "@/components/ui/calendar"
 import { tr } from "date-fns/locale"
-// import { JsonImportDialog } from "@/components/JsonImportDialog" // Disabled for now due to schema change
+import { JsonImportDialog } from "@/components/JsonImportDialog"
 
 // Database Type Matching New SQL
 interface Client {
@@ -149,9 +149,11 @@ export default function ClientsPage() {
     }
 
     const filteredClients = clients.filter(client =>
-        client.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+        (client.full_name && client.full_name.toLowerCase().includes(search.toLowerCase())) ||
+        (client.name && client.name.toLowerCase().includes(search.toLowerCase())) ||
         (client.phone && client.phone.includes(search)) ||
-        (client.process_types?.name && client.process_types.name.toLowerCase().includes(search.toLowerCase()))
+        (client.process_types?.name && client.process_types.name.toLowerCase().includes(search.toLowerCase())) ||
+        (client.process_name && client.process_name.toLowerCase().includes(search.toLowerCase()))
     )
 
     return (
@@ -179,7 +181,7 @@ export default function ClientsPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                        {/* <JsonImportDialog onSuccess={fetchClients} /> */}
+                        <JsonImportDialog onSuccess={fetchClients} />
                         <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white gap-2 shadow-lg shadow-purple-900/20 transition-all duration-300 hover:scale-[1.02]">
                             <Plus size={18} />
                             Yeni Müşteri
@@ -240,14 +242,16 @@ export default function ClientsPage() {
                                             >
                                                 {/* Name & Phone */}
                                                 <div className="w-[180px] shrink-0 flex flex-col justify-center gap-0.5">
-                                                    <div className="text-[13px] font-bold text-slate-200 truncate leading-tight">{client.full_name}</div>
+                                                    <div className="text-[13px] font-bold text-slate-200 truncate leading-tight">
+                                                        {client.full_name || client.name || 'İsimsiz'}
+                                                    </div>
                                                     <div className="text-[11px] font-semibold text-slate-500/90 truncate font-sans">{client.phone || '-'}</div>
                                                 </div>
 
                                                 {/* Process & Price Agreed */}
                                                 <div className="w-[120px] shrink-0 flex flex-col justify-center gap-1">
                                                     <div className="text-[12px] font-bold text-slate-300 truncate opacity-90">
-                                                        {client.process_types?.name || 'İşlem Yok'}
+                                                        {client.process_types?.name || client.process_name || 'İşlem Yok'}
                                                     </div>
                                                     <div className="text-[11px] font-bold text-slate-500 opacity-80">
                                                         {client.price_agreed ? `${client.price_agreed.toLocaleString('tr-TR')} ₺` : '-'}

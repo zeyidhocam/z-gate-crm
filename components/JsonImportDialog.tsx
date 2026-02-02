@@ -36,16 +36,26 @@ export function JsonImportDialog({ onSuccess }: JsonImportDialogProps) {
             const text = await file.text()
             const json = JSON.parse(text)
 
-            // Perform Mapping (Flutter logic replication)
-            const leadData = {
-                name: json['isim_soyisim'] || 'Bilinmeyen',
-                phone: json['telefon'] || '',
-                source: 'JSON Import',
-                process_name: json['islem'] || 'Bilinmeyen',
-                status: 'Yeni', // Default status from Flutter app
-                price: json['ucret'] ? parseFloat(json['ucret']) : null,
-                ai_summary: json['detay'] || null,
-                created_at: json['sistem']?.['olusturulma_tarihi'] || new Date().toISOString(),
+            // 1. Fetch Process Types to Map "islem" string to ID
+            const { data: processTypes } = await supabase.from('process_types').select('id, name')
+
+            // Helper to find process ID
+            const findProcessId = (name: string) => {
+                if (!processTypes || !name) return null
+                const found = processTypes.find(p => p.name.toLowerCase() === name.toLowerCase())
+                return found ? found.id : null
+            }
+
+            const clientData = {
+                full_name: json['isim_soyisim'] || 'Bilinmeyen Müşteri',
+                phone: json['telefon'] || null,
+                // Map 'islem' name to ID
+                process_type_id: findProcessId(json['islem']),
+
+                status: json['durum'] || 'Yeni',
+                price_agreed: json['ucret'] ? parseInt(json['ucret']) : 0,
+                notes: json['detay'] || null,
+                created_at: new Date().toISOString(),
             }
 
             // Check configuration
@@ -64,8 +74,9 @@ export function JsonImportDialog({ onSuccess }: JsonImportDialogProps) {
 
             // Insert into Supabase
             const { error: dbError } = await supabase
-                .from('leads')
-                .insert([leadData])
+            const { error: dbError } = await supabase
+                .from('clients')
+                .insert([clientData])
 
             if (dbError) throw dbError
 
