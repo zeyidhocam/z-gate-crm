@@ -20,7 +20,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="tr" className="dark">
-      <body className="bg-slate-950 text-slate-100 min-h-screen flex font-sans antialiased">
+      <body className="bg-background text-foreground min-h-screen flex font-sans antialiased">
         <SettingsProvider>
           <Sidebar />
           <main className="flex-1 min-h-screen overflow-auto bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-[#0F111A] via-slate-950 to-[#020617]">

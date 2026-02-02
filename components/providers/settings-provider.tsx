@@ -62,7 +62,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         }
 
         const primaryVal = themes[config.theme] || themes['zeyid-moru']
+        console.log('🎨 Theme Engine Injecting:', config.theme, primaryVal)
         root.style.setProperty('--primary', `oklch(${primaryVal})`)
+        root.style.setProperty('--color-primary', `oklch(${primaryVal})`)
         root.style.setProperty('--ring', `oklch(${primaryVal})`)
         root.style.setProperty('--sidebar-primary', `oklch(${primaryVal})`)
 
