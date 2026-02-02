@@ -15,7 +15,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"
 import { Calendar } from "@/components/ui/calendar"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+
 
 // Types
 interface Lead {
@@ -363,21 +363,17 @@ export default function ReservationsPage() {
                                                         </Dialog>
                                                     </div>
 
-                                                    {/* Operations Menu */}
-                                                    <div className="w-[100px] shrink-0 flex justify-end">
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
-                                                                    <MoreVertical size={16} />
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            <DropdownMenuContent className="bg-slate-900 border-slate-800" align="end">
-                                                                <DropdownMenuItem onClick={() => handleWhatsApp(lead.phone || null)} className="gap-2 cursor-pointer text-slate-300 focus:bg-slate-800">
-                                                                    <MessageCircle size={14} /> WhatsApp'a Git
-                                                                </DropdownMenuItem>
-                                                                {/* Can add more specific reservation actions here */}
-                                                            </DropdownMenuContent>
-                                                        </DropdownMenu>
+                                                    {/* Actions */}
+                                                    <div className="w-[100px] shrink-0 flex justify-end gap-1">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            onClick={() => handleWhatsApp(lead.phone || null)}
+                                                            className="h-8 w-8 text-green-400 hover:text-green-300 hover:bg-green-500/10 rounded-lg transition-all"
+                                                            title="WhatsApp Web"
+                                                        >
+                                                            <MessageCircle size={16} />
+                                                        </Button>
                                                     </div>
                                                 </div>
                                             )
