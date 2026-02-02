@@ -35,6 +35,7 @@ interface Client {
     magic_types?: { name: string, risk_level: string } | null
     process_name?: string | null // Legacy support
     price?: number | null // Legacy support
+    ai_summary?: string | null // Legacy support
 }
 
 // Category Configuration
@@ -293,7 +294,7 @@ export default function ClientsPage() {
                                                         <DialogTrigger asChild>
                                                             <button className="text-[10px] font-semibold text-slate-500/80 hover:text-slate-300 transition-colors text-left truncate w-[260px] opacity-90 cursor-pointer flex items-center gap-2">
                                                                 <Info size={12} />
-                                                                {client.notes || 'Not/Detay yok...'}
+                                                                {client.notes || client.ai_summary || 'Not/Detay yok...'}
                                                             </button>
                                                         </DialogTrigger>
                                                         <DialogContent className="bg-slate-950 border-slate-800">
@@ -305,13 +306,9 @@ export default function ClientsPage() {
                                                             </DialogHeader>
                                                             <div className="mt-4 p-4 bg-slate-900/50 rounded-lg border border-slate-800 space-y-3">
                                                                 <div>
-                                                                    <div className="text-xs text-slate-500 font-bold mb-1">ANNE ADI</div>
-                                                                    <div className="text-slate-300 text-sm">{client.mother_name || '-'}</div>
-                                                                </div>
-                                                                <div>
-                                                                    <div className="text-xs text-slate-500 font-bold mb-1">NOTLAR</div>
+                                                                    <div className="text-xs text-slate-500 font-bold mb-1">NOTLAR / DETAY</div>
                                                                     <div className="text-slate-300 text-sm leading-relaxed max-h-[40vh] overflow-y-auto">
-                                                                        {client.notes || "Not yok."}
+                                                                        {client.notes || client.ai_summary || "Not veya detay bulunamadı."}
                                                                     </div>
                                                                 </div>
                                                                 <div>
