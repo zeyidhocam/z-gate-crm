@@ -23,7 +23,7 @@ export default function RootLayout({
       <body className="bg-background text-foreground min-h-screen flex font-sans antialiased">
         <SettingsProvider>
           <Sidebar />
-          <main className="flex-1 min-h-screen overflow-auto bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-[#0F111A] via-slate-950 to-[#020617]">
+          <main className="flex-1 min-h-screen overflow-auto bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] from-[var(--gradient-start)] via-[var(--gradient-via)] to-[var(--gradient-end)]">
             {children}
           </main>
           <Toaster position="top-center" theme="dark" />

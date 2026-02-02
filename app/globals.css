@@ -115,28 +115,69 @@
 }
 
 @layer base {
-  .modern-purple {
+
+  /* Default (Zeyid Moru) */
+  :root {
     --primary: oklch(0.646 0.222 41.116);
-    /* Purple */
     --ring: oklch(0.646 0.222 41.116);
+    --gradient-start: #0F111A;
+    --gradient-via: #1a1033;
+    --gradient-end: #2D0F35;
   }
 
-  .ocean-blue {
+  /* Themes */
+  .theme-zeyid-moru {
+    --primary: oklch(0.646 0.222 41.116);
+    --ring: oklch(0.646 0.222 41.116);
+    --gradient-start: #0F111A;
+    /* Dark Base */
+    --gradient-via: #1a1033;
+    /* Purple Tint */
+    --gradient-end: #2D0F35;
+    /* Deep Purple Edge */
+  }
+
+  .theme-gece-mavisi {
     --primary: oklch(0.6 0.118 184.704);
-    /* Blue */
     --ring: oklch(0.6 0.118 184.704);
+    --gradient-start: #020617;
+    /* Slate 950 */
+    --gradient-via: #0f172a;
+    /* Slate 900 */
+    --gradient-end: #1e3a8a;
+    /* Blue 900 */
   }
 
-  .forest-green {
+  .theme-mistik-zumrut {
     --primary: oklch(0.645 0.246 16.439);
-    /* Green - chart 5-ish or custom */
     --ring: oklch(0.645 0.246 16.439);
+    --gradient-start: #022c22;
+    /* Teal 950 */
+    --gradient-via: #064e3b;
+    /* Emerald 900 */
+    --gradient-end: #065f46;
+    /* Emerald 800 */
   }
 
-  .sunset-orange {
-    --primary: oklch(0.627 0.265 303.9);
-    /* Orange/Pinkish */
-    --ring: oklch(0.627 0.265 303.9);
+  .theme-bordo-asalet {
+    --primary: oklch(0.577 0.245 27.325);
+    --ring: oklch(0.577 0.245 27.325);
+    --gradient-start: #450a0a;
+    /* Red 950 */
+    --gradient-via: #7f1d1d;
+    /* Red 900 */
+    --gradient-end: #991b1b;
+    /* Red 800 */
+  }
+
+  .theme-minimal-siyah {
+    --primary: oklch(0.2 0 0);
+    --ring: oklch(0.2 0 0);
+    --gradient-start: #000000;
+    --gradient-via: #171717;
+    /* Neutral 900 */
+    --gradient-end: #262626;
+    /* Neutral 800 */
   }
 }
 
