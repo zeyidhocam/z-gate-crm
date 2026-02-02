@@ -196,3 +196,13 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .app-gradient-bg {
+    background: radial-gradient(at top left, var(--tw-gradient-stops));
+    --tw-gradient-from: var(--gradient-start);
+    --tw-gradient-to: var(--gradient-end);
+    --tw-gradient-stops: var(--tw-gradient-from), var(--gradient-via), var(--tw-gradient-to);
+    background-attachment: fixed;
+  }
+}
