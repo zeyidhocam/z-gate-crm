@@ -3,6 +3,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ========================================
+   OCEAN ELITE THEME - Tek Kusursuz Tema
+   ======================================== */
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -46,133 +50,88 @@
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
+/* ========================================
+   OCEAN ELITE - Ana Renk Paleti
+   Gradient: Derin Lacivert → Okyanus Mavisi → Turkuaz
+   Aksan: Cyan / Turkuaz
+   ======================================== */
+
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+
+  /* === OCEAN ELITE GRADIENT === */
+  --gradient-start: #020617;
+  /* Derin Lacivert-Siyah */
+  --gradient-via: #0c1929;
+  /* Gece Mavisi */
+  --gradient-end: #0f2847;
+  /* Okyanus Mavisi */
+
+  /* === AKSAN RENKLERİ (Turkuaz/Cyan) === */
+  --primary: #22d3d1;
+  /* Turkuaz - Ana aksan */
+  --primary-foreground: #021a1a;
+  --ring: #22d3d1;
+
+  /* === ARKA PLAN === */
+  --background: #030a11;
+  /* Çok koyu lacivert */
+  --foreground: #e2e8f0;
+  /* Açık gri-beyaz */
+
+  /* === KARTLAR === */
+  --card: rgba(15, 25, 40, 0.8);
+  --card-foreground: #e2e8f0;
+
+  /* === POPOVER/MODAL === */
+  --popover: #0c1929;
+  --popover-foreground: #e2e8f0;
+
+  /* === İKİNCİL RENKLER === */
+  --secondary: #1e3a5f;
+  --secondary-foreground: #e2e8f0;
+
+  /* === MUTED === */
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+
+  /* === ACCENT === */
+  --accent: #164e63;
+  --accent-foreground: #e2e8f0;
+
+  /* === DESTRUCTIVE === */
+  --destructive: #ef4444;
+
+  /* === BORDER/INPUT === */
+  --border: rgba(34, 211, 238, 0.15);
+  --input: rgba(34, 211, 238, 0.1);
+
+  /* === CHART COLORS (Uyumlu) === */
+  --chart-1: #22d3d1;
+  /* Turkuaz */
+  --chart-2: #0ea5e9;
+  /* Gökyüzü Mavisi */
+  --chart-3: #3b82f6;
+  /* Mavi */
+  --chart-4: #6366f1;
+  /* İndigo */
+  --chart-5: #8b5cf6;
+  /* Mor */
+
+  /* === SIDEBAR === */
+  --sidebar: rgba(8, 15, 25, 0.95);
+  --sidebar-foreground: #e2e8f0;
+  --sidebar-primary: #22d3d1;
+  --sidebar-primary-foreground: #021a1a;
+  --sidebar-accent: #164e63;
+  --sidebar-accent-foreground: #e2e8f0;
+  --sidebar-border: rgba(34, 211, 238, 0.1);
+  --sidebar-ring: #22d3d1;
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  /* Primary handled by theme engine inline style */
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  /* Ring handled by theme engine inline style */
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  /* Sidebar Ring handled by theme engine inline style */
-}
-
-@layer base {
-
-  /* Varsayılan Tema: Gece Moru */
-  :root {
-    --primary: oklch(0.646 0.222 41.116);
-    /* Mor */
-    --ring: oklch(0.646 0.222 41.116);
-    --gradient-start: #1a0933;
-    /* Daha Parlak Mor */
-    --gradient-via: #2d1650;
-    /* Belirgin Mor */
-    --gradient-end: #4a1e7a;
-    /* Açık Mor */
-  }
-
-  /* Tema 1: Gece Moru (Mor Tonları) - Varsayılan */
-  [data-theme='midnight-violet'],
-  [data-theme='zeyid-moru'],
-  [data-theme='modern-purple'] {
-    --primary: oklch(0.646 0.222 41.116);
-    /* #8B5CF6 */
-    --ring: oklch(0.646 0.222 41.116);
-    --gradient-start: #1a0933;
-    /* Daha Parlak Koyu Mor */
-    --gradient-via: #2d1650;
-    /* Belirgin Orta Mor */
-    --gradient-end: #4a1e7a;
-    /* Parlak Açık Mor */
-  }
-
-  /* Tema 2: Okyanus Derinliği (Mavi Tonları) */
-  [data-theme='ocean-depth'],
-  [data-theme='gece-mavisi'],
-  [data-theme='ocean-blue'] {
-    --primary: oklch(0.6 0.118 184.704);
-    /* #3B82F6 */
-    --ring: oklch(0.6 0.118 184.704);
-    --gradient-start: #020617;
-    /* Koyu Lacivert */
-    --gradient-via: #0F172A;
-    /* Orta Lacivert */
-    --gradient-end: #1E3A8A;
-    /* Mavi */
-  }
-
-  /* Tema 3: OLED Siyah (Koyu Gri-Mavi Tonları) */
-  [data-theme='oled-black'],
-  [data-theme='minimal-siyah'],
-  [data-theme='midnight-oled'] {
-    --primary: oklch(0.556 0.016 254.604);
-    /* #64748B Gri */
-    --ring: oklch(0.556 0.016 254.604);
-    --gradient-start: #0A0A12;
-    /* Neredeyse Siyah */
-    --gradient-via: #1A1A2E;
-    /* Koyu Gri-Mavi */
-    --gradient-end: #16213E;
-    /* Lacivert-Gri */
-  }
+/* Dark mode uses same values - Ocean Elite is a dark theme by default */
+:root.dark {
+  color-scheme: dark;
 }
 
 @layer base {
@@ -186,11 +145,30 @@
 }
 
 @layer utilities {
+
+  /* Ana Gradient Arka Plan */
   .app-gradient-bg {
-    background: radial-gradient(at top left, var(--tw-gradient-stops));
-    --tw-gradient-from: var(--gradient-start);
-    --tw-gradient-to: var(--gradient-end);
-    --tw-gradient-stops: var(--tw-gradient-from), var(--gradient-via), var(--tw-gradient-to);
+    background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-via) 50%, var(--gradient-end) 100%);
     background-attachment: fixed;
+  }
+
+  /* Cam Efektli Kart */
+  .glass-card {
+    background: rgba(15, 25, 40, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(34, 211, 238, 0.1);
+  }
+
+  /* Türkuaz Glow Efekti */
+  .cyan-glow {
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.15);
+  }
+
+  /* Gradient Text */
+  .text-gradient-ocean {
+    background: linear-gradient(135deg, #22d3d1 0%, #0ea5e9 50%, #3b82f6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 }

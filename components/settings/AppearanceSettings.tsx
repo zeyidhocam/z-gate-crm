@@ -6,7 +6,7 @@ import { Separator } from "@/components/ui/separator"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Slider } from "@/components/ui/slider"
-import { LayoutTemplate, Type, Palette, Monitor } from "lucide-react"
+import { LayoutTemplate, Type, Monitor, Waves } from "lucide-react"
 
 export function AppearanceSettings() {
     const { config, updateConfig } = useSettings()
@@ -32,47 +32,41 @@ export function AppearanceSettings() {
                 <h2 className="text-2xl font-bold text-slate-100 mb-2">Gelişmiş Görünüm</h2>
                 <p className="text-slate-400">Panelin görsel detaylarını ince ayar yapın.</p>
             </div>
-            <Separator className="bg-slate-800" />
+            <Separator className="bg-cyan-500/10" />
+
+            {/* Aktif Tema Bilgisi */}
+            <div className="p-5 bg-gradient-to-r from-cyan-500/10 via-cyan-500/5 to-transparent rounded-xl border border-cyan-500/20">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center">
+                        <Waves size={20} className="text-white" />
+                    </div>
+                    <div>
+                        <p className="font-bold text-cyan-300">Ocean Elite Tema</p>
+                        <p className="text-xs text-slate-500">Tek kusursuz tema - tüm elementler uyumlu</p>
+                    </div>
+                </div>
+            </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                {/* COLUMN 1: Colors & Layout */}
+                {/* COLUMN 1: Layout */}
                 <div className="space-y-8">
-                    <div className="space-y-4">
-                        <Label className="flex items-center gap-2 text-slate-200">
-                            <Palette size={16} className="text-primary" /> Renk Teması
-                        </Label>
-                        <Select
-                            value={config.theme}
-                            onValueChange={(val: any) => updateConfig({ theme: val })}
-                        >
-                            <SelectTrigger className="bg-slate-950/50 border-slate-700 h-11">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="bg-slate-900 border-slate-700">
-                                <SelectItem value="midnight-violet">🟣 Gece Moru</SelectItem>
-                                <SelectItem value="ocean-depth">🔵 Okyanus Derinliği</SelectItem>
-                                <SelectItem value="oled-black">⚫ OLED Siyah</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div className="flex items-center justify-between p-5 bg-slate-950/50 rounded-xl border border-slate-800">
+                    <div className="flex items-center justify-between p-5 bg-[#0c1929]/80 rounded-xl border border-cyan-500/10">
                         <div className="space-y-0.5">
                             <Label className="flex items-center gap-2 text-base text-slate-200">
-                                <LayoutTemplate size={16} className="text-primary" /> Panel Genişliği
+                                <LayoutTemplate size={16} className="text-cyan-400" /> Panel Genişliği
                             </Label>
                             <p className="text-xs text-slate-500">İçeriği ortala veya tam ekran yay.</p>
                         </div>
-                        <div className="flex items-center border border-slate-700 rounded-lg p-1 bg-slate-900">
+                        <div className="flex items-center border border-cyan-500/20 rounded-lg p-1 bg-[#040d17]">
                             <button
                                 onClick={() => updateConfig({ panelWidth: 'boxed' })}
-                                className={`px-3 py-1.5 text-xs rounded-md transition-all ${config.panelWidth === 'boxed' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+                                className={`px-3 py-1.5 text-xs rounded-md transition-all ${config.panelWidth === 'boxed' ? 'bg-cyan-500/20 text-cyan-300 shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
                             >
                                 Kutulu
                             </button>
                             <button
                                 onClick={() => updateConfig({ panelWidth: 'full' })}
-                                className={`px-3 py-1.5 text-xs rounded-md transition-all ${config.panelWidth === 'full' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+                                className={`px-3 py-1.5 text-xs rounded-md transition-all ${config.panelWidth === 'full' ? 'bg-cyan-500/20 text-cyan-300 shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
                             >
                                 Tam Ekran
                             </button>
@@ -84,16 +78,16 @@ export function AppearanceSettings() {
                 <div className="space-y-8">
                     <div className="space-y-4">
                         <Label className="flex items-center gap-2 text-slate-200">
-                            <Type size={16} className="text-orange-400" /> Yazı Tipi Ailesi
+                            <Type size={16} className="text-cyan-400" /> Yazı Tipi Ailesi
                         </Label>
                         <Select
                             value={config.fontFamily}
                             onValueChange={(val: any) => updateConfig({ fontFamily: val })}
                         >
-                            <SelectTrigger className="bg-slate-950/50 border-slate-700 h-11">
+                            <SelectTrigger className="bg-[#0c1929]/80 border-cyan-500/10 h-11">
                                 <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-slate-900 border-slate-700">
+                            <SelectContent className="bg-[#0c1929] border-cyan-500/20">
                                 <SelectItem value="sans">Modern Sans (Montserrat)</SelectItem>
                                 <SelectItem value="serif">Klasik Serif (Playfair)</SelectItem>
                                 <SelectItem value="mono">Digital Mono (JetBrains)</SelectItem>
@@ -101,7 +95,7 @@ export function AppearanceSettings() {
                         </Select>
                     </div>
 
-                    <div className="flex items-center justify-between p-5 bg-slate-950/50 rounded-xl border border-slate-800">
+                    <div className="flex items-center justify-between p-5 bg-[#0c1929]/80 rounded-xl border border-cyan-500/10">
                         <div className="space-y-0.5">
                             <Label className="text-base text-slate-200">Kalın Yazı (Bold Mode)</Label>
                             <p className="text-xs text-slate-500">Tüm metinleri daha belirgin yapar.</p>
@@ -112,12 +106,12 @@ export function AppearanceSettings() {
                         />
                     </div>
 
-                    <div className="space-y-4 p-5 bg-slate-950/50 rounded-xl border border-slate-800">
+                    <div className="space-y-4 p-5 bg-[#0c1929]/80 rounded-xl border border-cyan-500/10">
                         <div className="flex justify-between">
                             <Label className="flex items-center gap-2 text-slate-200">
-                                <Monitor size={16} className="text-slate-400" /> Yazı Boyutu (Scale)
+                                <Monitor size={16} className="text-cyan-400" /> Yazı Boyutu (Scale)
                             </Label>
-                            <span className="text-xs text-primary font-bold uppercase">{config.fontScale}</span>
+                            <span className="text-xs text-cyan-400 font-bold uppercase">{config.fontScale}</span>
                         </div>
                         <Slider
                             defaultValue={[getSliderValue(config.fontScale)]}

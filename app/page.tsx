@@ -124,50 +124,50 @@ export default function DashboardPage() {
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto space-y-8">
-      {/* Header */}
+      {/* Header - Ocean Elite */}
       <div className="flex items-center gap-3">
-        <div className="p-3 bg-purple-500/10 rounded-xl border border-purple-500/20">
-          <CalendarCheck className="text-purple-400" size={32} />
+        <div className="p-3 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
+          <CalendarCheck className="text-cyan-400" size={32} />
         </div>
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Gösterge Paneli</h1>
+          <h1 className="text-3xl font-bold text-gradient-ocean">Gösterge Paneli</h1>
           <p className="text-slate-400">Genel durum ve yaklaşan randevular</p>
         </div>
       </div>
 
-      {/* KPI Cards - UPDATED */}
+      {/* KPI Cards - Ocean Elite Colors */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <KPICard
           title="Yaklaşan Rezervasyon"
           value={stats.reservation.toString()}
           icon={CalendarCheck}
-          colorClass="text-purple-400"
-          bgClass="bg-purple-500/10"
-          borderClass="border-purple-500/20"
-        />
-        <KPICard
-          title="Yeni Müşteri"
-          value={stats.new.toString()}
-          icon={User}
-          colorClass="text-green-400"
-          bgClass="bg-green-500/10"
-          borderClass="border-green-500/20"
-        />
-        <KPICard
-          title="Takip Edilen"
-          value={stats.tracking.toString()}
-          icon={CalendarRange}
           colorClass="text-cyan-400"
           bgClass="bg-cyan-500/10"
           borderClass="border-cyan-500/20"
         />
         <KPICard
+          title="Yeni Müşteri"
+          value={stats.new.toString()}
+          icon={User}
+          colorClass="text-emerald-400"
+          bgClass="bg-emerald-500/10"
+          borderClass="border-emerald-500/20"
+        />
+        <KPICard
+          title="Takip Edilen"
+          value={stats.tracking.toString()}
+          icon={CalendarRange}
+          colorClass="text-sky-400"
+          bgClass="bg-sky-500/10"
+          borderClass="border-sky-500/20"
+        />
+        <KPICard
           title="Toplam Kayıt"
           value={stats.total.toString()}
           icon={CalendarDays}
-          colorClass="text-pink-400"
-          bgClass="bg-pink-500/10"
-          borderClass="border-pink-500/20"
+          colorClass="text-indigo-400"
+          bgClass="bg-indigo-500/10"
+          borderClass="border-indigo-500/20"
         />
       </div>
 
@@ -193,25 +193,25 @@ export default function DashboardPage() {
                     className={cn(
                       "w-[340px] shrink-0 rounded-2xl border flex flex-col overflow-hidden",
                       isToday
-                        ? "bg-slate-900/80 border-purple-500/50 shadow-[0_0_30px_-10px_rgba(168,85,247,0.2)]"
+                        ? "bg-slate-900/80 border-cyan-500/50 shadow-[0_0_30px_-10px_rgba(34,211,238,0.2)]"
                         : "bg-slate-900/40 border-slate-800/50"
                     )}
                   >
                     {/* Date Header */}
                     <div className={cn(
                       "px-5 py-4 border-b flex items-center justify-between",
-                      isToday ? "bg-purple-500/10 border-purple-500/20" : "bg-slate-900/50 border-slate-800/50"
+                      isToday ? "bg-cyan-500/10 border-cyan-500/20" : "bg-slate-900/50 border-slate-800/50"
                     )}>
                       <div>
-                        <div className={cn("text-lg font-bold", isToday ? "text-purple-300" : "text-slate-200")}>
+                        <div className={cn("text-lg font-bold", isToday ? "text-cyan-300" : "text-slate-200")}>
                           {format(dateObj, 'd MMMM', { locale: tr })}
                         </div>
-                        <div className={cn("text-xs font-medium uppercase tracking-wider", isToday ? "text-purple-400/70" : "text-slate-500")}>
+                        <div className={cn("text-xs font-medium uppercase tracking-wider", isToday ? "text-cyan-400/70" : "text-slate-500")}>
                           {format(dateObj, 'EEEE', { locale: tr })}
                         </div>
                       </div>
                       {isToday && (
-                        <span className="text-[10px] font-bold bg-purple-500 text-white px-2 py-0.5 rounded-full uppercase tracking-wider">Bugün</span>
+                        <span className="text-[10px] font-bold bg-cyan-500 text-white px-2 py-0.5 rounded-full uppercase tracking-wider">Bugün</span>
                       )}
                     </div>
 
