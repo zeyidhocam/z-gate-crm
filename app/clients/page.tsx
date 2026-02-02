@@ -34,6 +34,7 @@ interface Client {
     process_types?: { name: string } | null
     magic_types?: { name: string, risk_level: string } | null
     process_name?: string | null // Legacy support
+    price?: number | null // Legacy support
 }
 
 // Category Configuration
@@ -226,12 +227,11 @@ export default function ClientsPage() {
                             <CollapsibleContent>
                                 <div className="px-4 pb-4 space-y-1">
                                     {/* Header Row */}
-                                    <div className="flex items-center gap-4 px-6 py-2 border-b border-slate-800/50 mb-3 text-sm font-black text-slate-400 uppercase tracking-wide">
-                                        <div className="w-[180px] shrink-0">İsim & Telefon</div>
-                                        <div className="w-[120px] shrink-0">İşlem & Fiyat</div>
-                                        <div className="w-[120px] shrink-0">Anne Adı</div>
-                                        <div className="w-[120px] shrink-0">Durum</div>
-                                        <div className="flex-1 pl-2">Notlar (Detay)</div>
+                                    <div className="flex items-center gap-6 px-6 py-2 border-b border-slate-800/50 mb-3 text-sm font-black text-slate-400 uppercase tracking-wide">
+                                        <div className="w-[200px] shrink-0">İsim & Telefon</div>
+                                        <div className="w-[180px] shrink-0">İşlem & Fiyat</div>
+                                        <div className="w-[140px] shrink-0">Durum</div>
+                                        <div className="flex-1 pl-4">Notlar (Detay)</div>
                                     </div>
 
                                     {categoryItems.length === 0 ? (
@@ -240,33 +240,28 @@ export default function ClientsPage() {
                                         categoryItems.map(client => (
                                             <div
                                                 key={client.id}
-                                                className="flex items-center gap-4 px-6 py-3 rounded-lg hover:bg-slate-800/60 transition-all duration-200 hover:scale-[1.01] hover:shadow-md border border-transparent hover:border-slate-800/50 group bg-slate-900/20"
+                                                className="flex items-center gap-6 px-6 py-4 rounded-lg hover:bg-slate-800/60 transition-all duration-200 hover:scale-[1.01] hover:shadow-md border border-transparent hover:border-slate-800/50 group bg-slate-900/20"
                                             >
                                                 {/* Name & Phone */}
-                                                <div className="w-[180px] shrink-0 flex flex-col justify-center gap-0.5">
-                                                    <div className="text-[13px] font-bold text-slate-200 truncate leading-tight">
+                                                <div className="w-[200px] shrink-0 flex flex-col justify-center gap-1">
+                                                    <div className="text-[14px] font-bold text-slate-200 truncate leading-tight">
                                                         {client.full_name || client.name || 'İsimsiz'}
                                                     </div>
-                                                    <div className="text-[11px] font-semibold text-slate-500/90 truncate font-sans">{client.phone || '-'}</div>
+                                                    <div className="text-[12px] font-semibold text-slate-500/90 truncate font-sans">{client.phone || '-'}</div>
                                                 </div>
 
                                                 {/* Process & Price Agreed */}
-                                                <div className="w-[120px] shrink-0 flex flex-col justify-center gap-1">
-                                                    <div className="text-[12px] font-bold text-slate-300 truncate opacity-90">
+                                                <div className="w-[180px] shrink-0 flex flex-col justify-center gap-1.5">
+                                                    <div className="text-[13px] font-bold text-slate-300 truncate opacity-90">
                                                         {client.process_types?.name || client.process_name || 'İşlem Yok'}
                                                     </div>
-                                                    <div className="text-[11px] font-bold text-slate-500 opacity-80">
-                                                        {client.price_agreed ? `${client.price_agreed.toLocaleString('tr-TR')} ₺` : '-'}
+                                                    <div className="text-[12px] font-bold text-slate-500 opacity-80">
+                                                        {(client.price_agreed || client.price) ? `${(client.price_agreed || client.price)?.toLocaleString('tr-TR')} ₺` : '-'}
                                                     </div>
-                                                </div>
-
-                                                {/* Mother Name */}
-                                                <div className="w-[120px] shrink-0 text-[12px] text-slate-400 font-medium truncate">
-                                                    {client.mother_name || '-'}
                                                 </div>
 
                                                 {/* Status Selector */}
-                                                <div className="w-[120px] shrink-0">
+                                                <div className="w-[140px] shrink-0">
                                                     <Popover>
                                                         <PopoverTrigger asChild>
                                                             <button className={cn("text-[10px] font-black px-2.5 py-1 rounded-md border border-slate-800/50 hover:border-slate-700 hover:bg-slate-800 transition-all flex w-fit items-center gap-2 shadow-sm", config.color, config.bg)}>
