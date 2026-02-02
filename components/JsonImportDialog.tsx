@@ -42,7 +42,7 @@ export function JsonImportDialog({ onSuccess }: JsonImportDialogProps) {
             // Helper to find process ID
             const findProcessId = (name: string) => {
                 if (!processTypes || !name) return null
-                const found = processTypes.find(p => p.name.toLowerCase() === name.toLowerCase())
+                const found = processTypes.find((p: { name: string; id: number }) => p.name.toLowerCase() === name.toLowerCase())
                 return found ? found.id : null
             }
 

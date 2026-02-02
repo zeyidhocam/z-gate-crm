@@ -30,14 +30,21 @@ export default function DashboardPage() {
   const fetchReservations = async () => {
     try {
       const { data, error } = await supabase
-        .from('leads')
-        .select('*')
+        .from('clients')
+        .select('id, full_name, name, phone, status, reservation_at, price_agreed') // Select specific fields including legacy
         .eq('status', 'Rezervasyon')
         .not('reservation_at', 'is', null) // Ensure date exists
         .order('reservation_at', { ascending: true })
 
       if (error) throw error
-      setLeads(data || [])
+      // Map clients to leads structure for dashboard compatibility
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const mappedData = (data as any[]).map(client => ({
+        ...client,
+        name: client.full_name || client.name || 'İsimsiz', // Fallback
+        price: client.price_agreed
+      }))
+      setLeads(mappedData || [])
     } catch (error) {
       console.error('Error fetching reservations:', error)
     } finally {

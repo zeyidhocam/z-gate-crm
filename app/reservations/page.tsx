@@ -61,8 +61,8 @@ export default function ReservationsPage() {
         try {
             setLoading(true)
             const { data, error } = await supabase
-                .from('leads')
-                .select('*')
+                .from('clients')
+                .select('*, process_types(name)')
                 .or('reservation_at.not.is.null,status.eq.Rezervasyon')
                 .order('reservation_at', { ascending: true })
 
@@ -72,7 +72,19 @@ export default function ReservationsPage() {
                 const grouped: GroupedReservations[] = []
                 const initialExpanded: Record<string, boolean> = {}
 
-                data.forEach((lead: Lead) => {
+                data.forEach((client: any) => {
+                    // Map client to lead structure
+                    const lead: Lead = {
+                        id: client.id,
+                        name: client.full_name || client.name || 'Bilinmeyen',
+                        phone: client.phone,
+                        process_name: client.process_types?.name || client.process_name,
+                        price: client.price_agreed,
+                        status: client.status,
+                        reservation_at: client.reservation_at,
+                        ai_summary: client.notes // notes is the new ai_summary
+                    }
+
                     const date = parseISO(lead.reservation_at!)
                     const existingGroup = grouped.find(g => isSameDay(g.date, date))
                     const dateKey = date.toISOString()
@@ -120,12 +132,12 @@ export default function ReservationsPage() {
         }))
         setReservations(updatedReservations)
 
-        await supabase.from('leads').update({ status: newStatus }).eq('id', id)
+        await supabase.from('clients').update({ status: newStatus }).eq('id', id)
     }
 
     const handleReservation = async (leadId: string, date: Date | undefined) => {
         if (!date) return
-        await supabase.from('leads').update({ reservation_at: date.toISOString() }).eq('id', leadId)
+        await supabase.from('clients').update({ reservation_at: date.toISOString() }).eq('id', leadId)
         fetchReservations() // Refresh to move into correct date bucket
     }
 
