@@ -52,7 +52,6 @@ export function AppearanceSettings() {
                                 <SelectItem value="midnight-violet">🟣 Gece Moru</SelectItem>
                                 <SelectItem value="ocean-depth">🔵 Okyanus Derinliği</SelectItem>
                                 <SelectItem value="oled-black">⚫ OLED Siyah</SelectItem>
-                                <SelectItem value="arctic-mint">🟢 Arktik Nane (Açık)</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

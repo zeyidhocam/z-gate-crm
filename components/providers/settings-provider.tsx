@@ -50,50 +50,23 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         // 1. Tema Attribute'unu Ayarla
         root.setAttribute('data-theme', config.theme)
 
-        // 2. Tüm Tema Değişkenlerini Zorla Enjekte Et (CSS Fallback)
-        const themeColors: Record<string, { primary: string; gradients: string[] }> = {
-            'midnight-violet': {
-                primary: '0.646 0.222 41.116',
-                gradients: ['#0F0A1F', '#1E1338', '#2D1B4E']
-            },
-            'ocean-depth': {
-                primary: '0.6 0.118 184.704',
-                gradients: ['#020617', '#0F172A', '#1E3A8A']
-            },
-            'oled-black': {
-                primary: '0.556 0.016 254.604',
-                gradients: ['#0A0A12', '#1A1A2E', '#16213E']
-            },
-            'arctic-mint': {
-                primary: '0.703 0.118 180.764',
-                gradients: ['#F0FDFA', '#CCFBF1', '#99F6E4']
-            },
+        // 2. Sadece Gradient Renklerini Enjekte Et (Yazı renkleri sabit kalsın)
+        const gradients: Record<string, string[]> = {
+            'midnight-violet': ['#0F0A1F', '#1E1338', '#2D1B4E'],
+            'ocean-depth': ['#020617', '#0F172A', '#1E3A8A'],
+            'oled-black': ['#0A0A12', '#1A1A2E', '#16213E'],
             // Eski tema isimleri için fallback
-            'zeyid-moru': {
-                primary: '0.646 0.222 41.116',
-                gradients: ['#0F0A1F', '#1E1338', '#2D1B4E']
-            },
-            'gece-mavisi': {
-                primary: '0.6 0.118 184.704',
-                gradients: ['#020617', '#0F172A', '#1E3A8A']
-            },
-            'minimal-siyah': {
-                primary: '0.556 0.016 254.604',
-                gradients: ['#0A0A12', '#1A1A2E', '#16213E']
-            },
+            'zeyid-moru': ['#0F0A1F', '#1E1338', '#2D1B4E'],
+            'gece-mavisi': ['#020617', '#0F172A', '#1E3A8A'],
+            'minimal-siyah': ['#0A0A12', '#1A1A2E', '#16213E'],
         }
 
-        const activeTheme = themeColors[config.theme] || themeColors['midnight-violet']
+        const activeGradient = gradients[config.theme] || gradients['midnight-violet']
 
-        // Primary renkleri ayarla
-        root.style.setProperty('--primary', `oklch(${activeTheme.primary})`)
-        root.style.setProperty('--ring', `oklch(${activeTheme.primary})`)
-        root.style.setProperty('--sidebar-primary', `oklch(${activeTheme.primary})`)
-
-        // Gradient renklerini ayarla
-        root.style.setProperty('--gradient-start', activeTheme.gradients[0])
-        root.style.setProperty('--gradient-via', activeTheme.gradients[1])
-        root.style.setProperty('--gradient-end', activeTheme.gradients[2])
+        // Sadece gradient renklerini ayarla
+        root.style.setProperty('--gradient-start', activeGradient[0])
+        root.style.setProperty('--gradient-via', activeGradient[1])
+        root.style.setProperty('--gradient-end', activeGradient[2])
 
         // 3. Yazı Boyutu
         const scales: Record<string, string> = {

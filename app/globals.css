@@ -170,26 +170,6 @@
     --gradient-end: #16213E;
     /* Lacivert-Gri */
   }
-
-  /* Tema 4: Arktik Nane (Açık Yeşil-Mavi Tonları) */
-  [data-theme='arctic-mint'],
-  [data-theme='emerald-gold'],
-  [data-theme='mistik-zumrut'] {
-    --primary: oklch(0.703 0.118 180.764);
-    /* #14B8A6 Turkuaz */
-    --ring: oklch(0.703 0.118 180.764);
-    --gradient-start: #F0FDFA;
-    /* Çok Açık Nane */
-    --gradient-via: #CCFBF1;
-    /* Açık Nane */
-    --gradient-end: #99F6E4;
-    /* Nane Yeşili */
-    /* Açık tema için temel renkler */
-    --background: oklch(0.985 0.002 180);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-  }
 }
 
 @layer base {

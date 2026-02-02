@@ -4,21 +4,24 @@ CREATE TABLE IF NOT EXISTS system_settings (
   site_title text default 'Z-Gate CRM',
   logo_url text default '',
   theme_preference text default 'zeyid-moru',
+  theme_preference text default 'midnight-violet',
   whatsapp_number text default '',
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
 
 -- 2. Yeni Sütunları Ekle (Veri kaybetmeden)
 ALTER TABLE system_settings 
+ADD COLUMN IF NOT EXISTS theme_preference text default 'midnight-violet',
 ADD COLUMN IF NOT EXISTS font_family text default 'sans',
 ADD COLUMN IF NOT EXISTS font_weight text default 'normal',
 ADD COLUMN IF NOT EXISTS font_scale text default 'medium',
 ADD COLUMN IF NOT EXISTS panel_width text default 'full',
-ADD COLUMN IF NOT EXISTS theme_preference text default 'zeyid-moru';
+ADD COLUMN IF NOT EXISTS logo_url text default '',
+ADD COLUMN IF NOT EXISTS whatsapp_number text default '';
 
 -- 3. İlk Ayarı Ekle (Eğer tablo boşsa)
 INSERT INTO system_settings (site_title, theme_preference)
-SELECT 'Z-Gate CRM', 'zeyid-moru'
+SELECT 'Z-Gate CRM', 'midnight-violet'
 WHERE NOT EXISTS (SELECT 1 FROM system_settings);
 
 -- 4. Yetkileri Aç (RLS)
