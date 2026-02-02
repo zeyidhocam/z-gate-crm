@@ -25,8 +25,8 @@ export function Sidebar() {
     return (
         <div className="w-[240px] h-screen bg-slate-900/50 border-r border-slate-700 p-5 flex flex-col text-slate-100">
             <div className="mb-6 px-3">
-                <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent truncate" title={config.sidebarTitle}>
-                    {config.sidebarTitle}
+                <h1 className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent truncate" title={config.appName}>
+                    {config.appName}
                 </h1>
             </div>
 

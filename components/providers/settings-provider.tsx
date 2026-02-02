@@ -4,21 +4,25 @@ import React, { createContext, useContext, useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
 
 interface UIConfig {
-    theme: 'modern-purple' | 'ocean-blue' | 'forest-green' | 'sunset-orange'
     appName: string
-    sidebarTitle: string
-    logoUrl: string | null
-    isSidebarCollapsed: boolean
+    logoUrl: string
+    theme: string
+    fontFamily: 'sans' | 'serif' | 'mono'
+    fontWeight: 'normal' | 'bold'
+    fontScale: 'small' | 'medium' | 'large' | 'xlarge'
+    panelWidth: 'full' | 'boxed'
     whatsappNumber?: string
-    fontSize?: 'normal' | 'large'
 }
 
 const DEFAULT_CONFIG: UIConfig = {
-    theme: 'modern-purple',
     appName: 'Z-Gate CRM',
-    sidebarTitle: 'Z-Gate',
-    logoUrl: null,
-    isSidebarCollapsed: false
+    logoUrl: '',
+    theme: 'zeyid-moru',
+    fontFamily: 'sans',
+    fontWeight: 'normal',
+    fontScale: 'medium',
+    panelWidth: 'full',
+    whatsappNumber: ''
 }
 
 interface SettingsContextType {
@@ -34,55 +38,92 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     const [config, setConfig] = useState<UIConfig>(DEFAULT_CONFIG)
     const [isLoading, setIsLoading] = useState(true)
 
+    // Initial Fetch
     useEffect(() => {
         fetchSettings()
     }, [])
 
-    // Apply theme to body/html
+    // Theme Engine: Apply styles when config changes
     useEffect(() => {
         const root = document.documentElement
-        root.classList.remove('modern-purple', 'ocean-blue', 'forest-green', 'sunset-orange')
-        if (config.theme) root.classList.add(config.theme)
 
-        if (config.fontSize === 'large') {
-            root.style.fontSize = '18px'
-        } else {
-            root.style.fontSize = ''
+        // 1. Color Themes
+        // Using OKLCH values for best gamut
+        const themes: Record<string, string> = {
+            'zeyid-moru': '0.646 0.222 41.116',   // Deep Purple
+            'gece-mavisi': '0.6 0.118 184.704',   // Navy Blue
+            'mistik-zumrut': '0.645 0.246 16.439', // Emerald
+            'bordo-asalet': '0.577 0.245 27.325',  // Deep Red
+            'minimal-siyah': '0.2 0 0',           // Black/Dark Grey
+            'modern-purple': '0.646 0.222 41.116', // Legacy fallback
+            'ocean-blue': '0.6 0.118 184.704',     // Legacy fallback
+            'forest-green': '0.645 0.246 16.439',  // Legacy fallback
+            'sunset-orange': '0.627 0.265 303.9',  // Legacy fallback
         }
-    }, [config.theme, config.fontSize])
+
+        const primaryVal = themes[config.theme] || themes['zeyid-moru']
+        root.style.setProperty('--primary', `oklch(${primaryVal})`)
+        root.style.setProperty('--ring', `oklch(${primaryVal})`)
+        root.style.setProperty('--sidebar-primary', `oklch(${primaryVal})`)
+
+        // 2. Font Scale
+        const scales: Record<string, string> = {
+            'small': '14px',
+            'medium': '16px',
+            'large': '18px',
+            'xlarge': '20px'
+        }
+        root.style.fontSize = scales[config.fontScale] || '16px'
+
+        // 3. Font Family
+        const fonts: Record<string, string> = {
+            'sans': '"Montserrat", sans-serif',
+            'serif': '"Playfair Display", serif',
+            'mono': '"JetBrains Mono", monospace'
+        }
+        root.style.setProperty('--font-sans', fonts[config.fontFamily] || fonts['sans'])
+
+        // 4. Font Weight
+        if (config.fontWeight === 'bold') {
+            root.classList.add('font-bold-mode')
+            root.style.fontWeight = '600'
+        } else {
+            root.classList.remove('font-bold-mode')
+            root.style.fontWeight = 'normal'
+        }
+
+        // 5. Panel Width (handled via CSS var or Context consumption in Layout)
+        root.style.setProperty('--panel-max-width', config.panelWidth === 'boxed' ? '1400px' : '100%')
+
+    }, [config])
 
     const fetchSettings = async () => {
         setIsLoading(true)
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-            // Mock mode
-            const saved = localStorage.getItem('ui_config')
-            if (saved) setConfig(JSON.parse(saved))
+            const saved = localStorage.getItem('system_settings')
+            if (saved) setConfig({ ...DEFAULT_CONFIG, ...JSON.parse(saved) })
             setIsLoading(false)
             return
         }
 
         try {
-            const { data, error } = await supabase
-                .from('system_settings')
-                .select('*')
-                .single()
-
+            const { data, error } = await supabase.from('system_settings').select('*').single()
             if (data) {
                 setConfig({
-                    theme: data.theme_preference || 'modern-purple',
-                    appName: data.site_title || 'Z-Gate CRM',
-                    sidebarTitle: data.site_title?.split(' ')[0] || 'Z-Gate', // Simple logic for sidebar title
-                    logoUrl: data.logo_url || null,
-                    isSidebarCollapsed: false,
-                    whatsappNumber: data.whatsapp_number,
-                    fontSize: data.font_size
+                    appName: data.site_title || DEFAULT_CONFIG.appName,
+                    logoUrl: data.logo_url || DEFAULT_CONFIG.logoUrl,
+                    theme: data.theme_preference || DEFAULT_CONFIG.theme,
+                    fontFamily: data.font_family || DEFAULT_CONFIG.fontFamily,
+                    fontWeight: data.font_weight || DEFAULT_CONFIG.fontWeight,
+                    fontScale: data.font_scale || DEFAULT_CONFIG.fontScale,
+                    panelWidth: data.panel_width || DEFAULT_CONFIG.panelWidth,
+                    whatsappNumber: data.whatsapp_number || DEFAULT_CONFIG.whatsappNumber
                 } as any)
             } else if (error && error.code === 'PGRST116') {
-                // No rows, try to insert default
-                await supabase.from('system_settings').insert([{ site_title: 'Z-Gate CRM' }])
+                await supabase.from('system_settings').insert([{ site_title: DEFAULT_CONFIG.appName }])
             }
-        } catch (error) {
-            console.error('Error fetching settings:', error)
+        } catch (e) {
+            console.error(e)
         } finally {
             setIsLoading(false)
         }
@@ -90,35 +131,34 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
     const updateConfig = async (updates: Partial<UIConfig>) => {
         const newConfig = { ...config, ...updates }
-        setConfig(newConfig) // Optimistic update
+        setConfig(newConfig) // Optimistic
 
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-            localStorage.setItem('ui_config', JSON.stringify(newConfig))
+            localStorage.setItem('system_settings', JSON.stringify(newConfig))
             return
         }
 
         try {
-            const dbUpdates: any = {}
-            if (updates.theme) dbUpdates.theme_preference = updates.theme
-            if (updates.appName) dbUpdates.site_title = updates.appName
-            if (updates.logoUrl !== undefined) dbUpdates.logo_url = updates.logoUrl
-            if ((updates as any).whatsappNumber !== undefined) dbUpdates.whatsapp_number = (updates as any).whatsappNumber
-            if ((updates as any).fontSize !== undefined) dbUpdates.font_size = (updates as any).fontSize
+            const dbPayload: any = {}
+            if (updates.appName) dbPayload.site_title = updates.appName
+            if (updates.logoUrl !== undefined) dbPayload.logo_url = updates.logoUrl
+            if (updates.theme) dbPayload.theme_preference = updates.theme
+            if (updates.fontFamily) dbPayload.font_family = updates.fontFamily
+            if (updates.fontWeight) dbPayload.font_weight = updates.fontWeight
+            if (updates.fontScale) dbPayload.font_scale = updates.fontScale
+            if (updates.panelWidth) dbPayload.panel_width = updates.panelWidth
+            if (updates.whatsappNumber !== undefined) dbPayload.whatsapp_number = updates.whatsappNumber
 
-            if (Object.keys(dbUpdates).length > 0) {
-                await supabase
-                    .from('system_settings')
-                    .update(dbUpdates)
-                    .gt('id', 0) // Update all rows (should be only one) or use single ID if we tracked it
+            if (Object.keys(dbPayload).length > 0) {
+                await supabase.from('system_settings').update(dbPayload).gt('id', 0)
             }
-        } catch (error) {
-            console.error('Error saving settings:', error)
+        } catch (e) {
+            console.error(e)
         }
     }
 
     const resetToDefaults = async () => {
-        setConfig(DEFAULT_CONFIG)
-        // Reset DB logic if needed, but usually we just want to reset local state or specific fields
+        await updateConfig(DEFAULT_CONFIG)
     }
 
     return (
