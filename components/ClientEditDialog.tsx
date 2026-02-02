@@ -52,10 +52,10 @@ export function ClientEditDialog({ client, open, onOpenChange, onSave, processTy
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-[#0F111A] border-slate-800 text-slate-200 max-w-2xl">
+            <DialogContent className="bg-[#0c1929] border-cyan-500/20 text-slate-200 max-w-2xl">
                 <DialogHeader>
-                    <DialogTitle className="text-xl font-bold bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent flex items-center gap-2">
-                        <Edit size={22} className="text-orange-400" />
+                    <DialogTitle className="text-xl font-bold text-gradient-ocean flex items-center gap-2">
+                        <Edit size={22} className="text-cyan-400" />
                         Müşteri Düzenle
                     </DialogTitle>
                 </DialogHeader>
@@ -66,7 +66,7 @@ export function ClientEditDialog({ client, open, onOpenChange, onSave, processTy
                         <Input
                             value={formData.full_name || ''}
                             onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                            className="bg-slate-900 border-slate-800 focus:border-orange-500/50"
+                            className="bg-[#0a1628] border-cyan-500/10 focus:border-cyan-500/30"
                         />
                     </div>
                     <div className="space-y-2">
@@ -74,7 +74,7 @@ export function ClientEditDialog({ client, open, onOpenChange, onSave, processTy
                         <Input
                             value={formData.phone || ''}
                             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                            className="bg-slate-900 border-slate-800 focus:border-orange-500/50"
+                            className="bg-[#0a1628] border-cyan-500/10 focus:border-cyan-500/30"
                         />
                     </div>
 
@@ -84,7 +84,7 @@ export function ClientEditDialog({ client, open, onOpenChange, onSave, processTy
                             type="number"
                             value={formData.price_agreed || ''}
                             onChange={(e) => setFormData({ ...formData, price_agreed: Number(e.target.value) })}
-                            className="bg-slate-900 border-slate-800 focus:border-orange-500/50"
+                            className="bg-[#0a1628] border-cyan-500/10 focus:border-cyan-500/30"
                         />
                     </div>
 
@@ -94,10 +94,10 @@ export function ClientEditDialog({ client, open, onOpenChange, onSave, processTy
                             value={formData.process_type_id?.toString()}
                             onValueChange={(val) => setFormData({ ...formData, process_type_id: Number(val) })}
                         >
-                            <SelectTrigger className="bg-slate-900 border-slate-800">
+                            <SelectTrigger className="bg-[#0a1628] border-cyan-500/10">
                                 <SelectValue placeholder="İşlem seç..." />
                             </SelectTrigger>
-                            <SelectContent className="bg-slate-900 border-slate-800">
+                            <SelectContent className="bg-[#0c1929] border-cyan-500/20">
                                 {processTypes.map(pt => (
                                     <SelectItem key={pt.id} value={pt.id.toString()}>{pt.name}</SelectItem>
                                 ))}
@@ -116,8 +116,8 @@ export function ClientEditDialog({ client, open, onOpenChange, onSave, processTy
                 </div>
 
                 <DialogFooter>
-                    <Button variant="ghost" onClick={() => onOpenChange(false)} className="hover:bg-slate-900 hover:text-white">İptal</Button>
-                    <Button onClick={handleSave} className="bg-orange-500 hover:bg-orange-600 text-white">Kaydet</Button>
+                    <Button variant="ghost" onClick={() => onOpenChange(false)} className="hover:bg-cyan-500/10 hover:text-white">İptal</Button>
+                    <Button onClick={handleSave} className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white">Kaydet</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

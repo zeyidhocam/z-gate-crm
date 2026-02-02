@@ -141,6 +141,23 @@
 
   body {
     @apply bg-background text-foreground;
+    font-weight: 500;
+    /* Tüm yazılar yarı-kalın (medium) */
+  }
+
+  /* Sidebar için ekstra kalın */
+  aside {
+    font-weight: 600;
+  }
+
+  /* Başlıklar için kalın */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: 700;
   }
 }
 

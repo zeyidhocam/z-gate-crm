@@ -40,7 +40,7 @@ interface GroupedReservations {
 
 // Reuse Categories for Status Colors
 const CATEGORIES: Record<string, { color: string, bg: string, border: string }> = {
-    'Rezervasyon': { color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
+    'Rezervasyon': { color: 'text-cyan-500', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
     'Yeni': { color: 'text-green-500', bg: 'bg-green-500/10', border: 'border-green-500/20' },
     'Sabit': { color: 'text-orange-500', bg: 'bg-orange-500/10', border: 'border-orange-500/20' },
     'Takip': { color: 'text-cyan-500', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
@@ -203,16 +203,16 @@ export default function ReservationsPage() {
     if (loading) {
         return (
             <div className="flex items-center justify-center h-screen text-slate-400">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
             </div>
         )
     }
 
     return (
         <div className="p-8 max-w-[1600px] mx-auto text-slate-200">
-            <div className="mb-8 flex items-end justify-between border-b border-slate-800 pb-6">
+            <div className="mb-8 flex items-end justify-between border-b border-cyan-500/10 pb-6">
                 <div>
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                    <h1 className="text-3xl font-bold text-gradient-ocean">
                         Rezervasyon Takvimi
                     </h1>
                     <p className="text-slate-400 mt-2">

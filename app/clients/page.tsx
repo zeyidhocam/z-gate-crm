@@ -44,7 +44,7 @@ const CATEGORIES = {
     'Sabit': { color: 'text-orange-500', bg: 'bg-orange-500/10', border: 'border-orange-500/20', icon: Pin },
     'Takip': { color: 'text-cyan-500', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20', icon: Clock },
     'Arşiv': { color: 'text-slate-500', bg: 'bg-slate-500/10', border: 'border-slate-500/20', icon: Archive },
-    'Rezervasyon': { color: 'text-purple-500', bg: 'bg-purple-500/10', border: 'border-purple-500/20', icon: CalendarDays },
+    'Rezervasyon': { color: 'text-cyan-500', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20', icon: CalendarDays },
 } as const
 
 type CategoryType = keyof typeof CATEGORIES
@@ -69,14 +69,19 @@ export default function ClientsPage() {
     const [reservationDate, setReservationDate] = useState<Date | undefined>(new Date())
     const [editingClient, setEditingClient] = useState<Client | null>(null) // For Edit Dialog
 
-    // Expanded states for categories
-    const [expanded, setExpanded] = useState<Record<string, boolean>>({
-        'Yeni': true,
-        'Sabit': true,
-        'Takip': true,
-        'Rezervasyon': true,
-        'Arşiv': false
+    // Expanded states for categories - localStorage ile kalıcı
+    const [expanded, setExpanded] = useState<Record<string, boolean>>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('categoryExpanded')
+            if (saved) return JSON.parse(saved)
+        }
+        return { 'Yeni': true, 'Sabit': true, 'Takip': true, 'Rezervasyon': true, 'Arşiv': false }
     })
+
+    // Expanded state'i localStorage'a kaydet
+    useEffect(() => {
+        localStorage.setItem('categoryExpanded', JSON.stringify(expanded))
+    }, [expanded])
 
     useEffect(() => {
         fetchClients()
@@ -177,9 +182,10 @@ export default function ClientsPage() {
     return (
         <div className="p-8 max-w-[1700px] mx-auto space-y-8">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-slate-800 pb-6">
+            {/* Header - Ocean Elite */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-cyan-500/10 pb-6">
                 <div>
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                    <h1 className="text-3xl font-bold text-gradient-ocean">
                         Müşteriler
                     </h1>
                     <p className="text-slate-400 mt-2">
@@ -189,10 +195,10 @@ export default function ClientsPage() {
 
                 <div className="flex items-center gap-4 w-full md:w-auto">
                     <div className="relative flex-1 md:w-[300px]">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-cyan-500/50" size={18} />
                         <Input
                             placeholder="İsim, telefon veya işlem ara..."
-                            className="pl-10 bg-slate-900/50 border-slate-700 text-slate-100 placeholder:text-slate-500"
+                            className="pl-10 bg-[#0c1929]/80 border-cyan-500/10 text-slate-100 placeholder:text-slate-500 focus:border-cyan-500/30"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
@@ -200,7 +206,7 @@ export default function ClientsPage() {
 
                     <div className="flex items-center gap-2">
                         <JsonImportDialog onSuccess={fetchClients} />
-                        <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white gap-2 shadow-lg shadow-purple-900/20 transition-all duration-300 hover:scale-[1.02]">
+                        <Button className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white gap-2 shadow-lg shadow-cyan-900/30 transition-all duration-300 hover:scale-[1.02]">
                             <Plus size={18} />
                             Yeni Müşteri
                         </Button>
@@ -285,7 +291,7 @@ export default function ClientsPage() {
                                                                 {client.status}
                                                             </button>
                                                         </PopoverTrigger>
-                                                        <PopoverContent className="w-48 p-1 bg-[#0F111A] border-slate-800 shadow-xl rounded-lg">
+                                                        <PopoverContent className="w-48 p-1 bg-[#0c1929] border-cyan-500/20 shadow-xl rounded-lg">
                                                             {ORDERED_CATEGORIES.map(cat => (
                                                                 <button
                                                                     key={cat}
@@ -312,7 +318,7 @@ export default function ClientsPage() {
                                                                 {client.notes || client.ai_summary || 'Not/Detay yok...'}
                                                             </button>
                                                         </DialogTrigger>
-                                                        <DialogContent className="bg-slate-950 border-slate-800">
+                                                        <DialogContent className="bg-[#0c1929] border-cyan-500/20">
                                                             <DialogHeader>
                                                                 <DialogTitle className="text-slate-100 flex items-center gap-2">
                                                                     <User size={18} className="text-slate-400" />

@@ -112,12 +112,12 @@ export function JsonImportDialog({ onSuccess }: JsonImportDialogProps) {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white gap-2 border-0 shadow-lg shadow-purple-900/20 transition-all duration-300 hover:scale-[1.02]">
+                <Button className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white gap-2 border-0 shadow-lg shadow-cyan-900/30 transition-all duration-300 hover:scale-[1.02]">
                     <Upload size={18} />
                     JSON Yükle
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] bg-slate-900 border-slate-800 text-slate-100">
+            <DialogContent className="sm:max-w-[425px] bg-[#0c1929] border-cyan-500/20 text-slate-100">
                 <DialogHeader>
                     <DialogTitle>JSON Müşteri Kaydı Yükle</DialogTitle>
                     <DialogDescription className="text-slate-400">
@@ -146,7 +146,7 @@ export function JsonImportDialog({ onSuccess }: JsonImportDialogProps) {
 
                     {isLoading && (
                         <div className="flex flex-col items-center gap-2">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
                             <p className="text-sm text-slate-400">Yükleniyor...</p>
                         </div>
                     )}
