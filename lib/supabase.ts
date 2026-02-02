@@ -1,5 +1,5 @@
 
-import { createClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -15,7 +15,7 @@ try {
         typeof supabaseAnonKey === 'string' &&
         supabaseAnonKey.length > 0
     ) {
-        client = createClient(supabaseUrl, supabaseAnonKey)
+        client = createBrowserClient(supabaseUrl, supabaseAnonKey)
     }
 } catch (error) {
     console.warn('Supabase client initialization failed:', error)
