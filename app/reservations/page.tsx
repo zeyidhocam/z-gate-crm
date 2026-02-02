@@ -15,6 +15,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"
 import { Calendar } from "@/components/ui/calendar"
+import { ClientEditDialog, Client } from "@/components/ClientEditDialog"
 
 
 // Types
@@ -28,6 +29,7 @@ interface Lead {
     reservation_at?: string
     ai_summary?: string
     notes?: string
+    process_type_id?: number | null
     is_done: boolean
 }
 
@@ -55,10 +57,39 @@ export default function ReservationsPage() {
     const [expanded, setExpanded] = useState<Record<string, boolean>>({})
     const [copiedText, setCopiedText] = useState<string | null>(null)
     const [reservationDate, setReservationDate] = useState<Date | undefined>(new Date())
+    const [editingClient, setEditingClient] = useState<Client | null>(null)
+    const [processTypes, setProcessTypes] = useState<{ id: number, name: string }[]>([])
 
+    // Initial fetch
     useEffect(() => {
         fetchReservations()
+        fetchProcessTypes()
     }, [])
+
+    const fetchProcessTypes = async () => {
+        const { data } = await supabase.from('process_types').select('*')
+        if (data) setProcessTypes(data)
+    }
+
+    const handleSaveEdit = async (updatedClient: Client) => {
+        const { error } = await supabase
+            .from('clients')
+            .update({
+                full_name: updatedClient.full_name,
+                phone: updatedClient.phone,
+                price_agreed: updatedClient.price_agreed,
+                process_type_id: updatedClient.process_type_id,
+                notes: updatedClient.notes
+            })
+            .eq('id', updatedClient.id)
+
+        if (!error) {
+            setEditingClient(null)
+            fetchReservations()
+        } else {
+            console.error('Error updating client:', error)
+        }
+    }
 
     const fetchReservations = async () => {
         try {
@@ -75,7 +106,7 @@ export default function ReservationsPage() {
             // Fetch
             const { data, error } = await supabase
                 .from('clients')
-                .select('*, process_types(name)')
+                .select('*, process_types(name), process_type_id')
                 .eq('status', 'Rezervasyon') // Only show active reservations here? Or all upcoming? User said "Rezervasyon kategorisine aldıklarımız"
                 .order('reservation_at', { ascending: true })
 
@@ -96,6 +127,7 @@ export default function ReservationsPage() {
                         status: client.status,
                         reservation_at: client.reservation_at,
                         ai_summary: client.notes || client.ai_summary,
+                        process_type_id: client.process_type_id, // For edit dialog
                         is_done: client.notes?.includes('[YAPILDI]') || false // Simple logic for demo, can be a column later if needed
                     }
 
@@ -368,6 +400,23 @@ export default function ReservationsPage() {
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
+                                                            onClick={() => setEditingClient({
+                                                                id: lead.id,
+                                                                full_name: lead.name,
+                                                                phone: lead.phone || null,
+                                                                notes: lead.notes || lead.ai_summary || null,
+                                                                price_agreed: lead.price || null,
+                                                                process_type_id: lead.process_type_id || null
+                                                            })}
+                                                            className="h-8 w-8 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 rounded-lg transition-all"
+                                                            title="Düzenle"
+                                                        >
+                                                            <Edit size={16} />
+                                                        </Button>
+
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
                                                             onClick={() => handleWhatsApp(lead.phone || null)}
                                                             className="h-8 w-8 text-green-400 hover:text-green-300 hover:bg-green-500/10 rounded-lg transition-all"
                                                             title="WhatsApp Web"
@@ -385,6 +434,14 @@ export default function ReservationsPage() {
                     })
                 )}
             </div>
+
+            <ClientEditDialog
+                open={!!editingClient}
+                onOpenChange={(open) => !open && setEditingClient(null)}
+                client={editingClient}
+                onSave={handleSaveEdit}
+                processTypes={processTypes}
+            />
         </div>
     )
 }

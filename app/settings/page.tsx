@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Settings, BrainCircuit, List, Save, Shield, Palette, RotateCcw, Activity, Lock, Eye, EyeOff } from "lucide-react"
+import { Settings, BrainCircuit, List, Save, Shield, Palette, RotateCcw, Activity, Lock, Eye, EyeOff, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -26,6 +26,7 @@ export default function SettingsPage() {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [isLoading, setIsLoading] = useState(false)
     const [activeTab, setActiveTab] = useState("appearance")
+    const [saved, setSaved] = useState(false)
 
     // Mock States for Security
     const [showPassword, setShowPassword] = useState(false)
@@ -179,13 +180,20 @@ export default function SettingsPage() {
                                 >
                                     <RotateCcw size={16} /> Defaults
                                 </Button>
-                                <Button className="bg-purple-600 hover:bg-purple-700 text-white px-8 gap-2">
-                                    <Save size={18} />
-                                    Değişiklikleri Kaydet
+                                <Button
+                                    className="bg-purple-600 hover:bg-purple-700 text-white px-8 gap-2"
+                                    onClick={() => {
+                                        setSaved(true)
+                                        setTimeout(() => setSaved(false), 2000)
+                                    }}
+                                >
+                                    {saved ? <Check size={18} /> : <Save size={18} />}
+                                    {saved ? "Kaydedildi!" : "Değişiklikleri Kaydet"}
                                 </Button>
                             </div>
                         </div>
                     )}
+
 
                     {/* DICTIONARIES TAB */}
                     {activeTab === 'dictionaries' && (
@@ -302,6 +310,6 @@ export default function SettingsPage() {
 
                 </div>
             </div>
-        </div>
+        </div >
     )
 }
