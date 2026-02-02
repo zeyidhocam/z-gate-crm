@@ -61,7 +61,7 @@ export function JsonImportDialog({ onSuccess }: JsonImportDialogProps) {
             // Check configuration
             if (!('auth' in supabase)) {
                 // Mock success
-                setSuccess(`[DEMO] ✅ ${leadData.name} başarıyla eklendi! (Veritabanı bağlı değil)`)
+                setSuccess(`[DEMO] ✅ ${clientData.full_name} başarıyla eklendi! (Veritabanı bağlı değil)`)
                 if (onSuccess) onSuccess()
                 setTimeout(() => {
                     setIsOpen(false)
@@ -74,13 +74,12 @@ export function JsonImportDialog({ onSuccess }: JsonImportDialogProps) {
 
             // Insert into Supabase
             const { error: dbError } = await supabase
-            const { error: dbError } = await supabase
                 .from('clients')
                 .insert([clientData])
 
             if (dbError) throw dbError
 
-            setSuccess(`✅ ${leadData.name} başarıyla eklendi!`)
+            setSuccess(`✅ ${clientData.full_name} başarıyla eklendi!`)
             if (onSuccess) onSuccess()
 
             // Close dialog after 2 seconds on success

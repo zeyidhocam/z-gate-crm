@@ -17,7 +17,8 @@ import { JsonImportDialog } from "@/components/JsonImportDialog"
 // Database Type Matching New SQL
 interface Client {
     id: string
-    full_name: string
+    full_name: string | null
+    name: string | null // Legacy support
     phone: string | null
     mother_name: string | null
     status: string | null
@@ -32,6 +33,7 @@ interface Client {
     magic_type_id: number | null
     process_types?: { name: string } | null
     magic_types?: { name: string, risk_level: string } | null
+    process_name?: string | null // Legacy support
 }
 
 // Category Configuration
