@@ -49,11 +49,10 @@ export function AppearanceSettings() {
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="bg-slate-900 border-slate-700">
-                                <SelectItem value="zeyid-moru">🟣 Zeyid Moru (Gold)</SelectItem>
-                                <SelectItem value="gece-mavisi">🔵 Gece Mavisi</SelectItem>
-                                <SelectItem value="mistik-zumrut">🟢 Mistik Zümrüt</SelectItem>
-                                <SelectItem value="bordo-asalet">🔴 Bordo Asalet</SelectItem>
-                                <SelectItem value="minimal-siyah">⚫ Minimal Siyah</SelectItem>
+                                <SelectItem value="midnight-violet">🟣 Gece Moru</SelectItem>
+                                <SelectItem value="ocean-depth">🔵 Okyanus Derinliği</SelectItem>
+                                <SelectItem value="oled-black">⚫ OLED Siyah</SelectItem>
+                                <SelectItem value="arctic-mint">🟢 Arktik Nane (Açık)</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

@@ -116,74 +116,79 @@
 
 @layer base {
 
-  /* Default (Zeyid Moru) */
+  /* Varsayılan Tema: Gece Moru */
   :root {
     --primary: oklch(0.646 0.222 41.116);
+    /* Mor */
     --ring: oklch(0.646 0.222 41.116);
-    --gradient-start: #0F111A;
-    --gradient-via: #1a1033;
-    --gradient-end: #2D0F35;
+    --gradient-start: #0F0A1F;
+    --gradient-via: #1E1338;
+    --gradient-end: #2D1B4E;
   }
 
-  /* Themes */
+  /* Tema 1: Gece Moru (Mor Tonları) - Varsayılan */
+  [data-theme='midnight-violet'],
   [data-theme='zeyid-moru'],
   [data-theme='modern-purple'] {
     --primary: oklch(0.646 0.222 41.116);
+    /* #8B5CF6 */
     --ring: oklch(0.646 0.222 41.116);
-    --gradient-start: #0F111A;
-    /* Dark Base */
-    --gradient-via: #1a1033;
-    /* Purple Tint */
-    --gradient-end: #2D0F35;
-    /* Deep Purple Edge */
+    --gradient-start: #0F0A1F;
+    /* Koyu Mor */
+    --gradient-via: #1E1338;
+    /* Orta Mor */
+    --gradient-end: #2D1B4E;
+    /* Açık Mor */
   }
 
+  /* Tema 2: Okyanus Derinliği (Mavi Tonları) */
+  [data-theme='ocean-depth'],
   [data-theme='gece-mavisi'],
   [data-theme='ocean-blue'] {
     --primary: oklch(0.6 0.118 184.704);
+    /* #3B82F6 */
     --ring: oklch(0.6 0.118 184.704);
     --gradient-start: #020617;
-    /* Slate 950 */
-    --gradient-via: #0f172a;
-    /* Slate 900 */
-    --gradient-end: #1e3a8a;
-    /* Blue 900 */
+    /* Koyu Lacivert */
+    --gradient-via: #0F172A;
+    /* Orta Lacivert */
+    --gradient-end: #1E3A8A;
+    /* Mavi */
   }
 
-  [data-theme='mistik-zumrut'],
-  [data-theme='forest-green'],
-  [data-theme='emerald-gold'] {
-    --primary: oklch(0.645 0.246 16.439);
-    --ring: oklch(0.645 0.246 16.439);
-    --gradient-start: #022c22;
-    /* Teal 950 */
-    --gradient-via: #064e3b;
-    /* Emerald 900 */
-    --gradient-end: #065f46;
-    /* Emerald 800 */
-  }
-
-  [data-theme='bordo-asalet'],
-  [data-theme='royal-crimson'] {
-    --primary: oklch(0.577 0.245 27.325);
-    --ring: oklch(0.577 0.245 27.325);
-    --gradient-start: #450a0a;
-    /* Red 950 */
-    --gradient-via: #7f1d1d;
-    /* Red 900 */
-    --gradient-end: #991b1b;
-    /* Red 800 */
-  }
-
+  /* Tema 3: OLED Siyah (Koyu Gri-Mavi Tonları) */
+  [data-theme='oled-black'],
   [data-theme='minimal-siyah'],
   [data-theme='midnight-oled'] {
-    --primary: oklch(0.2 0 0);
-    --ring: oklch(0.2 0 0);
-    --gradient-start: #000000;
-    --gradient-via: #171717;
-    /* Neutral 900 */
-    --gradient-end: #262626;
-    /* Neutral 800 */
+    --primary: oklch(0.556 0.016 254.604);
+    /* #64748B Gri */
+    --ring: oklch(0.556 0.016 254.604);
+    --gradient-start: #0A0A12;
+    /* Neredeyse Siyah */
+    --gradient-via: #1A1A2E;
+    /* Koyu Gri-Mavi */
+    --gradient-end: #16213E;
+    /* Lacivert-Gri */
+  }
+
+  /* Tema 4: Arktik Nane (Açık Yeşil-Mavi Tonları) */
+  [data-theme='arctic-mint'],
+  [data-theme='emerald-gold'],
+  [data-theme='mistik-zumrut'] {
+    --primary: oklch(0.703 0.118 180.764);
+    /* #14B8A6 Turkuaz */
+    --ring: oklch(0.703 0.118 180.764);
+    --gradient-start: #F0FDFA;
+    /* Çok Açık Nane */
+    --gradient-via: #CCFBF1;
+    /* Açık Nane */
+    --gradient-end: #99F6E4;
+    /* Nane Yeşili */
+    /* Açık tema için temel renkler */
+    --background: oklch(0.985 0.002 180);
+    --foreground: oklch(0.145 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
   }
 }
 
