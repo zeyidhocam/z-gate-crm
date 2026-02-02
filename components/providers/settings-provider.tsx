@@ -52,11 +52,11 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
         // 2. Sadece Gradient Renklerini Enjekte Et (Yazı renkleri sabit kalsın)
         const gradients: Record<string, string[]> = {
-            'midnight-violet': ['#0F0A1F', '#1E1338', '#2D1B4E'],
+            'midnight-violet': ['#1a0933', '#2d1650', '#4a1e7a'],
             'ocean-depth': ['#020617', '#0F172A', '#1E3A8A'],
             'oled-black': ['#0A0A12', '#1A1A2E', '#16213E'],
             // Eski tema isimleri için fallback
-            'zeyid-moru': ['#0F0A1F', '#1E1338', '#2D1B4E'],
+            'zeyid-moru': ['#1a0933', '#2d1650', '#4a1e7a'],
             'gece-mavisi': ['#020617', '#0F172A', '#1E3A8A'],
             'minimal-siyah': ['#0A0A12', '#1A1A2E', '#16213E'],
         }

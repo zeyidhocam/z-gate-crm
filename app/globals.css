@@ -121,9 +121,12 @@
     --primary: oklch(0.646 0.222 41.116);
     /* Mor */
     --ring: oklch(0.646 0.222 41.116);
-    --gradient-start: #0F0A1F;
-    --gradient-via: #1E1338;
-    --gradient-end: #2D1B4E;
+    --gradient-start: #1a0933;
+    /* Daha Parlak Mor */
+    --gradient-via: #2d1650;
+    /* Belirgin Mor */
+    --gradient-end: #4a1e7a;
+    /* Açık Mor */
   }
 
   /* Tema 1: Gece Moru (Mor Tonları) - Varsayılan */
@@ -133,12 +136,12 @@
     --primary: oklch(0.646 0.222 41.116);
     /* #8B5CF6 */
     --ring: oklch(0.646 0.222 41.116);
-    --gradient-start: #0F0A1F;
-    /* Koyu Mor */
-    --gradient-via: #1E1338;
-    /* Orta Mor */
-    --gradient-end: #2D1B4E;
-    /* Açık Mor */
+    --gradient-start: #1a0933;
+    /* Daha Parlak Koyu Mor */
+    --gradient-via: #2d1650;
+    /* Belirgin Orta Mor */
+    --gradient-end: #4a1e7a;
+    /* Parlak Açık Mor */
   }
 
   /* Tema 2: Okyanus Derinliği (Mavi Tonları) */
