@@ -6,24 +6,53 @@ interface KPICardProps {
     title: string
     value: string
     icon: LucideIcon
-    colorClass: string // e.g. "text-purple-500"
-    bgClass: string // e.g. "bg-purple-500/15"
-    borderClass: string // e.g. "border-purple-500/30"
+    colorClass: string
+    bgClass: string
+    borderClass: string
 }
 
 export function KPICard({ title, value, icon: Icon, colorClass, bgClass, borderClass }: KPICardProps) {
     return (
-        <div className="bg-slate-900/50 backdrop-blur-sm p-5 rounded-2xl border border-slate-800 transition-all hover:bg-slate-800/50">
-            <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                    <div className={twMerge("p-2.5 rounded-xl border-2", bgClass, borderClass)}>
-                        <Icon size={24} className={colorClass} />
-                    </div>
-                    <span className={twMerge("text-3xl font-extrabold", colorClass)}>
+        <div className={twMerge(
+            "relative group p-6 rounded-2xl transition-all duration-300",
+            "bg-gradient-to-br from-[#0c1929]/90 via-[#0a1628]/80 to-[#040d17]/90",
+            "backdrop-blur-xl border-2",
+            borderClass,
+            "hover:scale-[1.02] hover:shadow-lg",
+            "before:absolute before:inset-0 before:rounded-2xl before:bg-gradient-to-br before:from-white/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity"
+        )}>
+            {/* Glow Effect */}
+            <div className={twMerge(
+                "absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm -z-10",
+                bgClass.replace('/10', '/30')
+            )} />
+
+            <div className="flex items-center justify-between relative z-10">
+                {/* Icon Container */}
+                <div className={twMerge(
+                    "p-3.5 rounded-xl border-2 shadow-inner",
+                    bgClass,
+                    borderClass,
+                    "shadow-black/20"
+                )}>
+                    <Icon size={26} className={twMerge(colorClass, "drop-shadow-lg")} strokeWidth={2.5} />
+                </div>
+
+                {/* Value */}
+                <div className="text-right">
+                    <span className={twMerge(
+                        "text-4xl font-black tracking-tight",
+                        colorClass,
+                        "drop-shadow-[0_2px_10px_rgba(0,0,0,0.3)]"
+                    )}>
                         {value}
                     </span>
                 </div>
-                <span className="text-slate-400 font-medium text-sm">
+            </div>
+
+            {/* Title */}
+            <div className="mt-4 relative z-10">
+                <span className="text-slate-300 font-bold text-sm tracking-wide">
                     {title}
                 </span>
             </div>

@@ -227,21 +227,29 @@ export default function ClientsPage() {
                             open={isOpen}
                             onOpenChange={() => toggleCategory(category)}
                             className={cn(
-                                "rounded-xl border transition-all duration-200",
-                                isOpen ? "bg-slate-900/40 border-slate-800" : "bg-transparent border-transparent hover:bg-slate-900/20"
+                                "rounded-2xl border-2 transition-all duration-300",
+                                isOpen
+                                    ? "bg-gradient-to-br from-[#0c1929]/90 via-[#0a1628]/80 to-[#040d17]/90 border-cyan-500/20 shadow-[0_0_30px_-10px_rgba(34,211,238,0.15)]"
+                                    : "bg-[#0c1929]/40 border-transparent hover:bg-[#0c1929]/60 hover:border-cyan-500/10"
                             )}
                         >
                             <CollapsibleTrigger asChild>
-                                <div className="flex items-center gap-3 p-4 cursor-pointer group select-none">
-                                    <ChevronRight className={cn("text-slate-500 transition-transform duration-200", isOpen && "rotate-90")} />
+                                <div className="flex items-center gap-4 p-5 cursor-pointer group select-none">
+                                    <ChevronRight className={cn("text-cyan-500/50 transition-transform duration-300 group-hover:text-cyan-400", isOpen && "rotate-90 text-cyan-400")} size={20} />
 
-                                    <div className={cn("flex items-center gap-2 px-4 py-2.5 rounded-lg border", config.bg, config.border)}>
-                                        <config.icon size={20} className={config.color} />
-                                        <span className={cn("font-bold text-lg", config.color)}>{category}</span>
-                                        <span className={cn("text-sm opacity-70 ml-1", config.color)}>({categoryItems.length})</span>
+                                    <div className={cn(
+                                        "flex items-center gap-3 px-5 py-3 rounded-xl border-2 shadow-lg transition-all duration-300",
+                                        "bg-gradient-to-r",
+                                        config.bg.replace('/10', '/15'),
+                                        config.border.replace('/20', '/40'),
+                                        "group-hover:shadow-xl group-hover:scale-[1.02]"
+                                    )}>
+                                        <config.icon size={22} className={cn(config.color, "drop-shadow-md")} strokeWidth={2.5} />
+                                        <span className={cn("font-black text-lg tracking-wide", config.color)}>{category}</span>
+                                        <span className={cn("text-sm font-bold px-2 py-0.5 rounded-md", config.bg, config.color)}>({categoryItems.length})</span>
                                     </div>
 
-                                    <div className="flex-1 h-px bg-slate-800/50 ml-4 group-hover:bg-slate-800" />
+                                    <div className="flex-1 h-0.5 bg-gradient-to-r from-cyan-500/20 to-transparent ml-2" />
                                 </div>
                             </CollapsibleTrigger>
 
@@ -262,8 +270,8 @@ export default function ClientsPage() {
                                         categoryItems.map(client => (
                                             <div
                                                 key={client.id}
-                                                className="flex items-center gap-8 px-6 py-4 rounded-lg hover:bg-slate-800/60 transition-all duration-200 hover:scale-[1.01] hover:shadow-md border border-transparent hover:border-slate-800/50 group bg-slate-900/20"
-                                            >
+                                                className="flex items-center gap-8 px-6 py-5 rounded-xl hover:bg-gradient-to-r hover:from-cyan-500/5 hover:to-transparent transition-all duration-300 hover:scale-[1.005] border border-transparent hover:border-cyan-500/10 group bg-[#040d17]/30">
+
                                                 {/* Name & Phone */}
                                                 <div className="w-[240px] shrink-0 flex flex-col justify-center gap-1">
                                                     <div className="text-[15px] font-bold text-slate-200 truncate leading-tight">
