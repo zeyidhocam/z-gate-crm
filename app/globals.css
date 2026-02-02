@@ -126,7 +126,8 @@
   }
 
   /* Themes */
-  .theme-zeyid-moru {
+  [data-theme='zeyid-moru'],
+  [data-theme='modern-purple'] {
     --primary: oklch(0.646 0.222 41.116);
     --ring: oklch(0.646 0.222 41.116);
     --gradient-start: #0F111A;
@@ -137,7 +138,8 @@
     /* Deep Purple Edge */
   }
 
-  .theme-gece-mavisi {
+  [data-theme='gece-mavisi'],
+  [data-theme='ocean-blue'] {
     --primary: oklch(0.6 0.118 184.704);
     --ring: oklch(0.6 0.118 184.704);
     --gradient-start: #020617;
@@ -148,7 +150,9 @@
     /* Blue 900 */
   }
 
-  .theme-mistik-zumrut {
+  [data-theme='mistik-zumrut'],
+  [data-theme='forest-green'],
+  [data-theme='emerald-gold'] {
     --primary: oklch(0.645 0.246 16.439);
     --ring: oklch(0.645 0.246 16.439);
     --gradient-start: #022c22;
@@ -159,7 +163,8 @@
     /* Emerald 800 */
   }
 
-  .theme-bordo-asalet {
+  [data-theme='bordo-asalet'],
+  [data-theme='royal-crimson'] {
     --primary: oklch(0.577 0.245 27.325);
     --ring: oklch(0.577 0.245 27.325);
     --gradient-start: #450a0a;
@@ -170,7 +175,8 @@
     /* Red 800 */
   }
 
-  .theme-minimal-siyah {
+  [data-theme='minimal-siyah'],
+  [data-theme='midnight-oled'] {
     --primary: oklch(0.2 0 0);
     --ring: oklch(0.2 0 0);
     --gradient-start: #000000;

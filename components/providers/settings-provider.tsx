@@ -47,26 +47,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const root = document.documentElement
 
-        // 1. Color Themes
-        // Using OKLCH values for best gamut
-        const themes: Record<string, string> = {
-            'zeyid-moru': '0.646 0.222 41.116',   // Deep Purple
-            'gece-mavisi': '0.6 0.118 184.704',   // Navy Blue
-            'mistik-zumrut': '0.645 0.246 16.439', // Emerald
-            'bordo-asalet': '0.577 0.245 27.325',  // Deep Red
-            'minimal-siyah': '0.2 0 0',           // Black/Dark Grey
-            'modern-purple': '0.646 0.222 41.116', // Legacy fallback
-            'ocean-blue': '0.6 0.118 184.704',     // Legacy fallback
-            'forest-green': '0.645 0.246 16.439',  // Legacy fallback
-            'sunset-orange': '0.627 0.265 303.9',  // Legacy fallback
-        }
 
-        const primaryVal = themes[config.theme] || themes['zeyid-moru']
-        console.log('🎨 Theme Engine Injecting:', config.theme, primaryVal)
-        root.style.setProperty('--primary', `oklch(${primaryVal})`)
-        root.style.setProperty('--color-primary', `oklch(${primaryVal})`)
-        root.style.setProperty('--ring', `oklch(${primaryVal})`)
-        root.style.setProperty('--sidebar-primary', `oklch(${primaryVal})`)
 
         // 2. Font Scale
         const scales: Record<string, string> = {
