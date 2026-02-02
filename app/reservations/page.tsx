@@ -7,7 +7,7 @@ import { tr } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 // Icons
 import {
-    Calendar as CalendarIcon, CalendarDays, Copy, Check, ChevronRight, MessageCircle, Edit, User
+    Calendar as CalendarIcon, CalendarDays, Copy, Check, ChevronRight, MessageCircle, Edit, User, MoreVertical, DollarSign, CheckCircle, XCircle
 } from "lucide-react"
 // UI Components
 import { Button } from "@/components/ui/button"
@@ -15,6 +15,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"
 import { Calendar } from "@/components/ui/calendar"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 // Types
 interface Lead {
@@ -26,6 +27,8 @@ interface Lead {
     status: string
     reservation_at?: string
     ai_summary?: string
+    notes?: string
+    is_done: boolean
 }
 
 interface GroupedReservations {
@@ -60,10 +63,20 @@ export default function ReservationsPage() {
     const fetchReservations = async () => {
         try {
             setLoading(true)
+
+            // Auto Archive Logic
+            const now = new Date()
+            await supabase
+                .from('clients')
+                .update({ status: 'Arşiv' })
+                .eq('status', 'Rezervasyon')
+                .lt('reservation_at', now.toISOString())
+
+            // Fetch
             const { data, error } = await supabase
                 .from('clients')
                 .select('*, process_types(name)')
-                .or('reservation_at.not.is.null,status.eq.Rezervasyon')
+                .eq('status', 'Rezervasyon') // Only show active reservations here? Or all upcoming? User said "Rezervasyon kategorisine aldıklarımız"
                 .order('reservation_at', { ascending: true })
 
             if (error) throw error
@@ -79,13 +92,16 @@ export default function ReservationsPage() {
                         name: client.full_name || client.name || 'Bilinmeyen',
                         phone: client.phone,
                         process_name: client.process_types?.name || client.process_name,
-                        price: client.price_agreed,
+                        price: client.price_agreed || client.price,
                         status: client.status,
                         reservation_at: client.reservation_at,
-                        ai_summary: client.notes // notes is the new ai_summary
+                        ai_summary: client.notes || client.ai_summary,
+                        is_done: client.notes?.includes('[YAPILDI]') || false // Simple logic for demo, can be a column later if needed
                     }
 
-                    const date = parseISO(lead.reservation_at!)
+                    if (!lead.reservation_at) return
+
+                    const date = parseISO(lead.reservation_at)
                     const existingGroup = grouped.find(g => isSameDay(g.date, date))
                     const dateKey = date.toISOString()
 
@@ -125,14 +141,25 @@ export default function ReservationsPage() {
         window.open(`https://web.whatsapp.com/send?phone=${finalPhone}`, '_blank')
     }
 
-    const updateStatus = async (id: string, newStatus: string) => {
-        const updatedReservations = reservations.map(group => ({
-            ...group,
-            leads: group.leads.map(l => l.id === id ? { ...l, status: newStatus } : l)
-        }))
-        setReservations(updatedReservations)
+    const toggleDone = async (lead: Lead) => {
+        // Toggle done status by appending/removing a tag in notes
+        // Ideally checking 'payment_status' or a boolean is better, but using notes as per schema limitation for now
+        const isDone = !lead.is_done
+        let newNotes = lead.ai_summary || ""
 
+        if (isDone) {
+            newNotes = "[YAPILDI] " + newNotes.replace("[YAPILDI] ", "")
+        } else {
+            newNotes = newNotes.replace("[YAPILDI] ", "")
+        }
+
+        const { error } = await supabase.from('clients').update({ notes: newNotes }).eq('id', lead.id)
+        if (!error) fetchReservations()
+    }
+
+    const updateStatus = async (id: string, newStatus: string) => {
         await supabase.from('clients').update({ status: newStatus }).eq('id', id)
+        fetchReservations()
     }
 
     const handleReservation = async (leadId: string, date: Date | undefined) => {
@@ -166,7 +193,8 @@ export default function ReservationsPage() {
                 {reservations.length === 0 ? (
                     <div className="text-center py-20 bg-slate-900/30 rounded-2xl border border-slate-800/50 border-dashed">
                         <CalendarIcon size={48} className="mx-auto text-slate-600 mb-4" />
-                        <h3 className="text-xl font-semibold text-slate-400">Henüz Rezervasyon Yok</h3>
+                        <h3 className="text-xl font-semibold text-slate-400">Yaklaşan Rezervasyon Yok</h3>
+                        <p className="text-slate-500 mt-2">Geçmiş rezervasyonlar arşive taşınmış olabilir.</p>
                     </div>
                 ) : (
                     reservations.map((group) => {
@@ -208,50 +236,63 @@ export default function ReservationsPage() {
 
                                 <CollapsibleContent>
                                     <div className="px-4 pb-4 space-y-1">
-                                        {/* Wrapper for Headers + List */}
+                                        {/* Wrapper for Headers + List (Updated Widths for Symmetry) */}
 
                                         {/* Headers */}
-                                        <div className="flex items-center gap-4 px-6 py-2 border-b border-slate-800/50 mb-3 text-sm font-black text-slate-400 uppercase tracking-wide">
-                                            <div className="w-[180px] shrink-0">İsim & Telefon</div>
-                                            <div className="w-[160px] shrink-0">İşlem & Ücret</div>
-                                            <div className="w-[150px] shrink-0">Durum</div>
-                                            <div className="flex-1 pl-2">Detay (AI)</div>
+                                        <div className="flex items-center gap-6 px-6 py-2 border-b border-slate-800/50 mb-3 text-sm font-black text-slate-400 uppercase tracking-wide">
+                                            <div className="w-[200px] shrink-0">İsim & Telefon</div>
+                                            <div className="w-[180px] shrink-0">İşlem & Ücret</div>
+                                            <div className="w-[160px] shrink-0">İşlem Durumu</div>
+                                            <div className="w-[140px] shrink-0">Kayıt Durumu</div>
+                                            <div className="flex-1 pl-4">Notlar (Detay)</div>
+                                            <div className="w-[100px] shrink-0 text-right">İşlemler</div>
                                         </div>
 
                                         {/* List Items */}
                                         {group.leads.map(lead => {
-                                            const config = CATEGORIES[lead.status] || { color: 'text-slate-500', bg: 'bg-slate-500/10', border: 'border-slate-500/20' }
+                                            const config = CATEGORIES[lead.status] || CATEGORIES['Arşiv']
 
                                             return (
                                                 <div
                                                     key={lead.id}
-                                                    className="flex items-center gap-4 px-6 py-2 rounded-lg hover:bg-slate-800/60 transition-all duration-200 hover:scale-[1.01] hover:shadow-md border border-transparent hover:border-slate-800/50 group bg-slate-900/20"
+                                                    className="flex items-center gap-6 px-6 py-4 rounded-lg hover:bg-slate-800/60 transition-all duration-200 hover:scale-[1.01] hover:shadow-md border border-transparent hover:border-slate-800/50 group bg-slate-900/20"
                                                 >
                                                     {/* Name & Phone */}
-                                                    <div className="w-[180px] shrink-0 flex flex-col justify-center gap-0.5">
-                                                        <div className="text-[13px] font-bold text-slate-200 truncate leading-tight">{lead.name}</div>
-                                                        <div className="text-[11px] font-semibold text-slate-500/90 truncate font-sans">{lead.phone || '-'}</div>
+                                                    <div className="w-[200px] shrink-0 flex flex-col justify-center gap-1">
+                                                        <div className="text-[14px] font-bold text-slate-200 truncate leading-tight">
+                                                            {lead.name}
+                                                        </div>
+                                                        <div className="text-[12px] font-semibold text-slate-500/90 truncate font-sans">{lead.phone || '-'}</div>
                                                     </div>
 
                                                     {/* Process & Price */}
-                                                    <div className="w-[160px] shrink-0 flex flex-col justify-center gap-1">
-                                                        <div className="flex items-center gap-2">
-                                                            <div className={cn("w-2 h-2 rounded-full shrink-0 shadow-[0_0_8px]",
-                                                                lead.process_name?.includes('Bağlama') ? "bg-purple-500 shadow-purple-500/50" :
-                                                                    lead.process_name?.includes('Geri') ? "bg-cyan-500 shadow-cyan-500/50" :
-                                                                        lead.process_name?.includes('Büyü') ? "bg-red-500 shadow-red-500/50" :
-                                                                            lead.process_name?.includes('Rızık') ? "bg-amber-500 shadow-amber-500/50" :
-                                                                                "bg-slate-500 shadow-slate-500/50"
-                                                            )} />
-                                                            <span className="text-[12px] font-bold text-slate-300 truncate opacity-90">{lead.process_name || 'İşlem Yok'}</span>
+                                                    <div className="w-[180px] shrink-0 flex flex-col justify-center gap-1.5">
+                                                        <div className="text-[13px] font-bold text-slate-300 truncate opacity-90">
+                                                            {lead.process_name || 'İşlem Yok'}
                                                         </div>
-                                                        <div className="text-[11px] font-bold text-slate-500 pl-4 opacity-80">
+                                                        <div className="text-[12px] font-bold text-slate-500 opacity-80">
                                                             {lead.price ? `${lead.price.toLocaleString('tr-TR')} ₺` : '-'}
                                                         </div>
                                                     </div>
 
+                                                    {/* PROCESS DONE TOGGLE */}
+                                                    <div className="w-[160px] shrink-0">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => toggleDone(lead)}
+                                                            className={cn(
+                                                                "w-full justify-start gap-2 border-slate-800 bg-slate-950/50 hover:bg-slate-900",
+                                                                lead.is_done ? "text-green-500 border-green-500/20 bg-green-500/5" : "text-slate-400"
+                                                            )}
+                                                        >
+                                                            {lead.is_done ? <CheckCircle size={14} /> : <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-600" />}
+                                                            {lead.is_done ? "İşlem Yapıldı" : "Bekliyor"}
+                                                        </Button>
+                                                    </div>
+
                                                     {/* Status Selector */}
-                                                    <div className="w-[150px] shrink-0">
+                                                    <div className="w-[140px] shrink-0">
                                                         <Popover>
                                                             <PopoverTrigger asChild>
                                                                 <button className={cn("text-[10px] font-black px-2.5 py-1 rounded-md border border-slate-800/50 hover:border-slate-700 hover:bg-slate-800 transition-all flex w-fit items-center gap-2 shadow-sm", config.color, config.bg)}>
@@ -277,12 +318,16 @@ export default function ReservationsPage() {
                                                         </Popover>
                                                     </div>
 
-                                                    {/* AI Summary (Detail) & Actions */}
-                                                    <div className="flex-1 min-w-0 flex items-center gap-6 pl-2">
+                                                    {/* AI Summary (Detail) */}
+                                                    <div className="flex-1 pl-4 min-w-0">
                                                         <Dialog>
                                                             <DialogTrigger asChild>
-                                                                <button className="text-[10px] font-semibold text-slate-500/80 hover:text-slate-300 transition-colors text-left truncate w-[260px] opacity-90 cursor-pointer">
-                                                                    {lead.ai_summary || 'Detay yok...'}
+                                                                <button className="text-[10px] font-semibold text-slate-500/80 hover:text-slate-300 transition-colors text-left truncate w-full opacity-90 cursor-pointer flex items-center gap-2">
+                                                                    {lead.ai_summary ? (
+                                                                        <span className="truncate">{lead.ai_summary.replace('[YAPILDI]', '').trim()}</span>
+                                                                    ) : (
+                                                                        <span className="italic opacity-50">Not yok...</span>
+                                                                    )}
                                                                 </button>
                                                             </DialogTrigger>
                                                             <DialogContent className="bg-slate-950 border-slate-800">
@@ -292,8 +337,13 @@ export default function ReservationsPage() {
                                                                         {lead.name} - Detaylar
                                                                     </DialogTitle>
                                                                 </DialogHeader>
-                                                                <div className="mt-4 p-4 bg-slate-900/50 rounded-lg border border-slate-800 text-slate-300 text-sm leading-relaxed max-h-[60vh] overflow-y-auto">
-                                                                    {lead.ai_summary || "Herhangi bir detay bulunamadı."}
+                                                                <div className="mt-4 p-4 bg-slate-900/50 rounded-lg border border-slate-800 space-y-3">
+                                                                    <div>
+                                                                        <div className="text-xs text-slate-500 font-bold mb-1">NOTLAR / DETAY</div>
+                                                                        <div className="text-slate-300 text-sm leading-relaxed max-h-[40vh] overflow-y-auto">
+                                                                            {lead.ai_summary || "Not veya detay bulunamadı."}
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
                                                                 <DialogFooter className="sm:justify-between gap-2 mt-4">
                                                                     <Button
@@ -311,44 +361,23 @@ export default function ReservationsPage() {
                                                                 </DialogFooter>
                                                             </DialogContent>
                                                         </Dialog>
+                                                    </div>
 
-                                                        {/* Actions - Persistent & Scaled */}
-                                                        <div className="flex gap-2 shrink-0 ml-auto">
-                                                            <Popover>
-                                                                <PopoverTrigger asChild>
-                                                                    <Button variant="ghost" size="icon" className="h-10 w-10 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-xl transition-all hover:scale-110" title="Randevu Oluştur">
-                                                                        <CalendarDays size={22} />
-                                                                    </Button>
-                                                                </PopoverTrigger>
-                                                                <PopoverContent className="w-auto p-0 bg-slate-950 border-slate-800" align="end">
-                                                                    <Calendar
-                                                                        mode="single"
-                                                                        selected={reservationDate}
-                                                                        onSelect={(date) => {
-                                                                            setReservationDate(date)
-                                                                            if (date) handleReservation(lead.id, date)
-                                                                        }}
-                                                                        locale={tr}
-                                                                        disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                                                                        initialFocus
-                                                                        className="p-3"
-                                                                    />
-                                                                </PopoverContent>
-                                                            </Popover>
-
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                onClick={() => handleWhatsApp(lead.phone || null)}
-                                                                className="h-11 w-11 text-green-400 hover:text-green-300 hover:bg-green-500/10 rounded-xl transition-all hover:scale-110"
-                                                                title="WhatsApp Web"
-                                                            >
-                                                                <MessageCircle size={22} />
-                                                            </Button>
-                                                            <Button variant="ghost" size="icon" className="h-11 w-11 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 rounded-xl transition-all hover:scale-110" title="Düzenle">
-                                                                <Edit size={22} />
-                                                            </Button>
-                                                        </div>
+                                                    {/* Operations Menu */}
+                                                    <div className="w-[100px] shrink-0 flex justify-end">
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white">
+                                                                    <MoreVertical size={16} />
+                                                                </Button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent className="bg-slate-900 border-slate-800" align="end">
+                                                                <DropdownMenuItem onClick={() => handleWhatsApp(lead.phone || null)} className="gap-2 cursor-pointer text-slate-300 focus:bg-slate-800">
+                                                                    <MessageCircle size={14} /> WhatsApp'a Git
+                                                                </DropdownMenuItem>
+                                                                {/* Can add more specific reservation actions here */}
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
                                                     </div>
                                                 </div>
                                             )
