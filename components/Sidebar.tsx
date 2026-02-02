@@ -11,6 +11,8 @@ export function Sidebar() {
     const pathname = usePathname()
     const { config } = useSettings()
 
+    if (pathname === '/login') return null
+
     const items = [
         { label: 'Ana Sayfa', icon: LayoutDashboard, path: '/' },
         { label: 'Rezervasyonlar', icon: Calendar, path: '/reservations' },

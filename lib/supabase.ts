@@ -27,7 +27,15 @@ const mockClient = {
         select: () => Promise.resolve({ data: [], error: { message: 'Supabase not configured' } }),
         insert: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } }),
     }),
-    auth: undefined // ensuring 'auth' in client is false
+    auth: {
+        signInWithPassword: () => Promise.resolve({
+            data: { user: null, session: null },
+            error: { message: 'Bağlantı ayarları eksik! Lütfen .env.local dosyasını oluşturun.' }
+        }),
+        getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+        getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => { } } } }),
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } as any
 
