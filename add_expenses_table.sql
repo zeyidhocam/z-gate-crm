@@ -16,6 +16,7 @@ alter table public.expenses enable row level security;
 create policy "Enable read access for all users" on public.expenses for select using (true);
 create policy "Enable insert access for all users" on public.expenses for insert with check (true);
 create policy "Enable delete access for all users" on public.expenses for delete using (true);
+create policy "Enable update access for all users" on public.expenses for update using (true);
 
 -- Create index
 create index expenses_date_idx on public.expenses (date);
