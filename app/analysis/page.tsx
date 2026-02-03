@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useEffect } from "react"
-import { DollarSign, Plus, Trash2, TrendingDown, TrendingUp, Wallet, Home, Zap, ShoppingCart, Car, User, ArrowUpRight, ArrowDownRight } from "lucide-react"
+import { DollarSign, Plus, Trash2, TrendingDown, TrendingUp, Wallet, Home, Zap, ShoppingCart, Car, User, ArrowUpRight, ArrowDownRight, Lock, Unlock, KeyRound, Briefcase, Gift } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { supabase } from "@/lib/supabase"
@@ -10,65 +10,80 @@ import { format } from "date-fns"
 import { tr } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { toast } from "sonner"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-interface Expense {
+interface Transaction {
     id: string
     title: string
     amount: number
     category: string
+    type: 'income' | 'expense'
     date: string
 }
 
-const CATEGORIES = [
+// Categories
+const EXPENSE_CATEGORIES = [
     { id: 'kira', label: 'Ev Kirası', icon: Home, color: 'text-blue-400', bg: 'bg-blue-400/10' },
     { id: 'fatura', label: 'Faturalar', icon: Zap, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
     { id: 'gida', label: 'Mutfak/Gıda', icon: ShoppingCart, color: 'text-green-400', bg: 'bg-green-400/10' },
     { id: 'ulasim', label: 'Ulaşım/Yakıt', icon: Car, color: 'text-orange-400', bg: 'bg-orange-400/10' },
     { id: 'sahsi', label: 'Şahsi', icon: User, color: 'text-purple-400', bg: 'bg-purple-400/10' },
-    { id: 'diger', label: 'Diğer', icon: Wallet, color: 'text-slate-400', bg: 'bg-slate-400/10' },
+    { id: 'diger', label: 'Diğer Gider', icon: Wallet, color: 'text-slate-400', bg: 'bg-slate-400/10' },
+]
+
+const INCOME_CATEGORIES = [
+    { id: 'maas', label: 'Maaş', icon: Briefcase, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+    { id: 'ek_is', label: 'Ek Gelir', icon: Zap, color: 'text-cyan-400', bg: 'bg-cyan-400/10' },
+    { id: 'hediye', label: 'Hediye/Prim', icon: Gift, color: 'text-pink-400', bg: 'bg-pink-400/10' },
+    { id: 'diger_gelir', label: 'Diğer Gelir', icon: Wallet, color: 'text-slate-400', bg: 'bg-slate-400/10' },
 ]
 
 export default function AnalysisPage() {
-    const [expenses, setExpenses] = useState<Expense[]>([])
+    // Security State
+    const [isLocked, setIsLocked] = useState(true)
+    const [pin, setPin] = useState("")
+    const [error, setError] = useState(false)
+    const DEFAULT_PIN = "1234"
+
+    const [transactions, setTransactions] = useState<Transaction[]>([])
     const [loading, setLoading] = useState(true)
-    const [totalRevenue, setTotalRevenue] = useState(0) // From clients
 
     // Form
+    const [activeTab, setActiveTab] = useState<'income' | 'expense'>('expense')
     const [title, setTitle] = useState("")
     const [amount, setAmount] = useState("")
     const [category, setCategory] = useState("diger")
 
     useEffect(() => {
-        fetchData()
-    }, [])
+        if (!isLocked) {
+            fetchData()
+        }
+    }, [isLocked])
+
+    const handleUnlock = (e?: React.FormEvent) => {
+        e?.preventDefault()
+        if (pin === DEFAULT_PIN) {
+            setIsLocked(false)
+            setError(false)
+            toast.success("Kasa açıldı!")
+        } else {
+            setError(true)
+            setPin("")
+            toast.error("Hatalı Şifre!")
+            setTimeout(() => setError(false), 500)
+        }
+    }
 
     const fetchData = async () => {
         setLoading(true)
         try {
-            // 1. Fetch Expenses
-            const { data: expenseData, error: expenseError } = await supabase
-                .from('expenses')
+            const { data } = await supabase
+                .from('expenses') // Using same table, just added 'type' column
                 .select('*')
                 .order('date', { ascending: false })
 
-            // Handle missing table gracefully
-            if (expenseError) {
-                console.error("Expenses fetch error (Table might be missing):", expenseError)
-                setExpenses([])
-            } else {
-                setExpenses(expenseData || [])
-            }
-
-            // 2. Fetch Total Revenue (Confirmed Clients)
-            const { data: revenueData } = await supabase
-                .from('clients')
-                .select('price_agreed')
-                .eq('is_confirmed', true)
-
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const total = (revenueData as any[])?.reduce((sum, curr) => sum + (curr.price_agreed || 0), 0) || 0
-            setTotalRevenue(total)
-
+            setTransactions(data || [])
         } catch (error) {
             console.error('Error:', error)
         } finally {
@@ -76,46 +91,104 @@ export default function AnalysisPage() {
         }
     }
 
-    const handleAddExpense = async () => {
+    const handleAdd = async () => {
         if (!title || !amount) return
 
         try {
-            const newExpense = {
+            const newTransaction = {
                 title,
                 amount: parseInt(amount),
                 category,
+                type: activeTab,
                 date: new Date().toISOString()
             }
 
-            const { error } = await supabase.from('expenses').insert([newExpense])
+            const { error } = await supabase.from('expenses').insert([newTransaction])
             if (error) throw error
 
             setTitle("")
             setAmount("")
             fetchData()
-
-            // Success Toast could be added here
+            toast.success(activeTab === 'income' ? "Gelir eklendi" : "Gider eklendi")
 
         } catch (error) {
-            alert("Gider eklenirken hata: Tablo veritabanında bulunamadı. Lütfen SQL kodunu çalıştırın.")
+            toast.error("Hata! SQL kodunu çalıştırdınız mı?")
         }
     }
 
     const handleDelete = async (id: string) => {
-        if (!confirm("Bu gideri silmek istediğine emin misin?")) return
+        if (!confirm("Silmek istediğine emin misin?")) return
         await supabase.from('expenses').delete().eq('id', id)
         fetchData()
+        toast.info("Kayıt silindi")
     }
 
-    const totalExpenses = expenses.reduce((sum, item) => sum + item.amount, 0)
-    const netBalance = totalRevenue - totalExpenses
+    const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0)
+    const totalExpense = transactions.filter(t => t.type === 'expense' || !t.type).reduce((sum, t) => sum + t.amount, 0) // Default to expense if null
+    const netBalance = totalIncome - totalExpense
+
+    // LOCK SCREEN
+    if (isLocked) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[calc(100vh-100px)] p-4">
+                <div className="relative group animate-in zoom-in duration-500">
+                    <div className="absolute inset-0 bg-cyan-500/20 blur-3xl rounded-full opacity-50 group-hover:opacity-75 transition-opacity" />
+                    <div className="relative p-8 bg-[#0c1929] border border-cyan-500/20 rounded-3xl shadow-2xl flex flex-col items-center gap-6 w-full max-w-sm mx-auto backdrop-blur-xl">
+
+                        <div className="p-4 rounded-full bg-cyan-500/10 border border-cyan-500/20 mb-2">
+                            <Lock size={40} className="text-cyan-400" />
+                        </div>
+
+                        <div className="text-center space-y-2">
+                            <h2 className="text-2xl font-bold text-white">Kişisel Kasa Kilitli</h2>
+                            <p className="text-sm text-slate-400">Devam etmek için 4 haneli şifreyi girin.</p>
+                        </div>
+
+                        <form onSubmit={handleUnlock} className="w-full space-y-4">
+                            <div className="relative">
+                                <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                                <Input
+                                    type="password"
+                                    placeholder="Şifre Giriniz"
+                                    value={pin}
+                                    maxLength={4}
+                                    onChange={(e) => setPin(e.target.value)}
+                                    className={cn(
+                                        "pl-10 text-center text-lg tracking-[0.5em] font-mono h-12 bg-slate-900/50 border-cyan-500/20 focus:border-cyan-400 transition-all",
+                                        error && "border-red-500 animate-shake"
+                                    )}
+                                    autoFocus
+                                />
+                            </div>
+
+                            <Button type="submit" className="w-full h-11 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold shadow-lg shadow-cyan-900/20">
+                                <Unlock size={18} className="mr-2" />
+                                Kilidi Aç
+                            </Button>
+                        </form>
+                        <div className="text-xs text-slate-600">Varsayılan Şifre: 1234</div>
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-500">
             {/* Header */}
-            <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">Kişisel Kasa & Giderler</h1>
-                <p className="text-slate-400 mt-2">Şahsi bütçe yönetimi, ev giderleri ve net durum analizi.</p>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent flex items-center gap-3">
+                        Şahsi Cüzdan
+                        <span className="px-2 py-0.5 rounded text-xs font-mono bg-green-500/10 text-green-400 border border-green-500/20">GÜVENLİ</span>
+                    </h1>
+                    <p className="text-slate-400 mt-2">Kişisel gelir ve gider yönetim paneli.</p>
+                </div>
+                <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => setIsLocked(true)} className="border-cyan-500/20 text-cyan-400 hover:bg-cyan-500/10">
+                        <Lock size={16} className="mr-2" /> Kilitle
+                    </Button>
+                </div>
             </div>
 
             {/* Summary Cards */}
@@ -129,10 +202,10 @@ export default function AnalysisPage() {
                         <div className="p-3 rounded-xl bg-green-500/10 text-green-400">
                             <ArrowUpRight size={24} />
                         </div>
-                        <span className="text-slate-400 font-medium">Toplam İş Geliri</span>
+                        <span className="text-slate-400 font-medium">Toplam Gelir</span>
                     </div>
                     <div className="text-3xl font-black text-green-400 relative z-10">
-                        ₺{totalRevenue.toLocaleString('tr-TR')}
+                        ₺{totalIncome.toLocaleString('tr-TR')}
                     </div>
                 </div>
 
@@ -145,10 +218,10 @@ export default function AnalysisPage() {
                         <div className="p-3 rounded-xl bg-red-500/10 text-red-400">
                             <ArrowDownRight size={24} />
                         </div>
-                        <span className="text-slate-400 font-medium">Toplam Giderler</span>
+                        <span className="text-slate-400 font-medium">Toplam Gider</span>
                     </div>
                     <div className="text-3xl font-black text-red-400 relative z-10">
-                        ₺{totalExpenses.toLocaleString('tr-TR')}
+                        ₺{totalExpense.toLocaleString('tr-TR')}
                     </div>
                 </div>
 
@@ -162,7 +235,7 @@ export default function AnalysisPage() {
                         <div className="p-3 rounded-xl bg-cyan-500/20 text-cyan-400 shadow-lg shadow-cyan-500/20">
                             <Wallet size={24} />
                         </div>
-                        <span className="text-slate-100 font-bold">Net Kalan (Cepteki)</span>
+                        <span className="text-slate-100 font-bold">Net Bakiye</span>
                     </div>
                     <div className={cn("text-4xl font-black relative z-10 tracking-tight", netBalance >= 0 ? "text-cyan-400" : "text-red-400")}>
                         ₺{netBalance.toLocaleString('tr-TR')}
@@ -171,134 +244,116 @@ export default function AnalysisPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Add Expense Form */}
+                {/* Add Transaction Form */}
                 <div className="lg:col-span-1 space-y-6">
                     <div className="p-6 rounded-2xl bg-[#0c1929] border border-cyan-500/20 shadow-lg">
-                        <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2 border-b border-cyan-500/10 pb-4">
-                            <Plus className="text-cyan-400" size={20} />
-                            Hızlı Gider Ekle
-                        </h3>
+                        <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
+                            <TabsList className="grid w-full grid-cols-2 bg-slate-900/50 mb-6">
+                                <TabsTrigger value="income" className="data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400">Gelir Ekle</TabsTrigger>
+                                <TabsTrigger value="expense" className="data-[state=active]:bg-red-500/20 data-[state=active]:text-red-400">Gider Ekle</TabsTrigger>
+                            </TabsList>
 
-                        <div className="space-y-5">
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Gider Adı</label>
-                                <Input
-                                    placeholder="Örn: Ev Kirası"
-                                    value={title}
-                                    onChange={e => setTitle(e.target.value)}
-                                    className="bg-slate-900/50 border-cyan-500/10 focus:border-cyan-500/50 h-10"
-                                />
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Açıklama</label>
+                                    <Input
+                                        placeholder={activeTab === 'income' ? "Örn: Maaş" : "Örn: Kira"}
+                                        value={title}
+                                        onChange={e => setTitle(e.target.value)}
+                                        className="bg-slate-900/50 border-cyan-500/10 focus:border-cyan-500/50 h-10"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tutar (TL)</label>
+                                    <Input
+                                        type="number"
+                                        placeholder="0"
+                                        value={amount}
+                                        onChange={e => setAmount(e.target.value)}
+                                        className="bg-slate-900/50 border-cyan-500/10 focus:border-cyan-500/50 h-10"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Kategori</label>
+                                    <Select value={category} onValueChange={setCategory}>
+                                        <SelectTrigger className="bg-slate-900/50 border-cyan-500/10 focus:border-cyan-500/50 h-10">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-[#0c1929] border-cyan-500/20 text-slate-200">
+                                            {(activeTab === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES).map(cat => (
+                                                <SelectItem key={cat.id} value={cat.id} className="cursor-pointer">
+                                                    <div className="flex items-center gap-2">
+                                                        <cat.icon size={16} className={cat.color} />
+                                                        {cat.label}
+                                                    </div>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <Button
+                                    onClick={handleAdd}
+                                    className={cn(
+                                        "w-full text-white shadow-lg h-11 font-bold tracking-wide transition-all hover:scale-[1.02] active:scale-[0.98]",
+                                        activeTab === 'income'
+                                            ? "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 shadow-green-900/20"
+                                            : "bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 shadow-red-900/20"
+                                    )}
+                                >
+                                    {activeTab === 'income' ? <Plus className="mr-2" /> : <TrendingDown className="mr-2" />}
+                                    {activeTab === 'income' ? "Gelir Kaydet" : "Gider Kaydet"}
+                                </Button>
                             </div>
-
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tutar (TL)</label>
-                                <Input
-                                    type="number"
-                                    placeholder="0"
-                                    value={amount}
-                                    onChange={e => setAmount(e.target.value)}
-                                    className="bg-slate-900/50 border-cyan-500/10 focus:border-cyan-500/50 h-10"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Kategori</label>
-                                <Select value={category} onValueChange={setCategory}>
-                                    <SelectTrigger className="bg-slate-900/50 border-cyan-500/10 focus:border-cyan-500/50 h-10">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-[#0c1929] border-cyan-500/20 text-slate-200">
-                                        {CATEGORIES.map(cat => (
-                                            <SelectItem key={cat.id} value={cat.id} className="focus:bg-cyan-500/20 focus:text-cyan-400 cursor-pointer">
-                                                <div className="flex items-center gap-2">
-                                                    <cat.icon size={16} className={cat.color} />
-                                                    {cat.label}
-                                                </div>
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <Button
-                                onClick={handleAddExpense}
-                                className="w-full bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white shadow-lg shadow-red-900/20 h-11 font-bold tracking-wide transition-all hover:scale-[1.02] active:scale-[0.98]"
-                            >
-                                Gider Ekle
-                            </Button>
-                        </div>
-                    </div>
-
-                    {/* Category Summary */}
-                    <div className="p-6 rounded-2xl bg-[#0c1929] border border-cyan-500/10">
-                        <h3 className="text-sm font-bold text-slate-400 mb-4 uppercase tracking-wider flex items-center gap-2">
-                            <TrendingDown size={16} />
-                            Kategori Dağılımı
-                        </h3>
-                        <div className="space-y-4">
-                            {CATEGORIES.map(cat => {
-                                const catTotal = expenses.filter(e => e.category === cat.id).reduce((sum, e) => sum + e.amount, 0)
-                                if (catTotal === 0) return null
-                                const percent = Math.round((catTotal / totalExpenses) * 100) || 0
-                                return (
-                                    <div key={cat.id} className="space-y-1.5">
-                                        <div className="flex justify-between text-sm">
-                                            <span className="text-slate-300 flex items-center gap-2 font-medium">
-                                                <div className={cn("p-1 rounded-md", cat.bg)}>
-                                                    <cat.icon size={12} className={cat.color} />
-                                                </div>
-                                                {cat.label}
-                                            </span>
-                                            <span className="font-mono text-slate-400 font-bold">₺{catTotal.toLocaleString()}</span>
-                                        </div>
-                                        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-                                            <div style={{ width: `${percent}%` }} className={cn("h-full rounded-full transition-all duration-500", cat.color.replace('text-', 'bg-'))} />
-                                        </div>
-                                    </div>
-                                )
-                            })}
-                            {totalExpenses === 0 && <p className="text-slate-600 text-sm text-center py-4">Henüz gider eklenmedi.</p>}
-                        </div>
+                        </Tabs>
                     </div>
                 </div>
 
-                {/* Expense List */}
+                {/* Transaction List */}
                 <div className="lg:col-span-2">
                     <div className="bg-[#0c1929] border border-cyan-500/20 rounded-2xl overflow-hidden shadow-lg h-full max-h-[800px] flex flex-col">
                         <div className="p-6 border-b border-cyan-500/10 flex justify-between items-center bg-slate-900/30">
                             <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                 <Wallet className="text-slate-400" size={20} />
-                                Harcama Geçmişi
+                                Hesap Hareketleri
                             </h3>
                             <span className="text-xs font-medium text-slate-500 bg-slate-800/50 px-3 py-1 rounded-full">
-                                {expenses.length} Kayıt
+                                {transactions.length} İşlem
                             </span>
                         </div>
                         <div className="overflow-y-auto flex-1 custom-scrollbar">
                             <div className="divide-y divide-slate-800/50">
-                                {expenses.map(expense => {
-                                    const catConfig = CATEGORIES.find(c => c.id === expense.category) || CATEGORIES[5]
+                                {transactions.map(item => {
+                                    const isIncome = item.type === 'income'
+                                    const cats = isIncome ? INCOME_CATEGORIES : EXPENSE_CATEGORIES
+                                    const catConfig = cats.find(c => c.id === item.category) || cats[cats.length - 1]
+
                                     return (
-                                        <div key={expense.id} className="p-4 flex items-center justify-between hover:bg-slate-900/30 transition-colors group">
+                                        <div key={item.id} className="p-4 flex items-center justify-between hover:bg-slate-900/30 transition-colors group">
                                             <div className="flex items-center gap-4">
                                                 <div className={cn("p-3 rounded-xl transition-all duration-300 group-hover:scale-110", catConfig.bg)}>
                                                     <catConfig.icon size={20} className={catConfig.color} />
                                                 </div>
                                                 <div>
-                                                    <div className="font-bold text-slate-200 text-lg">{expense.title}</div>
+                                                    <div className="font-bold text-slate-200 text-lg">{item.title}</div>
                                                     <div className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
+                                                        <span className={cn("px-1.5 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider", isIncome ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400")}>
+                                                            {isIncome ? 'GELİR' : 'GİDER'}
+                                                        </span>
                                                         <span className="font-medium text-slate-400">{catConfig.label}</span>
                                                         <span className="w-1 h-1 rounded-full bg-slate-600" />
-                                                        {format(new Date(expense.date), 'd MMMM yyyy HH:mm', { locale: tr })}
+                                                        {format(new Date(item.date), 'd MMMM yyyy HH:mm', { locale: tr })}
                                                     </div>
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-6">
-                                                <div className="font-black text-red-400 text-lg tabular-nums">
-                                                    -₺{expense.amount.toLocaleString('tr-TR')}
+                                                <div className={cn("font-black text-lg tabular-nums", isIncome ? "text-green-400" : "text-red-400")}>
+                                                    {isIncome ? '+' : '-'}₺{item.amount.toLocaleString('tr-TR')}
                                                 </div>
                                                 <button
-                                                    onClick={() => handleDelete(expense.id)}
+                                                    onClick={() => handleDelete(item.id)}
                                                     className="p-2 text-slate-600 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all opacity-0 group-hover:opacity-100"
                                                     title="Sil"
                                                 >
@@ -308,12 +363,12 @@ export default function AnalysisPage() {
                                         </div>
                                     )
                                 })}
-                                {expenses.length === 0 && (
+                                {transactions.length === 0 && (
                                     <div className="flex flex-col items-center justify-center py-20 text-slate-500 gap-4">
                                         <div className="p-6 rounded-full bg-slate-900/50 border border-slate-800">
                                             <Wallet size={48} className="text-slate-700" />
                                         </div>
-                                        <p>Henüz harcama kaydı yok.</p>
+                                        <p>Henüz işlem yapmadınız.</p>
                                     </div>
                                 )}
                             </div>
