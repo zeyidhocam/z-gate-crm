@@ -112,7 +112,6 @@ export default function DashboardPage() {
       const { data: clientsData, error } = await supabase
         .from('clients')
         .select('id, full_name, name, phone, status, reservation_at, price_agreed, price, created_at, process_types(name), process_name')
-        .neq('status', 'Arşiv')
 
       if (error) throw error
 
@@ -128,7 +127,7 @@ export default function DashboardPage() {
           if (client.status === 'Rezervasyon') newStats.reservation++
           else if (client.status === 'Yeni') newStats.new++
           else if (client.status === 'Takip') newStats.tracking++
-          else if (client.status === 'Sabit') newStats.fixed++
+          else if (client.status === 'Aktif') newStats.fixed++
           newStats.total++
 
           if (client.status === 'Rezervasyon' && client.reservation_at) {
@@ -191,7 +190,7 @@ export default function DashboardPage() {
   // Conversion rate (Yeni → Sabit)
   const conversionRate = useMemo(() => {
     const newCount = allClients.filter(c => c.status === 'Yeni').length
-    const fixedCount = allClients.filter(c => c.status === 'Sabit').length
+    const fixedCount = allClients.filter(c => c.status === 'Aktif').length
     const total = newCount + fixedCount
     return total > 0 ? (fixedCount / total) * 100 : 0
   }, [allClients])
@@ -286,10 +285,10 @@ export default function DashboardPage() {
             title="Dönüşüm Oranı"
             value={conversionRate}
             suffix="%"
-            description="Yeni → Sabit dönüşüm"
+            description="Yeni → Aktif dönüşüm"
           />
           <ConversionCard
-            title="Sabit Müşteri"
+            title="Aktif Müşteri"
             value={stats.fixed}
             suffix=""
             description="Sadık müşteri sayısı"

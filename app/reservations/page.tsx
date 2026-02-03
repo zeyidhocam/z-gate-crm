@@ -189,7 +189,7 @@ export default function ReservationsPage() {
                     is_confirmed: true,
                     confirmed_at: new Date().toISOString(),
                     stage: 1,
-                    status: 'Sabit'
+                    status: 'Aktif'
                 })
                 .eq('id', lead.id)
 

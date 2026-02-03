@@ -44,15 +44,15 @@ interface Client {
 // Category Configuration
 const CATEGORIES = {
     'Yeni': { color: 'text-green-500', bg: 'bg-green-500/10', border: 'border-green-500/20', icon: Sparkles },
-    'Sabit': { color: 'text-orange-500', bg: 'bg-orange-500/10', border: 'border-orange-500/20', icon: Pin },
+    'Aktif': { color: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500/20', icon: Check },
     'Takip': { color: 'text-cyan-500', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20', icon: Clock },
+    'Rezervasyon': { color: 'text-purple-500', bg: 'bg-purple-500/10', border: 'border-purple-500/20', icon: CalendarDays },
     'Arşiv': { color: 'text-slate-500', bg: 'bg-slate-500/10', border: 'border-slate-500/20', icon: Archive },
-    'Rezervasyon': { color: 'text-cyan-500', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20', icon: CalendarDays },
 } as const
 
 type CategoryType = keyof typeof CATEGORIES
 
-const ORDERED_CATEGORIES: CategoryType[] = ['Yeni', 'Sabit', 'Takip', 'Arşiv', 'Rezervasyon']
+const ORDERED_CATEGORIES: CategoryType[] = ['Rezervasyon', 'Aktif', 'Yeni', 'Takip', 'Arşiv']
 
 
 // Additional imports
@@ -148,7 +148,22 @@ export default function ClientsPage() {
 
     const updateStatus = async (id: string, newStatus: string) => {
         setClients(prev => prev.map(c => c.id === id ? { ...c, status: newStatus } : c))
-        await supabase.from('clients').update({ status: newStatus }).eq('id', id)
+
+        // Aktif kategorisine geçince Müşteriler sayfasında görünmesi için is_confirmed ve confirmed_at set et
+        if (newStatus === 'Aktif') {
+            await supabase.from('clients').update({
+                status: newStatus,
+                is_confirmed: true,
+                confirmed_at: new Date().toISOString()
+            }).eq('id', id)
+        } else if (newStatus === 'Arşiv') {
+            await supabase.from('clients').update({
+                status: newStatus,
+                is_confirmed: false
+            }).eq('id', id)
+        } else {
+            await supabase.from('clients').update({ status: newStatus }).eq('id', id)
+        }
     }
 
 
@@ -330,10 +345,10 @@ export default function ClientsPage() {
                                                                 const catConfig = CATEGORIES[cat]
                                                                 const dotColors: Record<string, string> = {
                                                                     'Yeni': 'bg-green-500',
-                                                                    'Sabit': 'bg-orange-500',
+                                                                    'Aktif': 'bg-red-500',
                                                                     'Takip': 'bg-cyan-500',
+                                                                    'Rezervasyon': 'bg-purple-500',
                                                                     'Arşiv': 'bg-slate-500',
-                                                                    'Rezervasyon': 'bg-cyan-500',
                                                                 }
                                                                 return (
                                                                     <button

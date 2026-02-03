@@ -54,6 +54,8 @@ export default function CustomersPage() {
     const [stageFilter, setStageFilter] = useState<number | null>(null)
     const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
     const [editPrice, setEditPrice] = useState("")
+    const [archiveCustomerId, setArchiveCustomerId] = useState<string | null>(null)
+    const [initialStats, setInitialStats] = useState<{ count: number, revenue: number } | null>(null)
 
     // localStorage'dan state yükle
     useEffect(() => {
@@ -82,7 +84,15 @@ export default function CustomersPage() {
                 .order('confirmed_at', { ascending: false })
 
             if (error) throw error
-            setCustomers(data as any[] || [])
+            const fetchedData = data as any[] || []
+            setCustomers(fetchedData)
+            // İlk yüklemede stats'ı set et (arşivlemede değişmez)
+            if (!initialStats) {
+                setInitialStats({
+                    count: fetchedData.length,
+                    revenue: fetchedData.reduce((sum: number, c: any) => sum + (c.price_agreed || c.price || 0), 0)
+                })
+            }
         } catch (error) {
             console.error('Error fetching customers:', error)
         } finally {
@@ -125,18 +135,19 @@ export default function CustomersPage() {
         }
     }
 
-    const handleArchive = async (customerId: string) => {
-        if (!confirm('Bu müşteriyi arşive taşımak istediğinize emin misiniz?')) return
+    const handleArchive = async () => {
+        if (!archiveCustomerId) return
 
         try {
             const { error } = await supabase
                 .from('clients')
                 .update({ status: 'Arşiv', is_confirmed: false })
-                .eq('id', customerId)
+                .eq('id', archiveCustomerId)
 
             if (error) throw error
 
-            setCustomers(prev => prev.filter(c => c.id !== customerId))
+            setCustomers(prev => prev.filter(c => c.id !== archiveCustomerId))
+            setArchiveCustomerId(null)
             toast.success("Müşteri arşive taşındı")
         } catch (error) {
             console.error('Error archiving customer:', error)
@@ -187,8 +198,9 @@ export default function CustomersPage() {
         customers: filteredCustomers.filter(c => c.stage === stage.value)
     }))
 
-    // Toplam gelir (sadece görüntülenen müşteriler)
-    const totalRevenue = filteredCustomers.reduce((sum, c) => sum + (c.price_agreed || c.price || 0), 0)
+    // Toplam gelir ve kayıt sayısı (arşivlemede değişmez)
+    const totalRevenue = initialStats?.revenue || 0
+    const totalCount = initialStats?.count || 0
 
     if (loading) {
         return (
@@ -215,7 +227,7 @@ export default function CustomersPage() {
                 {/* Stats */}
                 <div className="flex items-center gap-6">
                     <div className="text-right">
-                        <div className="text-2xl font-black text-emerald-400">{customers.length}</div>
+                        <div className="text-2xl font-black text-emerald-400">{totalCount}</div>
                         <div className="text-xs text-slate-500 font-bold">Müşteri</div>
                     </div>
                     <div className="text-right">
@@ -388,7 +400,7 @@ export default function CustomersPage() {
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className="bg-[#0c1929] border-cyan-500/20">
                                                 <DropdownMenuItem
-                                                    onClick={() => handleArchive(customer.id)}
+                                                    onClick={() => setArchiveCustomerId(customer.id)}
                                                     className="text-slate-300 focus:text-slate-200"
                                                 >
                                                     <Archive size={14} className="mr-2" />
@@ -447,6 +459,37 @@ export default function CustomersPage() {
                             className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold"
                         >
                             Kaydet
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Archive Confirmation Dialog */}
+            <Dialog open={!!archiveCustomerId} onOpenChange={() => setArchiveCustomerId(null)}>
+                <DialogContent className="bg-[#0c1929] border-cyan-500/20 max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle className="text-slate-100 flex items-center gap-2">
+                            <Archive size={20} className="text-amber-400" />
+                            Arşive Taşı
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <p className="text-slate-300 text-sm">
+                            Bu müşteriyi arşive taşımak istediğinize emin misiniz?
+                        </p>
+                        <p className="text-slate-500 text-xs mt-2">
+                            Müşteri aktif listesinden kaldırılacak ve arşiv kategorisine taşınacak.
+                        </p>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="ghost" onClick={() => setArchiveCustomerId(null)} className="text-slate-400">
+                            İptal
+                        </Button>
+                        <Button
+                            onClick={handleArchive}
+                            className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold"
+                        >
+                            Arşive Taşı
                         </Button>
                     </DialogFooter>
                 </DialogContent>
