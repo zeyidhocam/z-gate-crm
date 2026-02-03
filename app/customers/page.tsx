@@ -187,8 +187,8 @@ export default function CustomersPage() {
         customers: filteredCustomers.filter(c => c.stage === stage.value)
     }))
 
-    // Toplam gelir
-    const totalRevenue = customers.reduce((sum, c) => sum + (c.price_agreed || c.price || 0), 0)
+    // Toplam gelir (sadece görüntülenen müşteriler)
+    const totalRevenue = filteredCustomers.reduce((sum, c) => sum + (c.price_agreed || c.price || 0), 0)
 
     if (loading) {
         return (
