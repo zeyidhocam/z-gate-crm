@@ -3,7 +3,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, Bell, BrainCircuit, Settings, Calendar, DollarSign, CalendarDays } from 'lucide-react'
+import { LayoutDashboard, Users, Bell, BrainCircuit, Settings, Calendar, DollarSign, CalendarDays, Wallet } from 'lucide-react'
 import { twMerge } from 'tailwind-merge'
 import { useSettings } from '@/components/providers/settings-provider'
 
@@ -21,7 +21,7 @@ export function Sidebar() {
         { label: 'Kayıtlar', icon: Users, path: '/clients' },
         { label: 'Finans', icon: DollarSign, path: '/finance' },
         { label: 'Hatırlatmalar', icon: Bell, path: '/reminders' },
-        { label: 'Bakım Yap', icon: BrainCircuit, path: '/analysis' },
+        { label: 'Kişisel Kasa', icon: Wallet, path: '/analysis' },
         { label: 'Ayarlar', icon: Settings, path: '/settings' },
     ]
 

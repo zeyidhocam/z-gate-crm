@@ -30,6 +30,10 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
     const [success, setSuccess] = useState<string | null>(null)
     const [error, setError] = useState<string | null>(null)
 
+    // JSON Validation State
+    const [jsonStatus, setJsonStatus] = useState<'neutral' | 'valid' | 'invalid'>('neutral')
+    const [jsonMessage, setJsonMessage] = useState("")
+
     // Form Data
     const [formData, setFormData] = useState({
         full_name: "",
@@ -48,9 +52,13 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
         setJsonInput(val)
         setError(null)
 
-        try {
-            if (!val.trim()) return
+        if (!val.trim()) {
+            setJsonStatus('neutral')
+            setJsonMessage("")
+            return
+        }
 
+        try {
             const parsed = JSON.parse(val)
 
             // Auto-fill form from JSON
@@ -63,8 +71,12 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
                 status: parsed.status || parsed.durum || "Yeni"
             })
 
+            setJsonStatus('valid')
+            setJsonMessage("✅ Form başarıyla dolduruldu! 'Kaydet' butonuna basabilirsiniz.")
+
         } catch (err) {
-            // Sessizce yut
+            setJsonStatus('invalid')
+            setJsonMessage("❌ Geçersiz JSON formatı. Lütfen kontrol edin.")
         }
     }
 
@@ -75,7 +87,13 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
 
         try {
             // Validation
-            if (!formData.full_name) throw new Error("Müşteri adı zorunludur.")
+            if (!formData.full_name) {
+                // Eğer JSON tabındaysa ve isim yoksa, JSON hatalı demektir
+                if (activeTab === 'json') {
+                    throw new Error("JSON geçerli değil veya isim alanı bulunamadı.")
+                }
+                throw new Error("Müşteri adı zorunludur.")
+            }
 
             // Prepare Data
             const clientData = {
@@ -104,6 +122,9 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
             setTimeout(() => {
                 setIsOpen(false)
                 setSuccess(null)
+                setError(null)
+                setJsonStatus('neutral')
+                setJsonMessage("")
                 setFormData({
                     full_name: "",
                     phone: "",
@@ -133,7 +154,6 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
                 </Button>
             </DialogTrigger>
 
-            {/* Scrollable Dialog Content Fix */}
             <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col bg-[#0c1929] border-cyan-500/20 text-slate-100 p-0 overflow-hidden gap-0">
                 <DialogHeader className="p-6 pb-2 shrink-0">
                     <DialogTitle className="text-xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
@@ -158,7 +178,6 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
                         </TabsList>
                     </div>
 
-                    {/* Scrollable Area */}
                     <div className="p-6 space-y-4 flex-1 overflow-y-auto custom-scrollbar">
                         {/* Manuel Tab Content */}
                         <div className={cn("space-y-4 transition-all", activeTab === 'json' && "opacity-50 pointer-events-none")}>
@@ -232,18 +251,30 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
                         </div>
 
                         {/* JSON Tab Content Overlay */}
-                        <TabsContent value="json" className="mt-0">
+                        <TabsContent value="json" className="mt-0 space-y-3">
                             <div className="space-y-2">
                                 <Label className="text-xs font-semibold text-purple-400 uppercase">JSON Kodunu Buraya Yapıştırın</Label>
                                 <Textarea
                                     placeholder='{ "full_name": "...", "phone": "..." }'
-                                    className="min-h-[200px] font-mono text-xs bg-slate-950/80 border-purple-500/30 focus:border-purple-500 text-purple-200"
+                                    className={cn(
+                                        "min-h-[200px] font-mono text-xs bg-slate-950/80 border-2 transition-colors",
+                                        jsonStatus === 'valid' ? "border-green-500/50 focus:border-green-500 text-green-300" :
+                                            jsonStatus === 'invalid' ? "border-red-500/50 focus:border-red-500 text-red-300" :
+                                                "border-purple-500/30 focus:border-purple-500 text-purple-200"
+                                    )}
                                     value={jsonInput}
                                     onChange={handleJsonPaste}
                                 />
-                                <p className="text-[10px] text-slate-500 text-right">
-                                    Form otomatik doldurulur. Kaydet'e basarak onaylayın.
-                                </p>
+                                {jsonMessage && (
+                                    <div className={cn(
+                                        "text-sm font-bold flex items-center gap-2 p-2 rounded-lg",
+                                        jsonStatus === 'valid' ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
+                                    )}>
+                                        {jsonStatus === 'valid' && <CheckCircle size={16} />}
+                                        {jsonStatus === 'invalid' && <AlertCircle size={16} />}
+                                        {jsonMessage}
+                                    </div>
+                                )}
                             </div>
                         </TabsContent>
                     </div>
@@ -257,7 +288,7 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
                             <Button variant="ghost" onClick={() => setIsOpen(false)} className="hover:bg-slate-800 text-slate-400">İptal</Button>
                             <Button
                                 onClick={handleSubmit}
-                                disabled={loading}
+                                disabled={loading || (activeTab === 'json' && jsonStatus === 'invalid')}
                                 className={cn(
                                     "min-w-[120px] bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-lg shadow-cyan-900/30 transition-all duration-300",
                                     loading && "opacity-80 cursor-not-allowed"
