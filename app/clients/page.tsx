@@ -298,8 +298,17 @@ export default function ClientsPage() {
                                                     <div className="text-[13px] font-bold text-slate-300 truncate opacity-90">
                                                         {client.process_types?.name || client.process_name || 'İşlem Yok'}
                                                     </div>
-                                                    <div className="text-[12px] font-bold text-slate-500 opacity-80">
-                                                        {(client.price_agreed || client.price) ? `${(client.price_agreed || client.price)?.toLocaleString('tr-TR')} ₺` : '-'}
+                                                    <div className="flex items-center gap-2 text-[12px] font-bold text-slate-500 opacity-80 group/price h-5">
+                                                        <span>
+                                                            {(client.price_agreed || client.price) ? `${(client.price_agreed || client.price)?.toLocaleString('tr-TR')} ₺` : '-'}
+                                                        </span>
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); setEditingClient(client) }}
+                                                            className="opacity-0 group-hover/price:opacity-100 p-1 hover:bg-slate-700/50 rounded transition-all text-cyan-400 cursor-pointer"
+                                                            title="Hızlı Düzenle"
+                                                        >
+                                                            <Edit size={12} />
+                                                        </button>
                                                     </div>
                                                 </div>
 
