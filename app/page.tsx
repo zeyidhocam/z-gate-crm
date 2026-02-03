@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import { CalendarCheck, Calendar, CalendarDays, CalendarRange, CalendarX, User, Phone, TrendingUp, PieChart as PieChartIcon, BarChart3, Check } from 'lucide-react'
+import { CalendarCheck, CalendarDays, CalendarRange, CalendarX, User, Phone, PieChart as PieChartIcon, BarChart3, Check } from 'lucide-react'
 import { KPICard } from '@/components/KPICard'
 import { ProcessPieChart } from '@/components/charts/ProcessPieChart'
 import { TrendChart } from '@/components/charts/TrendChart'
@@ -9,7 +9,7 @@ import { ConversionCard } from '@/components/charts/ConversionCard'
 import { AIInsights } from '@/components/AIInsights'
 import { ReminderAlert } from '@/components/ReminderAlert'
 import { supabase } from '@/lib/supabase'
-import { format, isSameDay, parseISO, subDays, startOfDay } from 'date-fns'
+import { format, parseISO, isSameDay, subDays } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
 
