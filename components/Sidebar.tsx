@@ -32,16 +32,16 @@ export function Sidebar() {
                 <img
                     src="/icon.png"
                     alt="Logo"
-                    className="w-10 h-10 rounded-lg shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform"
+                    className="w-12 h-12 rounded-xl shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform"
                 />
                 <div>
                     <h1
-                        className="text-xl font-black tracking-tight text-gradient-ocean group-hover:opacity-80 transition-opacity"
+                        className="text-2xl font-black tracking-tight text-gradient-ocean group-hover:opacity-80 transition-opacity"
                         title={config.appName}
                     >
                         {config.appName}
                     </h1>
-                    <p className="text-[10px] text-cyan-400/60 font-medium">Yönetim Paneli</p>
+                    <p className="text-xs text-cyan-400/60 font-medium">Yönetim Paneli</p>
                 </div>
             </Link>
 
