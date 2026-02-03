@@ -22,7 +22,6 @@ interface Transaction {
     date: string
 }
 
-// Categories
 const EXPENSE_CATEGORIES = [
     { id: 'kira', label: 'Ev Kirası', icon: Home, color: 'text-blue-400', bg: 'bg-blue-400/10' },
     { id: 'fatura', label: 'Faturalar', icon: Zap, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
@@ -44,7 +43,9 @@ export default function AnalysisPage() {
     const [isLocked, setIsLocked] = useState(true)
     const [pin, setPin] = useState("")
     const [error, setError] = useState(false)
-    const DEFAULT_PIN = "1234"
+    const DEFAULT_PIN = "1881" // Updated PIN
+    const LOCK_KEY = "expenses_session_timestamp"
+    const SESSION_DURATION = 24 * 60 * 60 * 1000 // 24 hours
 
     const [transactions, setTransactions] = useState<Transaction[]>([])
     const [loading, setLoading] = useState(true)
@@ -54,6 +55,19 @@ export default function AnalysisPage() {
     const [title, setTitle] = useState("")
     const [amount, setAmount] = useState("")
     const [category, setCategory] = useState("diger")
+
+    useEffect(() => {
+        // Check session
+        const savedTime = localStorage.getItem(LOCK_KEY)
+        if (savedTime) {
+            const timeDiff = Date.now() - parseInt(savedTime)
+            if (timeDiff < SESSION_DURATION) {
+                setIsLocked(false)
+            } else {
+                localStorage.removeItem(LOCK_KEY)
+            }
+        }
+    }, [])
 
     useEffect(() => {
         if (!isLocked) {
@@ -66,6 +80,7 @@ export default function AnalysisPage() {
         if (pin === DEFAULT_PIN) {
             setIsLocked(false)
             setError(false)
+            localStorage.setItem(LOCK_KEY, Date.now().toString())
             toast.success("Kasa açıldı!")
         } else {
             setError(true)
@@ -79,7 +94,7 @@ export default function AnalysisPage() {
         setLoading(true)
         try {
             const { data } = await supabase
-                .from('expenses') // Using same table, just added 'type' column
+                .from('expenses')
                 .select('*')
                 .order('date', { ascending: false })
 
@@ -124,7 +139,7 @@ export default function AnalysisPage() {
     }
 
     const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0)
-    const totalExpense = transactions.filter(t => t.type === 'expense' || !t.type).reduce((sum, t) => sum + t.amount, 0) // Default to expense if null
+    const totalExpense = transactions.filter(t => t.type === 'expense' || !t.type).reduce((sum, t) => sum + t.amount, 0)
     const netBalance = totalIncome - totalExpense
 
     // LOCK SCREEN
@@ -166,7 +181,7 @@ export default function AnalysisPage() {
                                 Kilidi Aç
                             </Button>
                         </form>
-                        <div className="text-xs text-slate-600">Varsayılan Şifre: 1234</div>
+                        <div className="text-xs text-slate-600">Varsayılan Şifre: 1881</div>
                     </div>
                 </div>
             </div>
@@ -185,7 +200,7 @@ export default function AnalysisPage() {
                     <p className="text-slate-400 mt-2">Kişisel gelir ve gider yönetim paneli.</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => setIsLocked(true)} className="border-cyan-500/20 text-cyan-400 hover:bg-cyan-500/10">
+                    <Button variant="outline" onClick={() => { setIsLocked(true); localStorage.removeItem(LOCK_KEY) }} className="border-cyan-500/20 text-cyan-400 hover:bg-cyan-500/10">
                         <Lock size={16} className="mr-2" /> Kilitle
                     </Button>
                 </div>
