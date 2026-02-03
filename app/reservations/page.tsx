@@ -7,7 +7,7 @@ import { tr } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 // Icons
 import {
-    Calendar as CalendarIcon, CalendarDays, Copy, Check, ChevronRight, MessageCircle, Edit, User, MoreVertical, DollarSign, CheckCircle, XCircle
+    Calendar as CalendarIcon, CalendarDays, Copy, Check, ChevronRight, MessageCircle, Edit, User, CheckCircle, XCircle, Bell
 } from "lucide-react"
 // UI Components
 import { Button } from "@/components/ui/button"
@@ -16,6 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"
 import { Calendar } from "@/components/ui/calendar"
 import { ClientEditDialog, Client } from "@/components/ClientEditDialog"
+import { ReminderButton } from "@/components/ReminderButton"
 
 
 // Types
@@ -30,7 +31,6 @@ interface Lead {
     ai_summary?: string
     notes?: string
     process_type_id?: number | null
-    is_done: boolean
 }
 
 interface GroupedReservations {
@@ -38,27 +38,29 @@ interface GroupedReservations {
     leads: Lead[]
 }
 
-// Reuse Categories for Status Colors
-const CATEGORIES: Record<string, { color: string, bg: string, border: string }> = {
-    'Rezervasyon': { color: 'text-cyan-500', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
-    'Yeni': { color: 'text-green-500', bg: 'bg-green-500/10', border: 'border-green-500/20' },
-    'Sabit': { color: 'text-orange-500', bg: 'bg-orange-500/10', border: 'border-orange-500/20' },
-    'Takip': { color: 'text-cyan-500', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
-    'Arşiv': { color: 'text-slate-500', bg: 'bg-slate-500/10', border: 'border-slate-500/20' },
-}
-
-const ORDERED_CATEGORIES = ['Rezervasyon', 'Yeni', 'Sabit', 'Takip', 'Arşiv']
-
 export default function ReservationsPage() {
     const [reservations, setReservations] = useState<GroupedReservations[]>([])
     const [loading, setLoading] = useState(true)
 
-    // UI State
+    // UI State - localStorage ile kalıcı
     const [expanded, setExpanded] = useState<Record<string, boolean>>({})
     const [copiedText, setCopiedText] = useState<string | null>(null)
     const [reservationDate, setReservationDate] = useState<Date | undefined>(new Date())
     const [editingClient, setEditingClient] = useState<Client | null>(null)
     const [processTypes, setProcessTypes] = useState<{ id: number, name: string }[]>([])
+
+    // localStorage'dan expanded state yükle
+    useEffect(() => {
+        const saved = localStorage.getItem('reservationsExpanded')
+        if (saved) setExpanded(JSON.parse(saved))
+    }, [])
+
+    // expanded state değiştiğinde localStorage'a kaydet
+    useEffect(() => {
+        if (Object.keys(expanded).length > 0) {
+            localStorage.setItem('reservationsExpanded', JSON.stringify(expanded))
+        }
+    }, [expanded])
 
     // Initial fetch
     useEffect(() => {
@@ -127,8 +129,7 @@ export default function ReservationsPage() {
                         status: client.status,
                         reservation_at: client.reservation_at,
                         ai_summary: client.notes || client.ai_summary,
-                        process_type_id: client.process_type_id, // For edit dialog
-                        is_done: client.notes?.includes('[YAPILDI]') || false // Simple logic for demo, can be a column later if needed
+                        process_type_id: client.process_type_id
                     }
 
                     if (!lead.reservation_at) return
@@ -173,31 +174,45 @@ export default function ReservationsPage() {
         window.open(`https://web.whatsapp.com/send?phone=${finalPhone}`, '_blank')
     }
 
-    const toggleDone = async (lead: Lead) => {
-        // Toggle done status by appending/removing a tag in notes
-        // Ideally checking 'payment_status' or a boolean is better, but using notes as per schema limitation for now
-        const isDone = !lead.is_done
-        let newNotes = lead.ai_summary || ""
-
-        if (isDone) {
-            newNotes = "[YAPILDI] " + newNotes.replace("[YAPILDI] ", "")
-        } else {
-            newNotes = newNotes.replace("[YAPILDI] ", "")
-        }
-
-        const { error } = await supabase.from('clients').update({ notes: newNotes }).eq('id', lead.id)
-        if (!error) fetchReservations()
-    }
-
-    const updateStatus = async (id: string, newStatus: string) => {
-        await supabase.from('clients').update({ status: newStatus }).eq('id', id)
-        fetchReservations()
-    }
-
     const handleReservation = async (leadId: string, date: Date | undefined) => {
         if (!date) return
         await supabase.from('clients').update({ reservation_at: date.toISOString() }).eq('id', leadId)
         fetchReservations() // Refresh to move into correct date bucket
+    }
+
+    // Müşteriyi onayla ve Müşteriler sayfasına aktar
+    const confirmCustomer = async (lead: Lead) => {
+        try {
+            const { error } = await supabase
+                .from('clients')
+                .update({
+                    is_confirmed: true,
+                    confirmed_at: new Date().toISOString(),
+                    stage: 1,
+                    status: 'Sabit'
+                })
+                .eq('id', lead.id)
+
+            if (error) throw error
+            fetchReservations()
+        } catch (error) {
+            console.error('Error confirming customer:', error)
+        }
+    }
+
+    // Müşteriyi reddet ve arşive taşı
+    const rejectCustomer = async (id: string) => {
+        try {
+            const { error } = await supabase
+                .from('clients')
+                .update({ status: 'Arşiv' })
+                .eq('id', id)
+
+            if (error) throw error
+            fetchReservations()
+        } catch (error) {
+            console.error('Error rejecting customer:', error)
+        }
     }
 
     if (loading) {
@@ -274,15 +289,13 @@ export default function ReservationsPage() {
                                         <div className="flex items-center gap-6 px-6 py-2 border-b border-slate-800/50 mb-3 text-sm font-black text-slate-400 uppercase tracking-wide">
                                             <div className="w-[200px] shrink-0">İsim & Telefon</div>
                                             <div className="w-[180px] shrink-0">İşlem & Ücret</div>
-                                            <div className="w-[160px] shrink-0">İşlem Durumu</div>
-                                            <div className="w-[140px] shrink-0">Kayıt Durumu</div>
+                                            <div className="w-[180px] shrink-0">Onay</div>
                                             <div className="flex-1 pl-4">Notlar (Detay)</div>
                                             <div className="w-[100px] shrink-0 text-right">İşlemler</div>
                                         </div>
 
                                         {/* List Items */}
                                         {group.leads.map(lead => {
-                                            const config = CATEGORIES[lead.status] || CATEGORIES['Arşiv']
 
                                             return (
                                                 <div
@@ -307,47 +320,26 @@ export default function ReservationsPage() {
                                                         </div>
                                                     </div>
 
-                                                    {/* PROCESS DONE TOGGLE */}
-                                                    <div className="w-[160px] shrink-0">
+                                                    {/* Onay Butonları */}
+                                                    <div className="w-[180px] shrink-0 flex items-center gap-2">
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
-                                                            onClick={() => toggleDone(lead)}
-                                                            className={cn(
-                                                                "w-full justify-start gap-2 border-slate-800 bg-slate-950/50 hover:bg-slate-900",
-                                                                lead.is_done ? "text-green-500 border-green-500/20 bg-green-500/5" : "text-slate-400"
-                                                            )}
+                                                            onClick={() => confirmCustomer(lead)}
+                                                            className="flex-1 gap-1.5 text-xs font-bold border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:text-emerald-300"
                                                         >
-                                                            {lead.is_done ? <CheckCircle size={14} /> : <div className="w-3.5 h-3.5 rounded-full border-2 border-slate-600" />}
-                                                            {lead.is_done ? "İşlem Yapıldı" : "Bekliyor"}
+                                                            <CheckCircle size={14} />
+                                                            Onayla
                                                         </Button>
-                                                    </div>
-
-                                                    {/* Status Selector */}
-                                                    <div className="w-[140px] shrink-0">
-                                                        <Popover>
-                                                            <PopoverTrigger asChild>
-                                                                <button className={cn("text-[10px] font-black px-2.5 py-1 rounded-md border border-slate-800/50 hover:border-slate-700 hover:bg-slate-800 transition-all flex w-fit items-center gap-2 shadow-sm", config.color, config.bg)}>
-                                                                    <div className={cn("w-1.5 h-1.5 rounded-full", config.bg.replace('/10', ''))} />
-                                                                    {lead.status}
-                                                                </button>
-                                                            </PopoverTrigger>
-                                                            <PopoverContent className="w-48 p-1 bg-[#0F111A] border-slate-800 shadow-xl rounded-lg">
-                                                                {ORDERED_CATEGORIES.map(cat => (
-                                                                    <button
-                                                                        key={cat}
-                                                                        onClick={() => updateStatus(lead.id, cat)}
-                                                                        className={cn(
-                                                                            "w-full text-left px-3 py-2.5 text-xs rounded-md hover:bg-slate-800 flex items-center gap-2.5 transition-colors",
-                                                                            cat === lead.status ? "text-white bg-slate-800/80 font-bold" : "text-slate-400 font-semibold"
-                                                                        )}
-                                                                    >
-                                                                        <div className={cn("w-2 h-2 rounded-full", CATEGORIES[cat].bg.replace('/10', ''))} />
-                                                                        {cat}
-                                                                    </button>
-                                                                ))}
-                                                            </PopoverContent>
-                                                        </Popover>
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => rejectCustomer(lead.id)}
+                                                            className="flex-1 gap-1.5 text-xs font-bold border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-300"
+                                                        >
+                                                            <XCircle size={14} />
+                                                            Reddet
+                                                        </Button>
                                                     </div>
 
                                                     {/* AI Summary (Detail) */}
@@ -396,7 +388,13 @@ export default function ReservationsPage() {
                                                     </div>
 
                                                     {/* Actions */}
-                                                    <div className="w-[100px] shrink-0 flex justify-end gap-1">
+                                                    <div className="w-[140px] shrink-0 flex justify-end gap-1.5">
+                                                        <ReminderButton
+                                                            clientId={lead.id}
+                                                            clientName={lead.name}
+                                                            iconSize={18}
+                                                        />
+
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
@@ -408,20 +406,20 @@ export default function ReservationsPage() {
                                                                 price_agreed: lead.price || null,
                                                                 process_type_id: lead.process_type_id || null
                                                             })}
-                                                            className="h-8 w-8 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 rounded-lg transition-all"
+                                                            className="h-9 w-9 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 rounded-xl transition-all"
                                                             title="Düzenle"
                                                         >
-                                                            <Edit size={16} />
+                                                            <Edit size={18} />
                                                         </Button>
 
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
                                                             onClick={() => handleWhatsApp(lead.phone || null)}
-                                                            className="h-8 w-8 text-green-400 hover:text-green-300 hover:bg-green-500/10 rounded-lg transition-all"
+                                                            className="h-9 w-9 text-green-400 hover:text-green-300 hover:bg-green-500/10 rounded-xl transition-all"
                                                             title="WhatsApp Web"
                                                         >
-                                                            <MessageCircle size={16} />
+                                                            <MessageCircle size={18} />
                                                         </Button>
                                                     </div>
                                                 </div>

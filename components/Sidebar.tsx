@@ -3,7 +3,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, Bell, BrainCircuit, Settings, Calendar } from 'lucide-react'
+import { LayoutDashboard, Users, Bell, BrainCircuit, Settings, Calendar, DollarSign, CalendarDays } from 'lucide-react'
 import { twMerge } from 'tailwind-merge'
 import { useSettings } from '@/components/providers/settings-provider'
 
@@ -16,14 +16,17 @@ export function Sidebar() {
     const items = [
         { label: 'Ana Sayfa', icon: LayoutDashboard, path: '/' },
         { label: 'Rezervasyonlar', icon: Calendar, path: '/reservations' },
-        { label: 'Müşteriler', icon: Users, path: '/clients' },
+        { label: 'Takvim', icon: CalendarDays, path: '/calendar' },
+        { label: 'Müşteriler', icon: Users, path: '/customers' },
+        { label: 'Kayıtlar', icon: Users, path: '/clients' },
+        { label: 'Finans', icon: DollarSign, path: '/finance' },
         { label: 'Hatırlatmalar', icon: Bell, path: '/reminders' },
         { label: 'Bakım Yap', icon: BrainCircuit, path: '/analysis' },
         { label: 'Ayarlar', icon: Settings, path: '/settings' },
     ]
 
     return (
-        <aside className="w-[260px] h-screen bg-gradient-to-b from-[#040d17] via-[#0a1628] to-[#0c1929] border-r border-cyan-500/10 p-6 flex flex-col">
+        <aside className="w-[260px] h-screen sticky top-0 bg-gradient-to-b from-[#040d17] via-[#0a1628] to-[#0c1929] border-r border-cyan-500/10 p-6 flex flex-col">
             {/* Logo / App Name */}
             <div className="mb-10 px-2">
                 <h1

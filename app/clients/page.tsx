@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Calendar } from "@/components/ui/calendar"
 import { tr } from "date-fns/locale"
 import { JsonImportDialog } from "@/components/JsonImportDialog"
+import { WhatsAppButton } from "@/components/WhatsAppButton"
+import { ReminderButton } from "@/components/ReminderButton"
 
 // Database Type Matching New SQL
 interface Client {
@@ -291,28 +293,43 @@ export default function ClientsPage() {
                                                 </div>
 
                                                 {/* Status Selector */}
-                                                <div className="w-[160px] shrink-0">
+                                                <div className="w-[160px] shrink-0 flex items-center">
                                                     <Popover>
                                                         <PopoverTrigger asChild>
-                                                            <button className={cn("text-[10px] font-black px-2.5 py-1 rounded-md border border-slate-800/50 hover:border-slate-700 hover:bg-slate-800 transition-all flex w-fit items-center gap-2 shadow-sm", config.color, config.bg)}>
-                                                                <div className={cn("w-1.5 h-1.5 rounded-full", config.bg.replace('/10', ''))} />
+                                                            <button className={cn(
+                                                                "text-[11px] font-black px-4 py-1.5 rounded-lg border transition-all flex items-center justify-center gap-2 shadow-sm min-w-[80px]",
+                                                                config.color,
+                                                                config.bg,
+                                                                "border-transparent hover:border-slate-600"
+                                                            )}>
                                                                 {client.status}
                                                             </button>
                                                         </PopoverTrigger>
-                                                        <PopoverContent className="w-48 p-1 bg-[#0c1929] border-cyan-500/20 shadow-xl rounded-lg">
-                                                            {ORDERED_CATEGORIES.map(cat => (
-                                                                <button
-                                                                    key={cat}
-                                                                    onClick={() => updateStatus(client.id, cat)}
-                                                                    className={cn(
-                                                                        "w-full text-left px-3 py-2.5 text-xs rounded-md hover:bg-slate-800 flex items-center gap-2.5 transition-colors",
-                                                                        cat === client.status ? "text-white bg-slate-800/80 font-bold" : "text-slate-400 font-semibold"
-                                                                    )}
-                                                                >
-                                                                    <div className={cn("w-2 h-2 rounded-full", CATEGORIES[cat].bg.replace('/10', ''))} />
-                                                                    {cat}
-                                                                </button>
-                                                            ))}
+                                                        <PopoverContent className="w-48 p-1.5 bg-[#0c1929] border-cyan-500/20 shadow-xl rounded-xl">
+                                                            {ORDERED_CATEGORIES.map(cat => {
+                                                                const catConfig = CATEGORIES[cat]
+                                                                const dotColors: Record<string, string> = {
+                                                                    'Yeni': 'bg-green-500',
+                                                                    'Sabit': 'bg-orange-500',
+                                                                    'Takip': 'bg-cyan-500',
+                                                                    'Arşiv': 'bg-slate-500',
+                                                                    'Rezervasyon': 'bg-cyan-500',
+                                                                }
+                                                                return (
+                                                                    <button
+                                                                        key={cat}
+                                                                        onClick={() => updateStatus(client.id, cat)}
+                                                                        className={cn(
+                                                                            "w-full text-left px-3 py-2.5 text-xs rounded-lg hover:bg-slate-800/80 flex items-center gap-3 transition-colors",
+                                                                            cat === client.status ? "bg-slate-800/60 font-bold" : "font-semibold",
+                                                                            catConfig.color
+                                                                        )}
+                                                                    >
+                                                                        <div className={cn("w-2.5 h-2.5 rounded-full", dotColors[cat])} />
+                                                                        {cat}
+                                                                    </button>
+                                                                )
+                                                            })}
                                                         </PopoverContent>
                                                     </Popover>
                                                 </div>
@@ -365,10 +382,16 @@ export default function ClientsPage() {
                                                     </Dialog>
 
                                                     {/* Actions */}
-                                                    <div className="flex gap-2 shrink-0 ml-auto w-[120px] justify-end">
+                                                    <div className="flex gap-1.5 shrink-0 ml-auto w-[160px] justify-end">
+                                                        <ReminderButton
+                                                            clientId={client.id}
+                                                            clientName={client.full_name || client.name || 'Müşteri'}
+                                                            iconSize={18}
+                                                        />
+
                                                         <Popover>
                                                             <PopoverTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-lg transition-all" title="Randevu Oluştur">
+                                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-xl transition-all" title="Randevu Oluştur">
                                                                     <CalendarDays size={18} />
                                                                 </Button>
                                                             </PopoverTrigger>
@@ -388,22 +411,18 @@ export default function ClientsPage() {
                                                             </PopoverContent>
                                                         </Popover>
 
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            onClick={() => handleWhatsApp(client.phone)}
-                                                            className="h-9 w-9 text-green-400 hover:text-green-300 hover:bg-green-500/10 rounded-lg transition-all"
-                                                            title="WhatsApp Web"
-                                                        >
-                                                            <MessageCircle size={18} />
-                                                        </Button>
+                                                        <WhatsAppButton
+                                                            phone={client.phone}
+                                                            clientName={client.full_name || client.name || 'Değerli Müşteri'}
+                                                            size="sm"
+                                                        />
 
                                                         {/* EDIT BUTTON */}
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
                                                             onClick={() => setEditingClient(client)}
-                                                            className="h-9 w-9 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 rounded-lg transition-all"
+                                                            className="h-9 w-9 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 rounded-xl transition-all"
                                                             title="Düzenle"
                                                         >
                                                             <Edit size={18} />

@@ -1,11 +1,16 @@
 
 'use client'
 
-import { useEffect, useState } from 'react'
-import { CalendarCheck, Calendar, CalendarDays, CalendarRange, CalendarX, User, Phone } from 'lucide-react'
+import { useEffect, useState, useMemo } from 'react'
+import { CalendarCheck, Calendar, CalendarDays, CalendarRange, CalendarX, User, Phone, TrendingUp, PieChart as PieChartIcon, BarChart3 } from 'lucide-react'
 import { KPICard } from '@/components/KPICard'
+import { ProcessPieChart } from '@/components/charts/ProcessPieChart'
+import { TrendChart } from '@/components/charts/TrendChart'
+import { ConversionCard } from '@/components/charts/ConversionCard'
+import { AIInsights } from '@/components/AIInsights'
+import { ReminderAlert } from '@/components/ReminderAlert'
 import { supabase } from '@/lib/supabase'
-import { format, isSameDay, isThisWeek, isThisMonth, parseISO, startOfDay, isAfter } from 'date-fns'
+import { format, isSameDay, parseISO, subDays, startOfDay } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
 
@@ -19,8 +24,56 @@ interface Lead {
   process_name?: string
 }
 
+interface Client {
+  id: string
+  full_name: string | null
+  name: string | null
+  status: string
+  created_at: string
+  reservation_at: string | null
+  price_agreed: number | null
+  process_types?: { name: string } | null
+}
+
+const PROCESS_COLORS: Record<string, string> = {
+  // Cyan / Turquoise
+  'Büyü Bozma': '#22d3ee',
+  'Standart Yorum': '#06b6d4',
+
+  // Emerald / Green
+  'Geri Getirme Çalışması': '#10b981',
+  'Rızık Açma': '#34d399',
+  'Kısmet Açma': '#22c55e',
+
+  // Pink / Rose
+  'Karma Kapama (Gönül + Rızık) Bozma': '#ec4899',
+  'Karma Kapama': '#f472b6',
+
+  // Amber / Orange
+  'Rahmani Kilit Kırma ve Fetih Çalışması': '#f59e0b',
+  'Mühürlü Bereket ve Fetih Çalışması': '#fbbf24',
+  'Aşk Büyüsü': '#fb923c',
+
+  // Violet / Purple
+  'Soğutma Bozma İşlemi': '#8b5cf6',
+  'İkili Bağlama': '#a78bfa',
+  'Kızıl Hüddam Çalışması': '#c084fc',
+
+  // Blue
+  'Tarot': '#3b82f6',
+  'Cesaret': '#60a5fa',
+
+  // Red
+  'Ayrılık Büyüsü': '#ef4444',
+
+  // Default
+  'Belirtilmemiş': '#64748b',
+  'default': '#6366f1'
+}
+
 export default function DashboardPage() {
   const [leads, setLeads] = useState<Lead[]>([])
+  const [allClients, setAllClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({
     reservation: 0,
@@ -38,7 +91,7 @@ export default function DashboardPage() {
     try {
       setLoading(true)
 
-      // 1. Auto-Archive Logic: Find past reservations that are still 'Rezervasyon'
+      // 1. Auto-Archive Logic
       const now = new Date()
       const { data: pastReservations } = await supabase
         .from('clients')
@@ -49,8 +102,6 @@ export default function DashboardPage() {
       if (pastReservations && pastReservations.length > 0) {
         console.log(`Auto-archiving ${pastReservations.length} records...`)
         const idsToArchive = (pastReservations as any[]).map(r => r.id)
-
-        // Update specific records to 'Arşiv'
         await supabase
           .from('clients')
           .update({ status: 'Arşiv' })
@@ -58,47 +109,38 @@ export default function DashboardPage() {
       }
 
       // 2. Fetch All Active Data for Stats
-      const { data: allClients, error } = await supabase
+      const { data: clientsData, error } = await supabase
         .from('clients')
-        .select('id, full_name, name, phone, status, reservation_at, price_agreed')
-        .neq('status', 'Arşiv') // Optionally exclude archive from main dashboard list or stats if requested, but for stats we might want to see them separately. 
-      // User asked "Toplam kayıt miktarı yazdın yanındada rezervasyon ayrı...". Let's fetch everything meaningful.
+        .select('id, full_name, name, phone, status, reservation_at, price_agreed, price, created_at, process_types(name), process_name')
+        .neq('status', 'Arşiv')
 
       if (error) throw error
 
-      // Calculate Stats
-      const newStats = {
-        reservation: 0,
-        new: 0,
-        tracking: 0,
-        fixed: 0,
-        total: 0
-      }
-
-      const mappedLeads: Lead[] = [];
-
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (allClients as any[] || []).forEach(client => {
-        // Stats
-        if (client.status === 'Rezervasyon') newStats.reservation++
-        else if (client.status === 'Yeni') newStats.new++
-        else if (client.status === 'Takip') newStats.tracking++
-        else if (client.status === 'Sabit') newStats.fixed++
+      setAllClients(clientsData as any[] || [])
 
-        newStats.total++
+      // Calculate Stats
+      const newStats = { reservation: 0, new: 0, tracking: 0, fixed: 0, total: 0 }
+      const mappedLeads: Lead[] = []
 
-        // Map for "Upcoming Reservations" List (Only 'Rezervasyon' status)
-        if (client.status === 'Rezervasyon' && client.reservation_at) {
-          mappedLeads.push({
-            ...client,
-            name: client.full_name || client.name || 'İsimsiz',
-            price: client.price_agreed
-          })
-        }
-      })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ; (clientsData as any[] || []).forEach(client => {
+          if (client.status === 'Rezervasyon') newStats.reservation++
+          else if (client.status === 'Yeni') newStats.new++
+          else if (client.status === 'Takip') newStats.tracking++
+          else if (client.status === 'Sabit') newStats.fixed++
+          newStats.total++
+
+          if (client.status === 'Rezervasyon' && client.reservation_at) {
+            mappedLeads.push({
+              ...client,
+              name: client.full_name || client.name || 'İsimsiz',
+              price: client.price_agreed
+            })
+          }
+        })
 
       setStats(newStats)
-      // Sort upcoming by date
       setLeads(mappedLeads.sort((a, b) => new Date(a.reservation_at!).getTime() - new Date(b.reservation_at!).getTime()))
 
     } catch (error) {
@@ -108,7 +150,52 @@ export default function DashboardPage() {
     }
   }
 
-  // Filter Stats (Time based - keeping for "Upcoming" view if needed, but main stats are now status based)
+  // Process distribution data for pie chart
+  const processData = useMemo(() => {
+    const counts: Record<string, number> = {}
+    allClients.forEach(client => {
+      // Fallback: eski kayıtlarda process_name, yeni kayıtlarda process_types.name
+      const processName = (client as any).process_types?.name || (client as any).process_name || 'Belirtilmemiş'
+      counts[processName] = (counts[processName] || 0) + 1
+    })
+    return Object.entries(counts)
+      .map(([name, value]) => ({
+        name,
+        value,
+        color: PROCESS_COLORS[name] || PROCESS_COLORS.default
+      }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 6)
+  }, [allClients])
+
+  // 30-day trend data
+  const trendData = useMemo(() => {
+    const now = new Date()
+    const days: { date: string; value: number }[] = []
+
+    for (let i = 29; i >= 0; i--) {
+      const date = subDays(now, i)
+      const dateStr = format(date, 'yyyy-MM-dd')
+      const count = allClients.filter(client => {
+        const createdDate = format(parseISO(client.created_at), 'yyyy-MM-dd')
+        return createdDate === dateStr
+      }).length
+      days.push({
+        date: format(date, 'd MMM', { locale: tr }),
+        value: count
+      })
+    }
+    return days
+  }, [allClients])
+
+  // Conversion rate (Yeni → Sabit)
+  const conversionRate = useMemo(() => {
+    const newCount = allClients.filter(c => c.status === 'Yeni').length
+    const fixedCount = allClients.filter(c => c.status === 'Sabit').length
+    const total = newCount + fixedCount
+    return total > 0 ? (fixedCount / total) * 100 : 0
+  }, [allClients])
+
   const now = new Date()
 
   // Group by Date for UI
@@ -119,7 +206,6 @@ export default function DashboardPage() {
     return groups
   }, {} as Record<string, Lead[]>)
 
-  // Sort dates
   const sortedDates = Object.keys(groupedReservations).sort((a, b) => a.localeCompare(b))
 
   return (
@@ -134,6 +220,9 @@ export default function DashboardPage() {
           <p className="text-slate-400">Genel durum ve yaklaşan randevular</p>
         </div>
       </div>
+
+      {/* Reminder Alert */}
+      <ReminderAlert />
 
       {/* KPI Cards - Ocean Elite Colors */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -171,10 +260,49 @@ export default function DashboardPage() {
         />
       </div>
 
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Process Distribution */}
+        <div className="p-5 rounded-2xl bg-gradient-to-br from-[#0c1929]/90 via-[#0a1628]/80 to-[#040d17]/90 border border-cyan-500/20">
+          <div className="flex items-center gap-2 mb-4">
+            <PieChartIcon size={18} className="text-cyan-400" />
+            <h3 className="font-bold text-slate-200">İşlem Dağılımı</h3>
+          </div>
+          <ProcessPieChart data={processData} />
+        </div>
+
+        {/* 30-Day Trend */}
+        <div className="p-5 rounded-2xl bg-gradient-to-br from-[#0c1929]/90 via-[#0a1628]/80 to-[#040d17]/90 border border-cyan-500/20">
+          <div className="flex items-center gap-2 mb-4">
+            <BarChart3 size={18} className="text-cyan-400" />
+            <h3 className="font-bold text-slate-200">Son 30 Gün</h3>
+          </div>
+          <TrendChart data={trendData} title="Yeni Kayıt" />
+        </div>
+
+        {/* Conversion Stats */}
+        <div className="space-y-4">
+          <ConversionCard
+            title="Dönüşüm Oranı"
+            value={conversionRate}
+            suffix="%"
+            description="Yeni → Sabit dönüşüm"
+          />
+          <ConversionCard
+            title="Sabit Müşteri"
+            value={stats.fixed}
+            suffix=""
+            description="Sadık müşteri sayısı"
+          />
+          {/* AI Insights */}
+          <AIInsights clients={allClients} />
+        </div>
+      </div>
+
       {/* Content Area - Horizontal Scroll */}
       {
         sortedDates.length === 0 ? (
-          <div className="bg-slate-900/40 border border-slate-800/50 rounded-2xl min-h-[400px] flex flex-col items-center justify-center text-center">
+          <div className="bg-slate-900/40 border border-slate-800/50 rounded-2xl min-h-[300px] flex flex-col items-center justify-center text-center">
             <CalendarX size={64} className="text-slate-800 mb-6" />
             <p className="text-xl text-slate-400 font-medium">Yaklaşan rezervasyon bulunmuyor</p>
             <p className="text-sm text-slate-600 mt-2">Kayıtlar ekranından yeni bir tarih belirleyebilirsiniz.</p>
@@ -216,7 +344,7 @@ export default function DashboardPage() {
                     </div>
 
                     {/* List */}
-                    <div className="p-3 space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar">
+                    <div className="p-3 space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
                       {items.map(lead => (
                         <div key={lead.id} className="p-4 rounded-xl bg-slate-950/50 border border-slate-800/50 hover:border-slate-700/50 transition-colors group">
                           <div className="flex items-start justify-between mb-3">

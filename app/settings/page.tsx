@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Settings, List, Shield, Palette } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -25,6 +25,16 @@ import { AppearanceSettings } from "@/components/settings/AppearanceSettings"
 
 export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState("services")
+
+    // localStorage ile kalıcı tab
+    useEffect(() => {
+        const saved = localStorage.getItem('settingsActiveTab')
+        if (saved) setActiveTab(saved)
+    }, [])
+
+    useEffect(() => {
+        localStorage.setItem('settingsActiveTab', activeTab)
+    }, [activeTab])
 
     return (
         <div className="p-8 max-w-[1700px] mx-auto min-h-screen">
