@@ -28,15 +28,22 @@ export function Sidebar() {
     return (
         <aside className="w-[260px] h-screen sticky top-0 bg-gradient-to-b from-[#040d17] via-[#0a1628] to-[#0c1929] border-r border-cyan-500/10 p-6 flex flex-col">
             {/* Logo / App Name */}
-            <div className="mb-10 px-2">
-                <h1
-                    className="text-2xl font-black tracking-tight text-gradient-ocean"
-                    title={config.appName}
-                >
-                    {config.appName}
-                </h1>
-                <p className="text-xs text-cyan-400/60 mt-1 font-medium">Yönetim Paneli</p>
-            </div>
+            <Link href="/" className="mb-10 px-2 flex items-center gap-3 group cursor-pointer">
+                <img
+                    src="/icon.png"
+                    alt="Logo"
+                    className="w-10 h-10 rounded-lg shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform"
+                />
+                <div>
+                    <h1
+                        className="text-xl font-black tracking-tight text-gradient-ocean group-hover:opacity-80 transition-opacity"
+                        title={config.appName}
+                    >
+                        {config.appName}
+                    </h1>
+                    <p className="text-[10px] text-cyan-400/60 font-medium">Yönetim Paneli</p>
+                </div>
+            </Link>
 
             {/* Navigation Items */}
             <nav className="flex flex-col gap-1">
