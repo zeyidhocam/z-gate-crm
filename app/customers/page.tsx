@@ -17,6 +17,13 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from "@/components/ui/dialog"
 
 interface Customer {
     id: string
@@ -45,6 +52,8 @@ export default function CustomersPage() {
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState("")
     const [stageFilter, setStageFilter] = useState<number | null>(null)
+    const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
+    const [editPrice, setEditPrice] = useState("")
 
     // localStorage'dan state yükle
     useEffect(() => {
@@ -132,6 +141,31 @@ export default function CustomersPage() {
         } catch (error) {
             console.error('Error archiving customer:', error)
             toast.error("Arşivleme sırasında hata oluştu")
+        }
+    }
+
+    const handleSavePrice = async () => {
+        if (!editingCustomer) return
+
+        try {
+            const newPrice = parseInt(editPrice) || 0
+            const { error } = await supabase
+                .from('clients')
+                .update({ price_agreed: newPrice })
+                .eq('id', editingCustomer.id)
+
+            if (error) throw error
+
+            setCustomers(prev => prev.map(c =>
+                c.id === editingCustomer.id
+                    ? { ...c, price_agreed: newPrice }
+                    : c
+            ))
+            setEditingCustomer(null)
+            toast.success("Fiyat güncellendi")
+        } catch (error) {
+            console.error('Error updating price:', error)
+            toast.error("Fiyat güncellenemedi")
         }
     }
 
@@ -299,7 +333,11 @@ export default function CustomersPage() {
                                         <div className="flex items-center justify-end gap-2 text-lg font-black text-emerald-400">
                                             <span>{price.toLocaleString('tr-TR')} ₺</span>
                                             <button
-                                                className="opacity-0 group-hover/price:opacity-100 p-1 hover:bg-slate-700/50 rounded transition-all text-cyan-400"
+                                                onClick={() => {
+                                                    setEditingCustomer(customer)
+                                                    setEditPrice(String(customer.price_agreed || customer.price || ''))
+                                                }}
+                                                className="opacity-0 group-hover/price:opacity-100 p-1 hover:bg-slate-700/50 rounded transition-all text-cyan-400 cursor-pointer"
                                                 title="Hızlı Düzenle"
                                             >
                                                 <Edit size={14} />
@@ -372,6 +410,47 @@ export default function CustomersPage() {
                     })}
                 </div>
             )}
+
+            {/* Quick Edit Price Dialog */}
+            <Dialog open={!!editingCustomer} onOpenChange={() => setEditingCustomer(null)}>
+                <DialogContent className="bg-[#0c1929] border-cyan-500/20 max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle className="text-slate-100 flex items-center gap-2">
+                            <Edit size={20} className="text-cyan-400" />
+                            Fiyat Düzenle
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 mt-4">
+                        <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+                            <div className="text-xs text-slate-500 font-bold">Müşteri</div>
+                            <div className="text-sm text-slate-200 font-bold">
+                                {editingCustomer?.full_name || editingCustomer?.name || 'Müşteri'}
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-xs font-bold text-slate-400 mb-1 block">Yeni Fiyat (₺)</label>
+                            <Input
+                                type="number"
+                                value={editPrice}
+                                onChange={(e) => setEditPrice(e.target.value)}
+                                placeholder="Fiyat girin..."
+                                className="bg-slate-900/50 border-slate-700 text-slate-200 text-lg font-bold"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter className="mt-6">
+                        <Button variant="ghost" onClick={() => setEditingCustomer(null)} className="text-slate-400">
+                            İptal
+                        </Button>
+                        <Button
+                            onClick={handleSavePrice}
+                            className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold"
+                        >
+                            Kaydet
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
