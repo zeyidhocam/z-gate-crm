@@ -11,6 +11,10 @@ import { Toaster } from 'sonner'
 export const metadata: Metadata = {
   title: 'Z-Gate CRM',
   description: 'Premium dark dashboard for offline reservation management',
+  icons: {
+    icon: '/icon.png',
+    apple: '/icon.png',
+  },
 }
 
 export default function RootLayout({
