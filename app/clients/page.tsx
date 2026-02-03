@@ -15,6 +15,7 @@ import { tr } from "date-fns/locale"
 import { WhatsAppButton } from "@/components/WhatsAppButton"
 import { ReminderButton } from "@/components/ReminderButton"
 import { NewClientDialog } from "@/components/NewClientDialog"
+import { toast } from "sonner"
 
 // Database Type Matching New SQL
 interface Client {
@@ -150,6 +151,20 @@ export default function ClientsPage() {
         await supabase.from('clients').update({ status: newStatus }).eq('id', id)
     }
 
+
+    const handleArchive = async (id: string, currentStatus: string) => {
+        if (currentStatus === 'Arşiv') {
+            toast.error("Zaten arşivde.")
+            return
+        }
+        if (!confirm("Bu müşteriyi ARŞİV'e taşımak istediğinize emin misiniz?")) return
+
+        // Optimistic Update
+        setClients(prev => prev.map(c => c.id === id ? { ...c, status: 'Arşiv' } : c))
+        await supabase.from('clients').update({ status: 'Arşiv' }).eq('id', id)
+        toast.success("Müşteri arşive taşındı.")
+    }
+
     // EDIT CLIENT HANDLER
     const handleSaveEdit = async (updatedClient: Partial<Client>) => {
         if (!editingClient) return
@@ -256,10 +271,10 @@ export default function ClientsPage() {
                                     {/* Header Row - WIDER COLUMNS */}
                                     <div className="flex items-center gap-8 px-6 py-2 border-b border-slate-800/50 mb-3 text-sm font-black text-slate-400 uppercase tracking-wide">
                                         <div className="w-[240px] shrink-0">İsim & Telefon</div>
-                                        <div className="w-[200px] shrink-0">İşlem & Fiyat</div>
-                                        <div className="w-[160px] shrink-0">Durum</div>
+                                        <div className="w-[180px] shrink-0">İşlem & Fiyat</div>
+                                        <div className="w-[140px] shrink-0">Durum</div>
                                         <div className="flex-1 pl-4">Notlar (Detay)</div>
-                                        <div className="w-[120px] shrink-0 text-right">İşlemler</div>
+                                        <div className="w-[200px] shrink-0 text-right">İşlemler</div>
                                     </div>
 
                                     {categoryItems.length === 0 ? (
@@ -279,7 +294,7 @@ export default function ClientsPage() {
                                                 </div>
 
                                                 {/* Process & Price Agreed */}
-                                                <div className="w-[200px] shrink-0 flex flex-col justify-center gap-1.5">
+                                                <div className="w-[180px] shrink-0 flex flex-col justify-center gap-1.5">
                                                     <div className="text-[13px] font-bold text-slate-300 truncate opacity-90">
                                                         {client.process_types?.name || client.process_name || 'İşlem Yok'}
                                                     </div>
@@ -289,7 +304,7 @@ export default function ClientsPage() {
                                                 </div>
 
                                                 {/* Status Selector */}
-                                                <div className="w-[160px] shrink-0 flex items-center">
+                                                <div className="w-[140px] shrink-0 flex items-center">
                                                     <Popover>
                                                         <PopoverTrigger asChild>
                                                             <button className={cn(
@@ -378,7 +393,7 @@ export default function ClientsPage() {
                                                     </Dialog>
 
                                                     {/* Actions */}
-                                                    <div className="flex gap-1.5 shrink-0 ml-auto w-[160px] justify-end">
+                                                    <div className="flex gap-1.5 shrink-0 ml-auto w-[200px] justify-end">
                                                         <ReminderButton
                                                             clientId={client.id}
                                                             clientName={client.full_name || client.name || 'Müşteri'}
@@ -412,6 +427,19 @@ export default function ClientsPage() {
                                                             clientName={client.full_name || client.name || 'Değerli Müşteri'}
                                                             size="sm"
                                                         />
+
+                                                        {/* ARCHIVE BUTTON */}
+                                                        {category !== 'Arşiv' && (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() => handleArchive(client.id, client.status || 'Yeni')}
+                                                                className="h-9 w-9 text-slate-400 hover:text-slate-300 hover:bg-slate-500/10 rounded-xl transition-all"
+                                                                title="Arşive Taşı"
+                                                            >
+                                                                <Archive size={18} />
+                                                            </Button>
+                                                        )}
 
                                                         {/* EDIT BUTTON */}
                                                         <Button
