@@ -95,15 +95,25 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
                 throw new Error("Müşteri adı zorunludur.")
             }
 
+            // Validate Status against known categories
+            const VALID_CATEGORIES = ['Yeni', 'Teklif', 'Düşünüyor', 'Arşiv', 'Çöp']
+            let finalStatus = formData.status?.trim() || 'Yeni'
+            // Capitalize first letter just in case (yeni -> Yeni)
+            finalStatus = finalStatus.charAt(0).toUpperCase() + finalStatus.slice(1).toLowerCase()
+
+            if (!VALID_CATEGORIES.includes(finalStatus)) {
+                finalStatus = 'Yeni'
+            }
+
             // Prepare Data
             const clientData = {
-                name: formData.full_name, // Fix constraint error
+                name: formData.full_name,
                 full_name: formData.full_name,
                 phone: formData.phone || null,
                 process_name: formData.process_name || null,
                 price_agreed: formData.price ? parseInt(String(formData.price)) : 0,
                 notes: formData.notes || null,
-                status: formData.status || 'Yeni',
+                status: finalStatus,
                 created_at: new Date().toISOString(),
                 is_confirmed: false,
                 stage: 0
