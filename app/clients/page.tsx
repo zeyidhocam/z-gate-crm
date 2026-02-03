@@ -12,9 +12,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"
 import { Calendar } from "@/components/ui/calendar"
 import { tr } from "date-fns/locale"
-import { JsonImportDialog } from "@/components/JsonImportDialog"
 import { WhatsAppButton } from "@/components/WhatsAppButton"
 import { ReminderButton } from "@/components/ReminderButton"
+import { NewClientDialog } from "@/components/NewClientDialog"
 
 // Database Type Matching New SQL
 interface Client {
@@ -207,11 +207,7 @@ export default function ClientsPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <JsonImportDialog onSuccess={fetchClients} />
-                        <Button className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white gap-2 shadow-lg shadow-cyan-900/30 transition-all duration-300 hover:scale-[1.02]">
-                            <Plus size={18} />
-                            Yeni Müşteri
-                        </Button>
+                        <NewClientDialog onSuccess={fetchClients} />
                     </div>
                 </div>
             </div>
