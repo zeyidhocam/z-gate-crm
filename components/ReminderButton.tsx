@@ -12,6 +12,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"
 import { Calendar as CalendarIcon } from "lucide-react"
+import { toast } from "sonner"
 
 interface ReminderButtonProps {
     clientId: string
@@ -42,7 +43,13 @@ export function ReminderButton({ clientId, clientName, className, iconSize = 18 
                     is_completed: false
                 })
 
-            if (error) throw error
+            if (error) {
+                console.error('Supabase error:', error)
+                toast.error(`Hata: ${error.message}. Reminders tablosu oluşturulmuş mu?`)
+                return
+            }
+
+            toast.success("Hatırlatma eklendi!")
 
             // Reset form
             setTitle('')
@@ -51,6 +58,7 @@ export function ReminderButton({ clientId, clientName, className, iconSize = 18 
             setOpen(false)
         } catch (error) {
             console.error('Error adding reminder:', error)
+            toast.error("Beklenmedik bir hata oluştu!")
         } finally {
             setSaving(false)
         }
