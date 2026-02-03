@@ -22,6 +22,17 @@ interface Transaction {
     date: string
 }
 
+// Fixed Income Categories
+const INCOME_CATEGORIES = [
+    { id: 'maas', label: 'Maaş', icon: Briefcase, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+    { id: 'ek_is', label: 'Ek Gelir (Freelance)', icon: Zap, color: 'text-cyan-400', bg: 'bg-cyan-400/10' },
+    { id: 'kira_geliri', label: 'Kira Geliri', icon: Home, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+    { id: 'yatirim', label: 'Yatırım/Faiz', icon: TrendingUp, color: 'text-purple-400', bg: 'bg-purple-400/10' },
+    { id: 'satis', label: 'Satış/Ticaret', icon: ShoppingCart, color: 'text-orange-400', bg: 'bg-orange-400/10' },
+    { id: 'hediye', label: 'Hediye/Prim', icon: Gift, color: 'text-pink-400', bg: 'bg-pink-400/10' },
+    { id: 'diger_gelir', label: 'Diğer Gelir', icon: Wallet, color: 'text-slate-400', bg: 'bg-slate-400/10' },
+]
+
 const EXPENSE_CATEGORIES = [
     { id: 'kira', label: 'Ev Kirası', icon: Home, color: 'text-blue-400', bg: 'bg-blue-400/10' },
     { id: 'fatura', label: 'Faturalar', icon: Zap, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
@@ -31,19 +42,12 @@ const EXPENSE_CATEGORIES = [
     { id: 'diger', label: 'Diğer Gider', icon: Wallet, color: 'text-slate-400', bg: 'bg-slate-400/10' },
 ]
 
-const INCOME_CATEGORIES = [
-    { id: 'maas', label: 'Maaş', icon: Briefcase, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-    { id: 'ek_is', label: 'Ek Gelir', icon: Zap, color: 'text-cyan-400', bg: 'bg-cyan-400/10' },
-    { id: 'hediye', label: 'Hediye/Prim', icon: Gift, color: 'text-pink-400', bg: 'bg-pink-400/10' },
-    { id: 'diger_gelir', label: 'Diğer Gelir', icon: Wallet, color: 'text-slate-400', bg: 'bg-slate-400/10' },
-]
-
 export default function AnalysisPage() {
     // Security State
     const [isLocked, setIsLocked] = useState(true)
     const [pin, setPin] = useState("")
     const [error, setError] = useState(false)
-    const DEFAULT_PIN = "1881" // Updated PIN
+    const DEFAULT_PIN = "1881"
     const LOCK_KEY = "expenses_session_timestamp"
     const SESSION_DURATION = 24 * 60 * 60 * 1000 // 24 hours
 
@@ -57,7 +61,6 @@ export default function AnalysisPage() {
     const [category, setCategory] = useState("diger")
 
     useEffect(() => {
-        // Check session
         const savedTime = localStorage.getItem(LOCK_KEY)
         if (savedTime) {
             const timeDiff = Date.now() - parseInt(savedTime)
@@ -103,6 +106,17 @@ export default function AnalysisPage() {
             console.error('Error:', error)
         } finally {
             setLoading(false)
+        }
+    }
+
+    const handleTabChange = (val: string) => {
+        const tab = val as 'income' | 'expense'
+        setActiveTab(tab)
+        // Reset category to default for that tab
+        if (tab === 'expense') {
+            setCategory('diger')
+        } else {
+            setCategory('maas')
         }
     }
 
@@ -262,7 +276,7 @@ export default function AnalysisPage() {
                 {/* Add Transaction Form */}
                 <div className="lg:col-span-1 space-y-6">
                     <div className="p-6 rounded-2xl bg-[#0c1929] border border-cyan-500/20 shadow-lg">
-                        <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)}>
+                        <Tabs value={activeTab} onValueChange={handleTabChange}>
                             <TabsList className="grid w-full grid-cols-2 bg-slate-900/50 mb-6">
                                 <TabsTrigger value="income" className="data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400">Gelir Ekle</TabsTrigger>
                                 <TabsTrigger value="expense" className="data-[state=active]:bg-red-500/20 data-[state=active]:text-red-400">Gider Ekle</TabsTrigger>
