@@ -21,6 +21,11 @@ export function KPICard({ title, value, icon: Icon, colorClass, bgClass, borderC
             "hover:scale-[1.02] hover:shadow-lg",
             "before:absolute before:inset-0 before:rounded-2xl before:bg-gradient-to-br before:from-white/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity"
         )}>
+            {/* Hover Background - Category Color */}
+            <div className={twMerge(
+                "absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300",
+                bgClass.replace('/10', '/20')
+            )} />
             {/* Glow Effect */}
             <div className={twMerge(
                 "absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm -z-10",

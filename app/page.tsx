@@ -1,8 +1,7 @@
-
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import { CalendarCheck, Calendar, CalendarDays, CalendarRange, CalendarX, User, Phone, TrendingUp, PieChart as PieChartIcon, BarChart3 } from 'lucide-react'
+import { CalendarCheck, Calendar, CalendarDays, CalendarRange, CalendarX, User, Phone, TrendingUp, PieChart as PieChartIcon, BarChart3, Check } from 'lucide-react'
 import { KPICard } from '@/components/KPICard'
 import { ProcessPieChart } from '@/components/charts/ProcessPieChart'
 import { TrendChart } from '@/components/charts/TrendChart'
@@ -80,6 +79,7 @@ export default function DashboardPage() {
     new: 0,
     tracking: 0,
     fixed: 0,
+    archive: 0,
     total: 0
   })
 
@@ -119,7 +119,7 @@ export default function DashboardPage() {
       setAllClients(clientsData as any[] || [])
 
       // Calculate Stats
-      const newStats = { reservation: 0, new: 0, tracking: 0, fixed: 0, total: 0 }
+      const newStats = { reservation: 0, new: 0, tracking: 0, fixed: 0, archive: 0, total: 0 }
       const mappedLeads: Lead[] = []
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -128,6 +128,7 @@ export default function DashboardPage() {
           else if (client.status === 'Yeni') newStats.new++
           else if (client.status === 'Takip') newStats.tracking++
           else if (client.status === 'Aktif') newStats.fixed++
+          else if (client.status === 'Arşiv') newStats.archive++
           newStats.total++
 
           if (client.status === 'Rezervasyon' && client.reservation_at) {
@@ -224,7 +225,7 @@ export default function DashboardPage() {
       <ReminderAlert />
 
       {/* KPI Cards - Ocean Elite Colors */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <KPICard
           title="Yaklaşan Rezervasyon"
           value={stats.reservation.toString()}
@@ -248,6 +249,22 @@ export default function DashboardPage() {
           colorClass="text-sky-400"
           bgClass="bg-sky-500/10"
           borderClass="border-sky-500/20"
+        />
+        <KPICard
+          title="Aktif Müşteri"
+          value={stats.fixed.toString()}
+          icon={Check}
+          colorClass="text-red-400"
+          bgClass="bg-red-500/10"
+          borderClass="border-red-500/20"
+        />
+        <KPICard
+          title="Arşiv"
+          value={stats.archive.toString()}
+          icon={CalendarX}
+          colorClass="text-slate-400"
+          bgClass="bg-slate-500/10"
+          borderClass="border-slate-500/20"
         />
         <KPICard
           title="Toplam Kayıt"
