@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Users, Search, Phone, Calendar, CheckCircle2, Circle, Clock, Star, ChevronRight, Filter, MoreVertical, Trash2 } from "lucide-react"
+import { Users, Search, Phone, Calendar, CheckCircle2, Circle, Clock, Star, ChevronRight, Filter, MoreVertical, Trash2, Archive, Edit } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { format, parseISO } from "date-fns"
 import { tr } from "date-fns/locale"
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { WhatsAppButton } from "@/components/WhatsAppButton"
 import { ReminderButton } from "@/components/ReminderButton"
+import { toast } from "sonner"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -109,8 +110,28 @@ export default function CustomersPage() {
             if (error) throw error
 
             setCustomers(prev => prev.filter(c => c.id !== customerId))
+            toast.success("Müşteri listeden kaldırıldı")
         } catch (error) {
             console.error('Error removing customer:', error)
+        }
+    }
+
+    const handleArchive = async (customerId: string) => {
+        if (!confirm('Bu müşteriyi arşive taşımak istediğinize emin misiniz?')) return
+
+        try {
+            const { error } = await supabase
+                .from('clients')
+                .update({ status: 'Arşiv', is_confirmed: false })
+                .eq('id', customerId)
+
+            if (error) throw error
+
+            setCustomers(prev => prev.filter(c => c.id !== customerId))
+            toast.success("Müşteri arşive taşındı")
+        } catch (error) {
+            console.error('Error archiving customer:', error)
+            toast.error("Arşivleme sırasında hata oluştu")
         }
     }
 
@@ -273,10 +294,16 @@ export default function CustomersPage() {
                                     </div>
 
                                     {/* Process & Price */}
-                                    <div className="text-right shrink-0">
+                                    <div className="text-right shrink-0 group/price">
                                         <div className="text-sm font-bold text-slate-300 mb-1">{processName}</div>
-                                        <div className="text-lg font-black text-emerald-400">
-                                            {price.toLocaleString('tr-TR')} ₺
+                                        <div className="flex items-center justify-end gap-2 text-lg font-black text-emerald-400">
+                                            <span>{price.toLocaleString('tr-TR')} ₺</span>
+                                            <button
+                                                className="opacity-0 group-hover/price:opacity-100 p-1 hover:bg-slate-700/50 rounded transition-all text-cyan-400"
+                                                title="Hızlı Düzenle"
+                                            >
+                                                <Edit size={14} />
+                                            </button>
                                         </div>
                                     </div>
 
@@ -322,6 +349,13 @@ export default function CustomersPage() {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className="bg-[#0c1929] border-cyan-500/20">
+                                                <DropdownMenuItem
+                                                    onClick={() => handleArchive(customer.id)}
+                                                    className="text-slate-300 focus:text-slate-200"
+                                                >
+                                                    <Archive size={14} className="mr-2" />
+                                                    Arşive Taşı
+                                                </DropdownMenuItem>
                                                 <DropdownMenuItem
                                                     onClick={() => removeCustomer(customer.id)}
                                                     className="text-red-400 focus:text-red-400"
