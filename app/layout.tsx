@@ -5,6 +5,7 @@ import "@fontsource/montserrat/400.css"
 import "@fontsource/montserrat/600.css"
 import "@fontsource/montserrat/700.css"
 import { Sidebar } from '@/components/Sidebar'
+import { GlobalReminderManager } from '@/components/GlobalReminderManager'
 import { SettingsProvider } from '@/components/providers/settings-provider'
 import { Toaster } from 'sonner'
 
@@ -26,6 +27,7 @@ export default function RootLayout({
     <html lang="tr" className="dark">
       <body className="bg-background text-foreground min-h-screen flex font-sans antialiased">
         <SettingsProvider>
+          <GlobalReminderManager />
           <Sidebar />
           <main className="flex-1 min-h-screen overflow-auto app-gradient-bg">
             {children}

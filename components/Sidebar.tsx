@@ -1,15 +1,42 @@
 
 'use client'
-
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LayoutDashboard, Users, Bell, BrainCircuit, Settings, Calendar, DollarSign, CalendarDays, Wallet } from 'lucide-react'
 import { twMerge } from 'tailwind-merge'
 import { useSettings } from '@/components/providers/settings-provider'
+import { supabase } from '@/lib/supabase'
 
 export function Sidebar() {
     const pathname = usePathname()
     const { config } = useSettings()
+    const [reminderCount, setReminderCount] = useState(0)
+
+    // Fetch reminder count
+    useEffect(() => {
+        const fetchReminders = async () => {
+            const { data } = await supabase
+                .from('reminders')
+                .select('id, reminder_date')
+                .eq('is_completed', false)
+
+            if (data) {
+                const now = new Date()
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const count = data.filter((r: any) => {
+                    const date = new Date(r.reminder_date)
+                    return date <= now || date.toDateString() === now.toDateString()
+                }).length
+                setReminderCount(count)
+            }
+        }
+
+        fetchReminders()
+        // Refresh every minute
+        const interval = setInterval(fetchReminders, 60000)
+        return () => clearInterval(interval)
+    }, [])
 
     if (pathname === '/login') return null
 
@@ -20,8 +47,8 @@ export function Sidebar() {
         { label: 'Müşteriler', icon: Users, path: '/customers' },
         { label: 'Kayıtlar', icon: Users, path: '/clients' },
         { label: 'Finans', icon: DollarSign, path: '/finance' },
-        { label: 'Hatırlatmalar', icon: Bell, path: '/reminders' },
-        { label: 'Kişisel Kasa', icon: Wallet, path: '/analysis' },
+        { label: 'Hatırlatmalar', icon: Bell, path: '/reminders', badge: reminderCount },
+        { label: 'Kişisel Kasa Analysis', icon: Wallet, path: '/analysis' },
         { label: 'Ayarlar', icon: Settings, path: '/settings' },
     ]
 
@@ -75,10 +102,17 @@ export function Sidebar() {
                             />
 
                             {/* Label */}
-                            <span>{item.label}</span>
+                            <span className="flex-1">{item.label}</span>
+
+                            {/* Badge */}
+                            {item.badge ? (
+                                <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.5)] animate-pulse">
+                                    {item.badge}
+                                </span>
+                            ) : null}
 
                             {/* Active indicator */}
-                            {isActive && (
+                            {isActive && !item.badge && (
                                 <div className="absolute right-4 w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.8)] animate-pulse" />
                             )}
                         </Link>

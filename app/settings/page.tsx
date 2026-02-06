@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Settings, List, Shield, Palette } from "lucide-react"
+import { Settings, List, Shield, Palette, Bell } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -21,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { GeneralSettings } from "@/components/settings/GeneralSettings"
 import { ServiceSettings } from "@/components/settings/ServiceSettings"
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings"
+import { NotificationSettings } from "@/components/settings/NotificationSettings"
 
 
 export default function SettingsPage() {
@@ -79,6 +80,13 @@ export default function SettingsPage() {
                                     <Shield size={18} />
                                     Kimlik ve Sistem
                                 </TabsTrigger>
+                                <TabsTrigger
+                                    value="notifications"
+                                    className="justify-start gap-3 px-4 py-3.5 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:font-bold rounded-xl transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+                                >
+                                    <Bell size={18} />
+                                    Bildirimler
+                                </TabsTrigger>
                             </TabsList>
                         </Tabs>
                     </div>
@@ -93,6 +101,7 @@ export default function SettingsPage() {
                     {activeTab === 'services' && <ServiceSettings />}
                     {activeTab === 'appearance' && <AppearanceSettings />}
                     {activeTab === 'identity' && <GeneralSettings />}
+                    {activeTab === 'notifications' && <NotificationSettings />}
                 </div>
             </div>
         </div>
