@@ -16,7 +16,7 @@ export function GlobalReminderManager() {
             try {
                 const { data, error } = await supabase
                     .from('reminders')
-                    .select('id, title, reminder_date, is_completed')
+                    .select('id, title, reminder_date, is_completed, clients (full_name, name, phone, process_name, process_types(name), price_agreed, price, payment_balance)')
                     .eq('is_completed', false)
 
                 if (error || !data) return
@@ -77,13 +77,41 @@ export function GlobalReminderManager() {
                         }
                     }
 
-                    if (shouldSend && overdueReminders.length > 0) {
+                    if (shouldSend && (overdueReminders.length > 0 || todayReminders.length > 0)) {
                         try {
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            const message = `🚨 <b>Ocean Elite CRM: Hatırlatma Uyarısı!</b>\n\n` +
-                                `Toplam <b>${total}</b> adet bildirim var.\n` +
-                                `🔴 <b>${overdueReminders.length}</b> gecikmiş işlem bulunuyor.\n\n` +
-                                `Lütfen panele girip kontrol ediniz.`
+                            let message = `🚨 <b>Ocean Elite CRM: Hatırlatma Raporu</b>\n` +
+                                `📅 Tarih: ${now.toLocaleDateString('tr-TR')}\n\n`
+
+                            const allReminders = [...overdueReminders, ...todayReminders]
+
+                            allReminders.forEach((r: any) => {
+                                const client = r.clients
+                                const clientName = client?.full_name || client?.name || 'Müşteri'
+                                const phone = client?.phone
+                                const process = client?.process_types?.name || client?.process_name
+                                const balance = client?.payment_balance
+                                const price = client?.price_agreed || client?.price
+
+                                const isOverdue = isBefore(parseISO(r.reminder_date), new Date()) && !isToday(parseISO(r.reminder_date))
+                                const icon = isOverdue ? '🔴 GECİKMİŞ' : '🟡 BUGÜN'
+
+                                message += `${icon} <b>${clientName}</b>\n`
+                                message += `📌 <i>${r.title}</i>\n`
+
+                                if (process) message += `🔮 İşlem: ${process}\n`
+                                if (balance) message += `💰 <b>Kalan: ${balance.toLocaleString('tr-TR')} ₺</b>\n`
+                                else if (price) message += `💰 Tutar: ${price.toLocaleString('tr-TR')} ₺\n`
+
+                                if (phone) {
+                                    const cleanPhone = phone.replace(/\D/g, '')
+                                    const finalPhone = cleanPhone.startsWith('90') ? cleanPhone : `90${cleanPhone}`
+                                    message += `📞 <a href="https://wa.me/${finalPhone}">WhatsApp'tan Yaz</a>\n`
+                                }
+
+                                message += `----------------------------\n`
+                            })
+
+                            message += `\n<i>Toplam ${total} hatırlatma.</i>`
 
                             await fetch('/api/telegram/send', {
                                 method: 'POST',
