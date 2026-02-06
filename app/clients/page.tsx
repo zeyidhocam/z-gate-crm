@@ -185,9 +185,13 @@ export default function ClientsPage() {
         if (!editingClient) return
 
         try {
+            // Temizleme: İlişkisel alanları (referans tabloları) update payload'ından çıkar
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { process_types, magic_types, ...cleanData } = updatedClient
+
             const { error } = await supabase
                 .from('clients')
-                .update(updatedClient)
+                .update(cleanData)
                 .eq('id', editingClient.id)
 
             if (error) throw error
