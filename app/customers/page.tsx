@@ -406,6 +406,12 @@ export default function CustomersPage() {
                                             clientId={customer.id}
                                             clientName={customer.full_name || customer.name || 'Müşteri'}
                                             iconSize={18}
+                                            clientDetails={{
+                                                phone: customer.phone,
+                                                process: processName,
+                                                balance: customer.payment_balance,
+                                                price: price
+                                            }}
                                         />
                                         <WhatsAppButton
                                             phone={customer.phone}

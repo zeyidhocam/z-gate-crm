@@ -426,6 +426,11 @@ export default function ClientsPage() {
                                                             clientId={client.id}
                                                             clientName={client.full_name || client.name || 'Müşteri'}
                                                             iconSize={18}
+                                                            clientDetails={{
+                                                                phone: client.phone,
+                                                                process: client.process_types?.name || client.process_name,
+                                                                price: client.price_agreed || client.price
+                                                            }}
                                                         />
 
                                                         <Popover>
