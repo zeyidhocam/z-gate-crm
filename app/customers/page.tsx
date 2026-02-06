@@ -24,6 +24,7 @@ import {
     DialogTitle,
     DialogFooter,
 } from "@/components/ui/dialog"
+import { PaymentTracker } from "@/components/PaymentTracker"
 
 interface Customer {
     id: string
@@ -38,6 +39,9 @@ interface Customer {
     confirmed_at: string | null
     created_at: string
     notes: string | null
+    financial_note: string | null
+    payment_balance: number | null
+    payment_due_date: string | null
 }
 
 const STAGES = [
@@ -79,7 +83,7 @@ export default function CustomersPage() {
             setLoading(true)
             const { data, error } = await supabase
                 .from('clients')
-                .select('id, full_name, name, phone, price_agreed, price, process_name, process_types(name), stage, confirmed_at, created_at, notes')
+                .select('id, full_name, name, phone, price_agreed, price, process_name, process_types(name), stage, confirmed_at, created_at, notes, financial_note, payment_balance, payment_due_date')
                 .eq('is_confirmed', true)
                 .order('confirmed_at', { ascending: false })
 
@@ -344,16 +348,32 @@ export default function CustomersPage() {
                                         <div className="text-sm font-bold text-slate-300 mb-1">{processName}</div>
                                         <div className="flex items-center justify-end gap-2 text-lg font-black text-emerald-400">
                                             <span>{price.toLocaleString('tr-TR')} ₺</span>
-                                            <button
-                                                onClick={() => {
-                                                    setEditingCustomer(customer)
-                                                    setEditPrice(String(customer.price_agreed || customer.price || ''))
-                                                }}
-                                                className="opacity-0 group-hover/price:opacity-100 p-1 hover:bg-slate-700/50 rounded transition-all text-cyan-400 cursor-pointer"
-                                                title="Hızlı Düzenle"
-                                            >
-                                                <Edit size={14} />
-                                            </button>
+                                            <div className="flex items-center gap-1">
+                                                <PaymentTracker
+                                                    clientId={customer.id}
+                                                    initialNote={customer.financial_note || null}
+                                                    initialBalance={customer.payment_balance || null}
+                                                    initialDueDate={customer.payment_due_date || null}
+                                                    onSave={(newNote, newBalance, newDate) => {
+                                                        setCustomers(prev => prev.map(c => c.id === customer.id ? {
+                                                            ...c,
+                                                            financial_note: newNote,
+                                                            payment_balance: newBalance,
+                                                            payment_due_date: newDate
+                                                        } : c))
+                                                    }}
+                                                />
+                                                <button
+                                                    onClick={() => {
+                                                        setEditingCustomer(customer)
+                                                        setEditPrice(String(customer.price_agreed || customer.price || ''))
+                                                    }}
+                                                    className="opacity-0 group-hover/price:opacity-100 p-1 hover:bg-slate-700/50 rounded transition-all text-cyan-400 cursor-pointer"
+                                                    title="Hızlı Düzenle"
+                                                >
+                                                    <Edit size={14} />
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
 

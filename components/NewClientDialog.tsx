@@ -58,6 +58,25 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
             return
         }
 
+        const parsePrice = (raw: any) => {
+            if (!raw) return ""
+            // "8.500 TL" -> "8500"
+            // "12.500,50" -> "12500.50"
+            let str = String(raw).replace(/[^0-9.,]/g, '') // Remove letters/symbols
+
+            // If it looks like Turkish format (dots as thousands), remove dots
+            if (str.includes('.') && str.indexOf('.') < str.length - 3) {
+                str = str.replace(/\./g, '')
+            } else if (str.includes('.') && str.split('.').length > 1 && str.split('.')[1].length === 3) {
+                // "8.500" case
+                str = str.replace(/\./g, '')
+            }
+
+            // Replace comma with dot for decimals
+            str = str.replace(',', '.')
+            return str
+        }
+
         try {
             const parsed = JSON.parse(val)
 
@@ -66,7 +85,7 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
                 full_name: parsed.full_name || parsed.name || parsed.isim_soyisim || "",
                 phone: parsed.phone || parsed.telefon || "",
                 process_name: parsed.process_name || parsed.islem || "",
-                price: parsed.price || parsed.ucret || parsed.price_agreed || "",
+                price: parsePrice(parsed.price || parsed.ucret || parsed.price_agreed),
                 notes: parsed.notes || parsed.detay || "",
                 status: parsed.status || parsed.durum || "Yeni"
             })
