@@ -324,7 +324,7 @@ export default function DashboardPage() {
             <p className="text-sm text-slate-600 mt-2">Kayıtlar ekranından yeni bir tarih belirleyebilirsiniz.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto pb-6">
+          <div className="overflow-x-auto pb-6 custom-scrollbar">
             <div className="flex gap-6 min-w-max px-1">
               {sortedDates.map(dateStr => {
                 const items = groupedReservations[dateStr]
