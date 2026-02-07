@@ -271,7 +271,7 @@ export default function ClientsContent() {
                             open={isOpen}
                             onOpenChange={() => toggleCategory(category)}
                             className={cn(
-                                "rounded-2xl border-2 transition-all duration-300",
+                                "rounded-2xl border-2 transition-all duration-150",
                                 isOpen
                                     ? "bg-gradient-to-br from-[#0c1929]/90 via-[#0a1628]/80 to-[#040d17]/90 border-cyan-500/20 shadow-[0_0_30px_-10px_rgba(34,211,238,0.15)]"
                                     : "bg-[#0c1929]/40 border-transparent hover:bg-[#0c1929]/60 hover:border-cyan-500/10"
@@ -279,10 +279,10 @@ export default function ClientsContent() {
                         >
                             <CollapsibleTrigger asChild>
                                 <div className="flex items-center gap-4 p-5 cursor-pointer group select-none">
-                                    <ChevronRight className={cn("text-cyan-500/50 transition-transform duration-300 group-hover:text-cyan-400", isOpen && "rotate-90 text-cyan-400")} size={20} />
+                                    <ChevronRight className={cn("text-cyan-500/50 transition-transform duration-150 group-hover:text-cyan-400", isOpen && "rotate-90 text-cyan-400")} size={20} />
 
                                     <div className={cn(
-                                        "flex items-center gap-3 px-5 py-3 rounded-xl border-2 shadow-lg transition-all duration-300",
+                                        "flex items-center gap-3 px-5 py-3 rounded-xl border-2 shadow-lg transition-all duration-150",
                                         "bg-gradient-to-r",
                                         config.bg.replace('/10', '/15'),
                                         config.border.replace('/20', '/40'),
@@ -314,7 +314,7 @@ export default function ClientsContent() {
                                         categoryItems.map(client => (
                                             <div
                                                 key={client.id}
-                                                className="flex items-center gap-8 px-6 py-5 rounded-xl hover:bg-gradient-to-r hover:from-cyan-500/5 hover:to-transparent transition-all duration-300 hover:scale-[1.005] border border-transparent hover:border-cyan-500/10 group bg-[#040d17]/30">
+                                                className="flex items-center gap-8 px-6 py-5 rounded-xl hover:bg-gradient-to-r hover:from-cyan-500/5 hover:to-transparent transition-all duration-150 hover:scale-[1.005] border border-transparent hover:border-cyan-500/10 group bg-[#040d17]/30">
 
                                                 {/* Name & Phone */}
                                                 <div className="w-[240px] shrink-0 flex flex-col justify-center gap-1">

@@ -104,7 +104,7 @@ export function Sidebar() {
                             key={item.path}
                             href={item.path}
                             className={twMerge(
-                                "group relative flex items-center gap-4 px-4 py-3.5 rounded-xl font-semibold text-[15px] transition-all duration-300",
+                                "group relative flex items-center gap-4 px-4 py-3.5 rounded-xl font-semibold text-[15px] transition-all duration-150",
                                 "hover:bg-cyan-500/10 hover:translate-x-1",
                                 isActive
                                     ? "bg-gradient-to-r from-cyan-500/20 via-cyan-500/10 to-transparent text-cyan-300 border-l-[3px] border-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.15)]"
@@ -116,7 +116,7 @@ export function Sidebar() {
                                 size={22}
                                 strokeWidth={2}
                                 className={twMerge(
-                                    "transition-all duration-300",
+                                    "transition-all duration-150",
                                     isActive
                                         ? "text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
                                         : "text-slate-500 group-hover:text-cyan-400"

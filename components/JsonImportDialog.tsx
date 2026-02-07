@@ -112,7 +112,7 @@ export function JsonImportDialog({ onSuccess }: JsonImportDialogProps) {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white gap-2 border-0 shadow-lg shadow-cyan-900/30 transition-all duration-300 hover:scale-[1.02]">
+                <Button className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white gap-2 border-0 shadow-lg shadow-cyan-900/30 transition-all duration-150 hover:scale-[1.02]">
                     <Upload size={18} />
                     JSON Yükle
                 </Button>

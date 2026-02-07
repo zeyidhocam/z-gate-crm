@@ -177,7 +177,7 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white gap-2 shadow-lg shadow-cyan-900/30 transition-all duration-300 hover:scale-[1.02]">
+                <Button className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white gap-2 shadow-lg shadow-cyan-900/30 transition-all duration-150 hover:scale-[1.02]">
                     <Plus size={18} />
                     Yeni Kayıt
                 </Button>
@@ -319,7 +319,7 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
                                 onClick={handleSubmit}
                                 disabled={loading || (activeTab === 'json' && jsonStatus === 'invalid')}
                                 className={cn(
-                                    "min-w-[120px] bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-lg shadow-cyan-900/30 transition-all duration-300",
+                                    "min-w-[120px] bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white shadow-lg shadow-cyan-900/30 transition-all duration-150",
                                     loading && "opacity-80 cursor-not-allowed"
                                 )}
                             >

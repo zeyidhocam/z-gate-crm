@@ -331,8 +331,8 @@ export default function DashboardContent() {
                     </div>
                 ) : (
                     <div className="overflow-x-auto pb-6 custom-scrollbar">
-                        <div className="flex gap-6 min-w-max px-1">
-                            {sortedDates.map(dateStr => {
+                        <div className="flex gap-4 min-w-max px-1">
+                            {sortedDates.slice(0, 5).map(dateStr => {
                                 const items = groupedReservations[dateStr]
                                 const dateObj = parseISO(dateStr)
                                 const isToday = isSameDay(dateObj, now)
@@ -341,7 +341,7 @@ export default function DashboardContent() {
                                     <div
                                         key={dateStr}
                                         className={cn(
-                                            "w-[340px] shrink-0 rounded-2xl border flex flex-col overflow-hidden",
+                                            "w-[280px] shrink-0 rounded-2xl border flex flex-col overflow-hidden",
                                             isToday
                                                 ? "bg-slate-900/80 border-cyan-500/50 shadow-[0_0_30px_-10px_rgba(34,211,238,0.2)]"
                                                 : "bg-slate-900/40 border-slate-800/50"
