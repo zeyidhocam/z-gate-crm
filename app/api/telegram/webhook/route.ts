@@ -100,6 +100,7 @@ export async function POST(request: Request) {
             const { data: newClient, error } = await supabase
                 .from('clients')
                 .insert({
+                    name: clientName, // FIX: 'name' column is NOT NULL
                     full_name: clientName,
                     phone: data.phone || null,
                     notes: data.notes || data.note || "Telegram üzerinden oluşturuldu",
