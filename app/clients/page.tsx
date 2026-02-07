@@ -61,7 +61,12 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ClientEditDialog } from "@/components/ClientEditDialog"
 
+import { useSearchParams } from "next/navigation"
+
+// ... imports
+
 export default function ClientsPage() {
+    const searchParams = useSearchParams()
     const [clients, setClients] = useState<Client[]>([])
     const [processTypes, setProcessTypes] = useState<{ id: number, name: string }[]>([])
     const [loading, setLoading] = useState(true)
@@ -81,7 +86,27 @@ export default function ClientsPage() {
         return { 'Yeni': true, 'Sabit': true, 'Takip': true, 'Rezervasyon': true, 'Arşiv': false }
     })
 
-    // Expanded state'i localStorage'a kaydet
+    // URL parametresine göre kategoriyi aç (Sadece sayfa ilk açıldığında)
+    useEffect(() => {
+        const categoryParam = searchParams.get('category')
+        if (categoryParam && Object.keys(CATEGORIES).includes(categoryParam)) {
+            // İstenen kategoriyi aç, diğerlerini (isteğe bağlı) kapatabiliriz ama kullanıcı deneyimi için koruyalım
+            setExpanded(prev => ({
+                ...prev,
+                [categoryParam]: true
+            }))
+
+            // Opsiyonel: Oraya scroll et
+            setTimeout(() => {
+                const element = document.getElementById(`category-${categoryParam}`)
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                }
+            }, 500)
+        }
+    }, [searchParams])
+
+    // ... existing localStorage effect
     useEffect(() => {
         localStorage.setItem('categoryExpanded', JSON.stringify(expanded))
     }, [expanded])

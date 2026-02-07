@@ -87,15 +87,15 @@ export async function GET(request: Request) {
         const dateStr = startOfTrtDay.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Istanbul' })
 
         const message = `
-<b>🔔 Z-GAME CRM GÜNLÜK RAPOR</b>
-<pre>📅 ${dateStr}</pre>
+<b>🔔 Z-GATE CRM GÜNLÜK RAPOR</b>
+📅 <b>${dateStr}</b>
 
 <b>📊 GÜNLÜK ÖZET</b>
 ━━━━━━━━━━━━━━━━━━━━
-🚀 <b>Yeni Kayıtlar:</b>   <code>${newLeadsCount || 0}</code>
-✅ <b>Yeni Müşteriler:</b> <code>${newCustomersCount || 0}</code>
-📅 <b>Bugünkü Randevular:</b> <code>${reservationsCount || 0}</code>
-❌ <b>İptal / Arşiv:</b>   <code>${archivedCount}</code>
+🚀 <b>Yeni Kayıtlar:</b>   <b>${newLeadsCount || 0}</b>
+✅ <b>Yeni Müşteriler:</b> <b>${newCustomersCount || 0}</b>
+📅 <b>Bugünkü Randevular:</b> <b>${reservationsCount || 0}</b>
+❌ <b>İptal / Arşiv:</b>   <b>${archivedCount}</b>
 
 <b>💰 FİNANSAL DURUM</b>
 ━━━━━━━━━━━━━━━━━━━━

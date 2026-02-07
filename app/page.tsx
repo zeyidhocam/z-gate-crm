@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import { CalendarCheck, CalendarDays, CalendarRange, CalendarX, User, Phone, PieChart as PieChartIcon, BarChart3, Check } from 'lucide-react'
+import Link from 'next/link'
 import { KPICard } from '@/components/KPICard'
 import { ProcessPieChart } from '@/components/charts/ProcessPieChart'
 import { TrendChart } from '@/components/charts/TrendChart'
@@ -222,58 +223,72 @@ export default function DashboardPage() {
       </div>
 
       {/* Reminder Alert */}
-      <ReminderAlert />
+      <div className="mb-6">
+        <ReminderAlert />
+      </div>
 
       {/* KPI Cards - Ocean Elite Colors */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <KPICard
-          title="Yaklaşan Rezervasyon"
-          value={stats.reservation.toString()}
-          icon={CalendarCheck}
-          colorClass="text-cyan-400"
-          bgClass="bg-cyan-500/10"
-          borderClass="border-cyan-500/20"
-        />
-        <KPICard
-          title="Yeni Müşteri"
-          value={stats.new.toString()}
-          icon={User}
-          colorClass="text-emerald-400"
-          bgClass="bg-emerald-500/10"
-          borderClass="border-emerald-500/20"
-        />
-        <KPICard
-          title="Takip Edilen"
-          value={stats.tracking.toString()}
-          icon={CalendarRange}
-          colorClass="text-sky-400"
-          bgClass="bg-sky-500/10"
-          borderClass="border-sky-500/20"
-        />
-        <KPICard
-          title="Aktif Müşteri"
-          value={stats.fixed.toString()}
-          icon={Check}
-          colorClass="text-red-400"
-          bgClass="bg-red-500/10"
-          borderClass="border-red-500/20"
-        />
-        <KPICard
-          title="Arşiv"
-          value={stats.archive.toString()}
-          icon={CalendarX}
-          colorClass="text-slate-400"
-          bgClass="bg-slate-500/10"
-          borderClass="border-slate-500/20"
-        />
-        <KPICard
-          title="Toplam Kayıt"
-          value={stats.total.toString()}
-          icon={CalendarDays}
-          colorClass="text-indigo-400"
-          bgClass="bg-indigo-500/10"
-          borderClass="border-indigo-500/20"
-        />
+        <Link href="/reservations">
+          <KPICard
+            title="Yaklaşan Rezervasyon"
+            value={stats.reservation.toString()}
+            icon={CalendarCheck}
+            colorClass="text-cyan-400"
+            bgClass="bg-cyan-500/10"
+            borderClass="border-cyan-500/20"
+          />
+        </Link>
+        <Link href="/clients?category=Yeni">
+          <KPICard
+            title="Yeni Müşteri"
+            value={stats.new.toString()}
+            icon={User}
+            colorClass="text-emerald-400"
+            bgClass="bg-emerald-500/10"
+            borderClass="border-emerald-500/20"
+          />
+        </Link>
+        <Link href="/clients?category=Takip">
+          <KPICard
+            title="Takip Edilen"
+            value={stats.tracking.toString()}
+            icon={CalendarRange}
+            colorClass="text-sky-400"
+            bgClass="bg-sky-500/10"
+            borderClass="border-sky-500/20"
+          />
+        </Link>
+        <Link href="/clients?category=Aktif">
+          <KPICard
+            title="Aktif Müşteri"
+            value={stats.fixed.toString()}
+            icon={Check}
+            colorClass="text-red-400"
+            bgClass="bg-red-500/10"
+            borderClass="border-red-500/20"
+          />
+        </Link>
+        <Link href="/clients?category=Arşiv">
+          <KPICard
+            title="Arşiv"
+            value={stats.archive.toString()}
+            icon={CalendarX}
+            colorClass="text-slate-400"
+            bgClass="bg-slate-500/10"
+            borderClass="border-slate-500/20"
+          />
+        </Link>
+        <Link href="/clients">
+          <KPICard
+            title="Toplam Kayıt"
+            value={stats.total.toString()}
+            icon={CalendarDays}
+            colorClass="text-indigo-400"
+            bgClass="bg-indigo-500/10"
+            borderClass="border-indigo-500/20"
+          />
+        </Link>
       </div>
 
       {/* Charts Section */}

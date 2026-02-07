@@ -18,7 +18,7 @@ export function KPICard({ title, value, icon: Icon, colorClass, bgClass, borderC
             "bg-gradient-to-br from-[#0c1929]/90 via-[#0a1628]/80 to-[#040d17]/90",
             "backdrop-blur-xl border-2",
             borderClass,
-            "hover:scale-[1.02] hover:shadow-lg",
+            "hover:shadow-lg hover:border-opacity-50",
             "before:absolute before:inset-0 before:rounded-2xl before:bg-gradient-to-br before:from-white/5 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity"
         )}>
             {/* Hover Background - Category Color */}
