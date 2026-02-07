@@ -91,22 +91,22 @@ export default function DashboardPage() {
     try {
       setLoading(true)
 
-      // 1. Auto-Archive Logic
-      const now = new Date()
-      const { data: pastReservations } = await supabase
-        .from('clients')
-        .select('id, reservation_at')
-        .eq('status', 'Rezervasyon')
-        .lt('reservation_at', now.toISOString())
+      // 1. Auto-Archive Logic TEMPORARILY DISABLED
+      // const now = new Date()
+      // const { data: pastReservations } = await supabase
+      //   .from('clients')
+      //   .select('id, reservation_at')
+      //   .eq('status', 'Rezervasyon')
+      //   .lt('reservation_at', now.toISOString())
 
-      if (pastReservations && pastReservations.length > 0) {
-        console.log(`Auto-archiving ${pastReservations.length} records...`)
-        const idsToArchive = (pastReservations as any[]).map(r => r.id)
-        await supabase
-          .from('clients')
-          .update({ status: 'Arşiv' })
-          .in('id', idsToArchive)
-      }
+      // if (pastReservations && pastReservations.length > 0) {
+      //   console.log(`Auto-archiving ${pastReservations.length} records...`)
+      //   const idsToArchive = (pastReservations as any[]).map(r => r.id)
+      //   await supabase
+      //     .from('clients')
+      //     .update({ status: 'Arşiv' })
+      //     .in('id', idsToArchive)
+      // }
 
       // 2. Fetch All Active Data for Stats
       const { data: clientsData, error } = await supabase
