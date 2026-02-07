@@ -113,7 +113,7 @@ export default function DashboardPage() {
       // 2. Fetch All Active Data for Stats
       const { data: clientsData, error } = await supabase
         .from('clients')
-        .select('*')
+        .select('*, process_types(name)')
 
       if (error) throw error
 
@@ -135,7 +135,8 @@ export default function DashboardPage() {
             mappedLeads.push({
               ...client,
               name: client.full_name || client.name || 'İsimsiz',
-              price: client.price_agreed || undefined
+              price: client.price_agreed || undefined,
+              process_name: client.process_types?.name || client.process_name
             })
           }
         })
