@@ -124,7 +124,11 @@ export async function POST(request: Request) {
                 await sendMessage(token, chatId, "⚠️ <b>JSON Hatası:</b> Gönderdiğin formatı anlayamadım.\n\nLütfen tırnak işaretlerine ve parantezlere dikkat et.")
             } else {
                 console.error('Db Error:', e)
-                const errorMsg = (e as any)?.message || (e as any)?.details || "Bilinmeyen hata"
+                const errorDetails = typeof e === 'object' && e !== null && 'details' in e
+                    ? (e as { details?: string }).details
+                    : undefined
+                const errorMessage = e instanceof Error ? e.message : undefined
+                const errorMsg = errorDetails || errorMessage || "Bilinmeyen hata"
                 await sendMessage(token, chatId, `❌ <b>Veritabanı Hatası:</b>\n\n<code>${errorMsg}</code>`)
             }
         }

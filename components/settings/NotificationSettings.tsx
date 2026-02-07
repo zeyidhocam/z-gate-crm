@@ -118,10 +118,10 @@ export function NotificationSettings() {
                     <div className="alert bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl text-sm text-blue-200">
                         <p className="font-bold mb-1">🤖 Nasıl Kurulur?</p>
                         <ol className="list-decimal list-inside space-y-1 opacity-90">
-                            <li>Telegram'da <strong>@BotFather</strong>'ı bulun ve <code>/newbot</code> diyerek yeni bir bot oluşturun.</li>
-                            <li>Size verdiği <strong>Token</strong>'ı aşağıya yapıştırın.</li>
+                            <li>Telegram&apos;da <strong>@BotFather</strong>&apos;ı bulun ve <code>/newbot</code> diyerek yeni bir bot oluşturun.</li>
+                            <li>Size verdiği <strong>Token</strong>&apos;ı aşağıya yapıştırın.</li>
                             <li>Kendi botunuzu bulun, <code>/start</code> diyerek başlatın.</li>
-                            <li><strong>@userinfobot</strong>'a yazarak <strong>ID</strong>'nizi öğrenin ve aşağıya yapıştırın.</li>
+                            <li><strong>@userinfobot</strong>&apos;a yazarak <strong>ID</strong>&apos;nizi öğrenin ve aşağıya yapıştırın.</li>
                         </ol>
                     </div>
 
@@ -174,7 +174,8 @@ export function NotificationSettings() {
                                     const data = await res.json()
                                     if (data.ok) toast.success("Rapor başarıyla gönderildi!")
                                     else toast.error("Rapor gönderilemedi: " + data.error)
-                                } catch (e) {
+                                } catch (error) {
+                                    console.error(error)
                                     toast.error("Bir hata oluştu")
                                 }
                             }}

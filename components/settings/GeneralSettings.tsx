@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useSettings } from "@/components/providers/settings-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,26 +10,17 @@ import { Separator } from "@/components/ui/separator"
 
 export function GeneralSettings() {
     const { config, updateConfig, isLoading } = useSettings()
-    const [formData, setFormData] = useState({
-        appName: '',
-        logoUrl: '',
-    })
+    const [formData, setFormData] = useState(() => ({
+        appName: config.appName,
+        logoUrl: config.logoUrl || '',
+    }))
     const [saved, setSaved] = useState(false)
-
-    useEffect(() => {
-        if (!isLoading) {
-            setFormData({
-                appName: config.appName,
-                logoUrl: config.logoUrl || '',
-            })
-        }
-    }, [config, isLoading])
 
     const handleSave = async () => {
         await updateConfig({
             appName: formData.appName,
             logoUrl: formData.logoUrl,
-        } as any)
+        })
 
         setSaved(true)
         setTimeout(() => setSaved(false), 2000)

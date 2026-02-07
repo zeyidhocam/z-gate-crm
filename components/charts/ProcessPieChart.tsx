@@ -1,6 +1,7 @@
 "use client"
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts'
+import type { PieLabelRenderProps, TooltipProps } from 'recharts'
 
 interface ProcessData {
     name: string
@@ -23,8 +24,8 @@ const COLORS = [
 ]
 
 // Custom label renderer
-const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }: any) => {
-    if (percent < 0.08) return null
+const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }: PieLabelRenderProps) => {
+    if (!percent || percent < 0.08) return null
     const RADIAN = Math.PI / 180
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5
     const x = cx + radius * Math.cos(-midAngle * RADIAN)
@@ -45,12 +46,13 @@ const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent
 }
 
 // Custom tooltip
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip = ({ active, payload }: TooltipProps<number, string>) => {
     if (active && payload && payload.length) {
+        const entry = payload[0]
         return (
             <div className="bg-[#0c1929] border border-cyan-500/30 rounded-xl px-4 py-3 shadow-xl shadow-cyan-500/10">
-                <p className="text-sm font-bold text-cyan-300 mb-1">{payload[0].name}</p>
-                <p className="text-lg font-black text-white">{payload[0].value} <span className="text-xs text-slate-400">müşteri</span></p>
+                <p className="text-sm font-bold text-cyan-300 mb-1">{entry?.name}</p>
+                <p className="text-lg font-black text-white">{entry?.value} <span className="text-xs text-slate-400">müşteri</span></p>
             </div>
         )
     }

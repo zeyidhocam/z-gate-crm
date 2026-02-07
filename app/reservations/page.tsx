@@ -452,6 +452,7 @@ export default function ReservationsPage() {
             </div>
 
             <ClientEditDialog
+                key={editingClient?.id ?? 'client-edit-dialog'}
                 open={!!editingClient}
                 onOpenChange={(open) => !open && setEditingClient(null)}
                 client={editingClient}
