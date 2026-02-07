@@ -97,15 +97,15 @@ export default function ReservationsPage() {
         try {
             setLoading(true)
 
-            // Auto Archive Logic
-            const now = new Date()
-            now.setHours(0, 0, 0, 0)
+            // Auto Archive Logic TEMPORARILY DISABLED
+            // const now = new Date()
+            // now.setHours(0, 0, 0, 0)
 
-            await supabase
-                .from('clients')
-                .update({ status: 'Arşiv' })
-                .eq('status', 'Rezervasyon')
-                .lt('reservation_at', now.toISOString())
+            // await supabase
+            //     .from('clients')
+            //     .update({ status: 'Arşiv' })
+            //     .eq('status', 'Rezervasyon')
+            //     .lt('reservation_at', now.toISOString())
 
             // Fetch
             const { data, error } = await supabase
