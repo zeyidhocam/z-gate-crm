@@ -79,21 +79,36 @@ export async function POST(request: Request) {
 
             const data = JSON.parse(cleanText)
 
-            // Validate required fields
-            if (!data.name) {
-                await sendMessage(token, chatId, "⚠️ <b>Hata:</b> 'name' alanı zorunludur.\n\nÖrnek:\n<code>{\"name\": \"Ali\"}</code>")
+            // Validate required fields (Support both 'name' and 'full_name')
+            const clientName = data.name || data.full_name
+            if (!clientName) {
+                await sendMessage(token, chatId, "⚠️ <b>Hata:</b> 'name' veya 'full_name' alanı zorunludur.\n\nÖrnek:\n<code>{\"name\": \"Ali\"}</code>")
                 return NextResponse.json({ ok: true })
+            }
+
+            // Clean price string (e.g. "9.000 TL" -> 9000)
+            let price = 0
+            if (data.price) {
+                if (typeof data.price === 'number') price = data.price
+                else if (typeof data.price === 'string') {
+                    // Remove TL, dots, spaces
+                    price = parseFloat(data.price.replace(/[^\d]/g, '')) || 0
+                }
             }
 
             // Insert into Supabase
             const { data: newClient, error } = await supabase
                 .from('clients')
                 .insert({
-                    full_name: data.name,
+                    full_name: clientName,
                     phone: data.phone || null,
-                    notes: data.note || data.notes || "Telegram üzerinden oluşturuldu",
-                    price_agreed: data.price || 0,
-                    status: 'Rehber', // Default status
+                    notes: data.notes || data.note || "Telegram üzerinden oluşturuldu",
+                    price_agreed: price,
+                    status: data.status || 'Rehber',
+                    process_name: data.process_name || null,
+                    ai_summary: data.ai_summary || null,
+                    reservation_at: data.reservation_at ? new Date(data.reservation_at).toISOString() : null,
+                    payment_status: data.payment_status || null,
                     created_at: new Date().toISOString()
                 })
                 .select()
@@ -101,7 +116,7 @@ export async function POST(request: Request) {
 
             if (error) throw error
 
-            await sendMessage(token, chatId, `✅ <b>Kayıt Başarılı!</b>\n\n👤 <b>İsim:</b> ${newClient.full_name}\n📞 <b>Tel:</b> ${newClient.phone || '-'}\n💰 <b>Fiyat:</b> ${newClient.price_agreed} ₺`)
+            await sendMessage(token, chatId, `✅ <b>Kayıt Başarılı!</b>\n\n👤 <b>İsim:</b> ${newClient.full_name}\n📞 <b>Tel:</b> ${newClient.phone || '-'}\n💰 <b>Fiyat:</b> ${newClient.price_agreed?.toLocaleString('tr-TR')} ₺`)
 
         } catch (e) {
             if (e instanceof SyntaxError) {
