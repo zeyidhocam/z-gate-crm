@@ -126,7 +126,7 @@ export default function ClientsPage() {
             .order('created_at', { ascending: false })
 
         if (error) console.error('Error fetching clients:', error)
-        else setClients(data as any || []) // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        else setClients((data ?? []) as Client[])
 
         setLoading(false)
     }
@@ -523,9 +523,10 @@ export default function ClientsPage() {
 
             {/* EDIT DIALOG */}
             <ClientEditDialog
+                key={editingClient?.id ?? 'client-edit-dialog'}
                 open={!!editingClient}
                 onOpenChange={(open) => !open && setEditingClient(null)}
-                client={editingClient as any}
+                client={editingClient}
                 onSave={handleSaveEdit}
                 processTypes={processTypes}
             />

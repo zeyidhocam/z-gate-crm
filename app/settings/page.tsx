@@ -2,20 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { Settings, List, Shield, Palette, Bell } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Separator } from "@/components/ui/separator"
-import { Switch } from "@/components/ui/switch"
-import { Textarea } from "@/components/ui/textarea"
+import { useSettings } from "@/components/providers/settings-provider"
 
 
 import { GeneralSettings } from "@/components/settings/GeneralSettings"
@@ -25,13 +13,14 @@ import { NotificationSettings } from "@/components/settings/NotificationSettings
 
 
 export default function SettingsPage() {
-    const [activeTab, setActiveTab] = useState("services")
-
-    // localStorage ile kalıcı tab
-    useEffect(() => {
-        const saved = localStorage.getItem('settingsActiveTab')
-        if (saved) setActiveTab(saved)
-    }, [])
+    const { config } = useSettings()
+    const [activeTab, setActiveTab] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('settingsActiveTab')
+            if (saved) return saved
+        }
+        return "services"
+    })
 
     useEffect(() => {
         localStorage.setItem('settingsActiveTab', activeTab)
@@ -100,7 +89,9 @@ export default function SettingsPage() {
 
                     {activeTab === 'services' && <ServiceSettings />}
                     {activeTab === 'appearance' && <AppearanceSettings />}
-                    {activeTab === 'identity' && <GeneralSettings />}
+                    {activeTab === 'identity' && (
+                        <GeneralSettings key={`${config.appName}-${config.logoUrl ?? ''}`} />
+                    )}
                     {activeTab === 'notifications' && <NotificationSettings />}
                 </div>
             </div>

@@ -88,13 +88,13 @@ export default function CustomersPage() {
                 .order('confirmed_at', { ascending: false })
 
             if (error) throw error
-            const fetchedData = data as any[] || []
+            const fetchedData = (data ?? []) as Customer[]
             setCustomers(fetchedData)
             // İlk yüklemede stats'ı set et (arşivlemede değişmez)
             if (!initialStats) {
                 setInitialStats({
                     count: fetchedData.length,
-                    revenue: fetchedData.reduce((sum: number, c: any) => sum + (c.price_agreed || c.price || 0), 0)
+                    revenue: fetchedData.reduce((sum: number, c) => sum + (c.price_agreed || c.price || 0), 0)
                 })
             }
         } catch (error) {

@@ -93,7 +93,7 @@ export default function RemindersPage() {
                 .order('created_at', { ascending: true })
 
             if (error) throw error
-            setClients(data as any[] || [])
+            setClients((data ?? []) as Client[])
         } catch (error) {
             console.error('Error fetching clients:', error)
         }
@@ -108,7 +108,7 @@ export default function RemindersPage() {
                 .order('reminder_date', { ascending: true })
 
             if (error) throw error
-            setReminders(data as any[] || [])
+            setReminders((data ?? []) as Reminder[])
         } catch (error) {
             console.error('Error fetching reminders:', error)
         } finally {

@@ -1,10 +1,64 @@
 
 import { createBrowserClient } from '@supabase/ssr'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-let client
+type MockResponse<T> = {
+    data: T | null
+    error: { message: string } | null
+}
+
+type MockQueryBuilder<T> = {
+    select: () => MockQueryBuilder<T>
+    insert: () => MockQueryBuilder<T>
+    update: () => MockQueryBuilder<T>
+    eq: () => MockQueryBuilder<T>
+    in: () => MockQueryBuilder<T>
+    order: () => MockQueryBuilder<T>
+    single: () => MockQueryBuilder<T>
+    then: (resolve: (value: MockResponse<T>) => void) => Promise<void>
+}
+
+type MockSupabaseClient = {
+    from: () => {
+        select: () => MockQueryBuilder<unknown[]>
+        insert: () => MockQueryBuilder<null>
+        update: () => MockQueryBuilder<null>
+    }
+    auth: {
+        signInWithPassword: () => Promise<{ data: { user: null; session: null }; error: { message: string } }>
+        getUser: () => Promise<{ data: { user: null }; error: null }>
+        getSession: () => Promise<{ data: { session: null }; error: null }>
+        onAuthStateChange: () => { data: { subscription: { unsubscribe: () => void } } }
+    }
+}
+
+const createMockQueryBuilder = <T,>(data: T | null): MockQueryBuilder<T> => {
+    const response: MockResponse<T> = {
+        data,
+        error: { message: 'Supabase not configured' }
+    }
+
+    const builder: MockQueryBuilder<T> = {
+        select: () => builder,
+        insert: () => builder,
+        update: () => builder,
+        eq: () => builder,
+        in: () => builder,
+        order: () => builder,
+        single: () => builder,
+        then: (resolve) => Promise.resolve(resolve(response))
+    }
+
+    return builder
+}
+
+const selectBuilder = createMockQueryBuilder<unknown[]>([])
+const writeBuilder = createMockQueryBuilder<null>(null)
+
+let client: SupabaseClient | null = null
 
 try {
     // Ensure both are strings and have valid length
@@ -22,10 +76,11 @@ try {
 }
 
 // Fallback mock client
-const mockClient = {
+const mockClient: MockSupabaseClient = {
     from: () => ({
-        select: () => Promise.resolve({ data: [], error: { message: 'Supabase not configured' } }),
-        insert: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } }),
+        select: () => selectBuilder,
+        insert: () => writeBuilder,
+        update: () => writeBuilder,
     }),
     auth: {
         signInWithPassword: () => Promise.resolve({
@@ -36,8 +91,7 @@ const mockClient = {
         getSession: () => Promise.resolve({ data: { session: null }, error: null }),
         onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => { } } } }),
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-} as any
+}
 
-export const supabase = client || mockClient
+export const supabase = client ?? mockClient
 export const isSupabaseConfigured = !!client

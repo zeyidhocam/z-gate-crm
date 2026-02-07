@@ -6,6 +6,25 @@ import { toast } from "sonner"
 import { isBefore, isToday, parseISO } from "date-fns"
 import { Bell, AlertTriangle } from "lucide-react"
 
+interface ReminderClient {
+    full_name: string | null
+    name: string | null
+    phone: string | null
+    process_name?: string | null
+    process_types?: { name: string } | null
+    price_agreed?: number | null
+    price?: number | null
+    payment_balance?: number | null
+}
+
+interface ReminderRow {
+    id: string
+    title: string
+    reminder_date: string
+    is_completed: boolean
+    clients?: ReminderClient | null
+}
+
 export function GlobalReminderManager() {
     const [hasChecked, setHasChecked] = useState(false)
 
@@ -21,10 +40,9 @@ export function GlobalReminderManager() {
 
                 if (error || !data) return
 
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const todayReminders = data.filter((r: any) => isToday(parseISO(r.reminder_date)))
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const overdueReminders = data.filter((r: any) => isBefore(parseISO(r.reminder_date), new Date()) && !isToday(parseISO(r.reminder_date)))
+                const reminders = (data ?? []) as ReminderRow[]
+                const todayReminders = reminders.filter((r) => isToday(parseISO(r.reminder_date)))
+                const overdueReminders = reminders.filter((r) => isBefore(parseISO(r.reminder_date), new Date()) && !isToday(parseISO(r.reminder_date)))
 
                 const total = todayReminders.length + overdueReminders.length
 
@@ -84,7 +102,7 @@ export function GlobalReminderManager() {
 
                             const allReminders = [...overdueReminders, ...todayReminders]
 
-                            allReminders.forEach((r: any) => {
+                            allReminders.forEach((r) => {
                                 const client = r.clients
                                 const clientName = client?.full_name || client?.name || 'Müşteri'
                                 const phone = client?.phone

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client"
 
 import { useState, useEffect, useRef } from "react"
@@ -5,7 +6,7 @@ import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import { Plus, Trash2, Loader2, Save } from "lucide-react"
+import { Plus, Trash2, Loader2 } from "lucide-react"
 
 interface ProcessType {
     id: number
@@ -22,6 +23,13 @@ export function ServiceSettings() {
     // For auto-focus
     const inputRef = useRef<HTMLInputElement>(null)
 
+    const fetchItems = async () => {
+        setLoading(true)
+        const { data } = await supabase.from('process_types').select('*').order('id', { ascending: true })
+        if (data) setItems(data as ProcessType[])
+        setLoading(false)
+    }
+
     useEffect(() => {
         fetchItems()
     }, [])
@@ -32,13 +40,6 @@ export function ServiceSettings() {
         }
     }, [editingParams])
 
-    const fetchItems = async () => {
-        setLoading(true)
-        const { data } = await supabase.from('process_types').select('*').order('id', { ascending: true })
-        if (data) setItems(data)
-        setLoading(false)
-    }
-
     const handleCellClick = (id: number, field: string) => {
         setEditingParams({ id, field })
     }
@@ -47,7 +48,7 @@ export function ServiceSettings() {
         setEditingParams(null)
     }
 
-    const handleChange = async (id: number, field: keyof ProcessType, value: any) => {
+    const handleChange = async (id: number, field: keyof ProcessType, value: string | number) => {
         // Validation for price
         if (field === 'price' && isNaN(Number(value))) return
 
@@ -66,7 +67,7 @@ export function ServiceSettings() {
     }
 
     // Explicit save function for Blur
-    const saveChange = async (id: number, field: string, value: any) => {
+    const saveChange = async (id: number, field: string, value: string | number) => {
         await supabase.from('process_types').update({ [field]: value }).eq('id', id)
     }
 

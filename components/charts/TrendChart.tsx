@@ -1,6 +1,7 @@
 "use client"
 
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
+import type { DotProps, TooltipProps } from 'recharts'
 
 interface TrendData {
     date: string
@@ -13,12 +14,13 @@ interface TrendChartProps {
 }
 
 // Custom tooltip
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
     if (active && payload && payload.length) {
+        const entry = payload[0]
         return (
             <div className="bg-[#0c1929] border border-cyan-500/30 rounded-xl px-4 py-3 shadow-xl shadow-cyan-500/10">
                 <p className="text-xs font-bold text-slate-400 mb-1">{label}</p>
-                <p className="text-lg font-black text-cyan-300">{payload[0].value} <span className="text-xs text-slate-400">kayıt</span></p>
+                <p className="text-lg font-black text-cyan-300">{entry?.value} <span className="text-xs text-slate-400">kayıt</span></p>
             </div>
         )
     }
@@ -26,9 +28,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 }
 
 // Custom dot component
-const CustomDot = (props: any) => {
-    const { cx, cy, value } = props
-    if (value === 0) return null
+const CustomDot = ({ cx, cy, value }: DotProps) => {
+    if (!cx || !cy || value === 0 || value === undefined) return null
     return (
         <circle
             cx={cx}

@@ -30,6 +30,15 @@ interface SettingsContextType {
     isLoading: boolean
 }
 
+interface SystemSettingsRow {
+    site_title?: string | null
+    logo_url?: string | null
+    font_family?: UIConfig['fontFamily'] | null
+    font_weight?: UIConfig['fontWeight'] | null
+    font_scale?: UIConfig['fontScale'] | null
+    panel_width?: UIConfig['panelWidth'] | null
+}
+
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined)
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
@@ -41,16 +50,17 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
             .from('system_settings')
             .select('*')
             .single()
-            .then(({ data }: { data: any }) => {
-                if (data) {
+            .then(({ data }) => {
+                const settings = data as SystemSettingsRow | null
+                if (settings) {
                     setConfig({
-                        appName: data.site_title || DEFAULT_CONFIG.appName,
-                        logoUrl: data.logo_url || '',
+                        appName: settings.site_title || DEFAULT_CONFIG.appName,
+                        logoUrl: settings.logo_url || '',
                         theme: 'ocean-elite',  // Her zaman ocean-elite
-                        fontFamily: data.font_family || DEFAULT_CONFIG.fontFamily,
-                        fontWeight: data.font_weight || DEFAULT_CONFIG.fontWeight,
-                        fontScale: data.font_scale || DEFAULT_CONFIG.fontScale,
-                        panelWidth: data.panel_width || DEFAULT_CONFIG.panelWidth,
+                        fontFamily: settings.font_family || DEFAULT_CONFIG.fontFamily,
+                        fontWeight: settings.font_weight || DEFAULT_CONFIG.fontWeight,
+                        fontScale: settings.font_scale || DEFAULT_CONFIG.fontScale,
+                        panelWidth: settings.panel_width || DEFAULT_CONFIG.panelWidth,
                     })
                 }
                 setIsLoading(false)

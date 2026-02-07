@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Edit } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -33,13 +33,7 @@ interface ClientEditDialogProps {
 }
 
 export function ClientEditDialog({ client, open, onOpenChange, onSave, processTypes }: ClientEditDialogProps) {
-    const [formData, setFormData] = useState<Client | null>(null)
-
-    useEffect(() => {
-        if (client) {
-            setFormData({ ...client })
-        }
-    }, [client])
+    const [formData, setFormData] = useState<Client | null>(() => (client ? { ...client } : null))
 
     const handleSave = () => {
         if (formData) {
