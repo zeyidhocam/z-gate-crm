@@ -7,6 +7,9 @@ module.exports = {
     ],
     theme: {
         extend: {
+            transitionDuration: {
+                DEFAULT: '200ms',
+            },
             colors: {
                 background: "var(--background)",
                 sidebar: "var(--sidebar)",

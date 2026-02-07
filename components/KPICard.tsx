@@ -14,7 +14,7 @@ interface KPICardProps {
 export function KPICard({ title, value, icon: Icon, colorClass, bgClass, borderClass }: KPICardProps) {
     return (
         <div className={twMerge(
-            "relative group p-6 rounded-2xl transition-all duration-300",
+            "relative group p-6 rounded-2xl transition-all duration-200 hover:scale-[1.02] h-full min-w-0 overflow-hidden",
             "bg-gradient-to-br from-[#0c1929]/90 via-[#0a1628]/80 to-[#040d17]/90",
             "backdrop-blur-xl border-2",
             borderClass,
@@ -23,12 +23,12 @@ export function KPICard({ title, value, icon: Icon, colorClass, bgClass, borderC
         )}>
             {/* Hover Background - Category Color */}
             <div className={twMerge(
-                "absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300",
+                "absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200",
                 bgClass.replace('/10', '/20')
             )} />
             {/* Glow Effect */}
             <div className={twMerge(
-                "absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm -z-10",
+                "absolute -inset-px rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 blur-sm -z-10",
                 bgClass.replace('/10', '/30')
             )} />
 

@@ -112,7 +112,7 @@ export default function DashboardPage() {
       // 2. Fetch All Active Data for Stats
       const { data: clientsData, error } = await supabase
         .from('clients')
-        .select('id, full_name, name, phone, status, reservation_at, price_agreed, price, created_at, updated_at, process_types(name), process_name')
+        .select('*')
 
       if (error) throw error
 
@@ -228,7 +228,7 @@ export default function DashboardPage() {
       </div>
 
       {/* KPI Cards - Ocean Elite Colors */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-fr">
         <Link href="/reservations">
           <KPICard
             title="Yaklaşan Rezervasyon"
@@ -377,41 +377,43 @@ export default function DashboardPage() {
                     {/* List */}
                     <div className="p-3 space-y-3 max-h-[400px] overflow-y-auto custom-scrollbar">
                       {items.map(lead => (
-                        <div key={lead.id} className="p-4 rounded-xl bg-slate-950/50 border border-slate-800/50 hover:border-slate-700/50 transition-colors group">
-                          <div className="flex items-start justify-between mb-3">
-                            <div>
-                              <div className="font-bold text-slate-200 text-base">{lead.name}</div>
-                              <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5 font-medium">
-                                <Phone size={12} />
-                                {lead.phone || '-'}
-                              </div>
-                            </div>
-                            {lead.price && (
-                              <div className="text-right">
-                                <div className="text-sm font-bold text-slate-300 bg-slate-800/50 px-2 py-0.5 rounded-md font-mono">
-                                  {lead.price.toLocaleString('tr-TR')} ₺
+                        <Link key={lead.id} href="/reservations" className="block">
+                          <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800/50 hover:border-cyan-500/50 hover:shadow-[0_0_15px_-5px_rgba(34,211,238,0.3)] transition-all duration-200 hover:scale-[1.02] group">
+                            <div className="flex items-start justify-between mb-3">
+                              <div>
+                                <div className="font-bold text-slate-200 text-base">{lead.name}</div>
+                                <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5 font-medium">
+                                  <Phone size={12} />
+                                  {lead.phone || '-'}
                                 </div>
                               </div>
-                            )}
-                          </div>
-
-                          <div className="flex items-center justify-between pt-3 border-t border-slate-800/50">
-                            <div className="flex items-center gap-2">
-                              <div className="p-1.5 bg-indigo-500/10 rounded-md">
-                                <User size={14} className="text-indigo-400" />
-                              </div>
-                              <span className="text-xs font-semibold text-slate-400">
-                                {lead.process_name || 'İşlem Belirtilmemiş'}
-                              </span>
+                              {lead.price && (
+                                <div className="text-right">
+                                  <div className="text-sm font-bold text-slate-300 bg-slate-800/50 px-2 py-0.5 rounded-md font-mono">
+                                    {lead.price.toLocaleString('tr-TR')} ₺
+                                  </div>
+                                </div>
+                              )}
                             </div>
 
-                            {lead.reservation_at && (
-                              <span className="text-xs font-bold text-slate-500 bg-slate-900 px-2 py-1 rounded">
-                                {format(parseISO(lead.reservation_at), 'HH:mm')}
-                              </span>
-                            )}
+                            <div className="flex items-center justify-between pt-3 border-t border-slate-800/50">
+                              <div className="flex items-center gap-2">
+                                <div className="p-1.5 bg-indigo-500/10 rounded-md">
+                                  <User size={14} className="text-indigo-400" />
+                                </div>
+                                <span className="text-xs font-semibold text-slate-400">
+                                  {lead.process_name || 'İşlem Belirtilmemiş'}
+                                </span>
+                              </div>
+
+                              {lead.reservation_at && (
+                                <span className="text-xs font-bold text-slate-500 bg-slate-900 px-2 py-1 rounded">
+                                  {format(parseISO(lead.reservation_at), 'HH:mm')}
+                                </span>
+                              )}
+                            </div>
                           </div>
-                        </div>
+                        </Link>
                       ))}
                     </div>
                   </div>
@@ -421,6 +423,6 @@ export default function DashboardPage() {
           </div>
         )
       }
-    </div >
+    </div>
   )
 }
