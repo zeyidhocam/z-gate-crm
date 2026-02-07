@@ -55,19 +55,17 @@ export default function CustomersPage() {
     const [customers, setCustomers] = useState<Customer[]>([])
     const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState("")
-    const [stageFilter, setStageFilter] = useState<number | null>(null)
+    const [stageFilter, setStageFilter] = useState<number | null>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('customersStageFilter')
+            return (saved && saved !== 'null') ? parseInt(saved) : null
+        }
+        return null
+    })
     const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null)
     const [editPrice, setEditPrice] = useState("")
     const [archiveCustomerId, setArchiveCustomerId] = useState<string | null>(null)
     const [initialStats, setInitialStats] = useState<{ count: number, revenue: number } | null>(null)
-
-    // localStorage'dan state yükle
-    useEffect(() => {
-        const savedFilter = localStorage.getItem('customersStageFilter')
-        if (savedFilter && savedFilter !== 'null') {
-            setStageFilter(parseInt(savedFilter))
-        }
-    }, [])
 
     // stageFilter değiştiğinde localStorage'a kaydet
     useEffect(() => {
@@ -88,13 +86,13 @@ export default function CustomersPage() {
                 .order('confirmed_at', { ascending: false })
 
             if (error) throw error
-            const fetchedData = data as any[] || []
+            const fetchedData = (data as unknown as Customer[]) || []
             setCustomers(fetchedData)
             // İlk yüklemede stats'ı set et (arşivlemede değişmez)
             if (!initialStats) {
                 setInitialStats({
                     count: fetchedData.length,
-                    revenue: fetchedData.reduce((sum: number, c: any) => sum + (c.price_agreed || c.price || 0), 0)
+                    revenue: fetchedData.reduce((sum, c) => sum + (c.price_agreed || c.price || 0), 0)
                 })
             }
         } catch (error) {

@@ -120,7 +120,9 @@ export default function ReservationsPage() {
                 const grouped: GroupedReservations[] = []
                 const initialExpanded: Record<string, boolean> = {}
 
-                data.forEach((client: any) => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const leadsData = data as any[]
+                leadsData.forEach((client) => {
                     // Map client to lead structure
                     const lead: Lead = {
                         id: client.id,
@@ -403,6 +405,7 @@ export default function ReservationsPage() {
                                                             onClick={() => setEditingClient({
                                                                 id: lead.id,
                                                                 full_name: lead.name,
+                                                                name: lead.name,
                                                                 phone: lead.phone || null,
                                                                 notes: lead.notes || lead.ai_summary || null,
                                                                 price_agreed: lead.price || null,

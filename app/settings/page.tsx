@@ -25,13 +25,12 @@ import { NotificationSettings } from "@/components/settings/NotificationSettings
 
 
 export default function SettingsPage() {
-    const [activeTab, setActiveTab] = useState("services")
-
-    // localStorage ile kalıcı tab
-    useEffect(() => {
-        const saved = localStorage.getItem('settingsActiveTab')
-        if (saved) setActiveTab(saved)
-    }, [])
+    const [activeTab, setActiveTab] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem('settingsActiveTab') || "services"
+        }
+        return "services"
+    })
 
     useEffect(() => {
         localStorage.setItem('settingsActiveTab', activeTab)

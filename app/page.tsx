@@ -17,11 +17,11 @@ import { cn } from '@/lib/utils'
 interface Lead {
   id: string
   name: string
-  phone?: string
+  phone?: string | null
   status: string
-  reservation_at?: string
+  reservation_at?: string | null
   price?: number
-  process_name?: string
+  process_name?: string | null
 }
 
 interface Client {
@@ -32,6 +32,7 @@ interface Client {
   created_at: string
   reservation_at: string | null
   price_agreed: number | null
+  process_name?: string | null
   process_types?: { name: string } | null
 }
 
@@ -116,15 +117,13 @@ export default function DashboardPage() {
 
       if (error) throw error
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setAllClients(clientsData as any[] || [])
+      setAllClients((clientsData as Client[] || []))
 
       // Calculate Stats
       const newStats = { reservation: 0, new: 0, tracking: 0, fixed: 0, archive: 0, total: 0 }
       const mappedLeads: Lead[] = []
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ; (clientsData as any[] || []).forEach(client => {
+        ; (clientsData as Client[] || []).forEach(client => {
           if (client.status === 'Rezervasyon') newStats.reservation++
           else if (client.status === 'Yeni') newStats.new++
           else if (client.status === 'Takip') newStats.tracking++
@@ -136,7 +135,7 @@ export default function DashboardPage() {
             mappedLeads.push({
               ...client,
               name: client.full_name || client.name || 'İsimsiz',
-              price: client.price_agreed
+              price: client.price_agreed || undefined
             })
           }
         })
@@ -156,7 +155,7 @@ export default function DashboardPage() {
     const counts: Record<string, number> = {}
     allClients.forEach(client => {
       // Fallback: eski kayıtlarda process_name, yeni kayıtlarda process_types.name
-      const processName = (client as any).process_types?.name || (client as any).process_name || 'Belirtilmemiş'
+      const processName = client.process_types?.name || client.process_name || 'Belirtilmemiş'
       counts[processName] = (counts[processName] || 0) + 1
     })
     return Object.entries(counts)

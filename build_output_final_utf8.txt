@@ -1,0 +1,38 @@
+﻿
+> oracle_web@0.1.0 build
+> next build
+
+Ôû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+node.exe : ÔÜá The "middleware" file convention is deprecated. Please use "proxy" instead
+. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (ÔÜá The "middle...leware-to-proxy:String) [ 
+   ], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  Creating an optimized production build ...
+Ô£ô Compiled successfully in 4.9s
+  Running TypeScript ...
+Failed to compile.
+
+./app/reservations/page.tsx:127:25
+Type error: Type 'unknown' is not assignable to type 'string'.
+
+[0m [90m 125 |[39m                     [90m// Map client to lead structure[39m
+ [90m 126 |[39m                     [36mconst[39m lead[33m:[39m [33mLead[39m [33
+m=[39m {
+[31m[1m>[22m[39m[90m 127 |[39m                         id[33m:[39m client[33m.[
+39mid[33m,[39m
+ [90m     |[39m                         [31m[1m^[22m[39m
+ [90m 128 |[39m                         name[33m:[39m client[33m.[39mfull_name [33
+m||[39m client[33m.[39mname [33m||[39m [32m'Bilinmeyen'[39m[33m,[39m
+ [90m 129 |[39m                         phone[33m:[39m client[33m.[39mphone[33m,[
+39m
+ [90m 130 |[39m                         process_name[33m:[39m client[33m.[39mproces
+s_types[33m?[39m[33m.[39mname [33m||[39m client[33m.[39mprocess_name[33m,[39m[
+0m
+Next.js build worker exited with code: 1 and signal: null

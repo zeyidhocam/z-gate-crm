@@ -1,0 +1,182 @@
+﻿
+> oracle_web@0.1.0 lint
+> eslint
+
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\app\analysis\page.tsx
+    5:10  warning  'DollarSign' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+   14:16  warning  'TabsContent' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+   55:12  warning  'loading' is assigned a value but never used                                                                         @typescript-eslint/no-unused-vars
+   73:8   warning  React Hook useEffect has a missing dependency: 'SESSION_DURATION'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  143:18  warning  'error' is defined but never used                                                                                    @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\app\api\cron\daily-report\route.ts
+  7:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\app\calendar\page.tsx
+  4:70  warning  'User' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\app\clients\page.tsx
+    4:32   warning  'MessageCircle' is defined but never used            @typescript-eslint/no-unused-vars
+    4:90   warning  'Pin' is defined but never used                      @typescript-eslint/no-unused-vars
+    4:111  warning  'Plus' is defined but never used                     @typescript-eslint/no-unused-vars
+   61:10   warning  'Label' is defined but never used                    @typescript-eslint/no-unused-vars
+   62:10   warning  'Textarea' is defined but never used                 @typescript-eslint/no-unused-vars
+   63:10   warning  'Select' is defined but never used                   @typescript-eslint/no-unused-vars
+   63:18   warning  'SelectContent' is defined but never used            @typescript-eslint/no-unused-vars
+   63:33   warning  'SelectItem' is defined but never used               @typescript-eslint/no-unused-vars
+   63:45   warning  'SelectTrigger' is defined but never used            @typescript-eslint/no-unused-vars
+   63:60   warning  'SelectValue' is defined but never used              @typescript-eslint/no-unused-vars
+   74:12   warning  'loading' is assigned a value but never used         @typescript-eslint/no-unused-vars
+  151:11   warning  'handleWhatsApp' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\app\customers\page.tsx
+    4:64  warning  'Clock' is defined but never used                                                                                  @typescript-eslint/no-unused-vars
+    4:71  warning  'Star' is defined but never used                                                                                   @typescript-eslint/no-unused-vars
+    4:77  warning  'ChevronRight' is defined but never used                                                                           @typescript-eslint/no-unused-vars
+   77:8   warning  React Hook useEffect has a missing dependency: 'fetchCustomers'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  198:11  warning  'groupedByStage' is assigned a value but never used                                                                @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\app\finance\page.tsx
+  8:69   warning  'LineChart' is defined but never used  @typescript-eslint/no-unused-vars
+  8:80   warning  'Line' is defined but never used       @typescript-eslint/no-unused-vars
+  8:101  warning  'Legend' is defined but never used     @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\app\page.tsx
+  78:10  warning  'loading' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\app\reminders\page.tsx
+    4:45   warning  'Phone' is defined but never used         @typescript-eslint/no-unused-vars
+    4:111  warning  'X' is defined but never used             @typescript-eslint/no-unused-vars
+   96:32   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  111:34   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\app\reservations\page.tsx
+   10:31   warning  'CalendarDays' is defined but never used                 @typescript-eslint/no-unused-vars
+   10:121  warning  'Bell' is defined but never used                         @typescript-eslint/no-unused-vars
+   15:10   warning  'Popover' is defined but never used                      @typescript-eslint/no-unused-vars
+   15:19   warning  'PopoverContent' is defined but never used               @typescript-eslint/no-unused-vars
+   15:35   warning  'PopoverTrigger' is defined but never used               @typescript-eslint/no-unused-vars
+   17:10   warning  'Calendar' is defined but never used                     @typescript-eslint/no-unused-vars
+   48:12   warning  'reservationDate' is assigned a value but never used     @typescript-eslint/no-unused-vars
+   48:29   warning  'setReservationDate' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  123:39   error    Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+  179:11   warning  'handleReservation' is assigned a value but never used   @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\app\settings\page.tsx
+   5:10  warning  'Button' is defined but never used         @typescript-eslint/no-unused-vars
+   6:10  warning  'Input' is defined but never used          @typescript-eslint/no-unused-vars
+   7:10  warning  'Label' is defined but never used          @typescript-eslint/no-unused-vars
+   9:5   warning  'Select' is defined but never used         @typescript-eslint/no-unused-vars
+  10:5   warning  'SelectContent' is defined but never used  @typescript-eslint/no-unused-vars
+  11:5   warning  'SelectItem' is defined but never used     @typescript-eslint/no-unused-vars
+  12:5   warning  'SelectTrigger' is defined but never used  @typescript-eslint/no-unused-vars
+  13:5   warning  'SelectValue' is defined but never used    @typescript-eslint/no-unused-vars
+  16:10  warning  'Separator' is defined but never used      @typescript-eslint/no-unused-vars
+  17:10  warning  'Switch' is defined but never used         @typescript-eslint/no-unused-vars
+  18:10  warning  'Textarea' is defined but never used       @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\AIInsights.tsx
+   4:57  warning  'Users' is defined but never used              @typescript-eslint/no-unused-vars
+   5:38  warning  'format' is defined but never used             @typescript-eslint/no-unused-vars
+   6:10  warning  'tr' is defined but never used                 @typescript-eslint/no-unused-vars
+  60:11  warning  'avgPrice' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\ClientEditDialog.tsx
+  43:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\ClientEditDialog.tsx:43:13
+  41 |     useEffect(() => {
+  42 |         if (client) {
+> 43 |             setFormData({ ...client })
+     |             ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  44 |         } else {
+  45 |             setFormData(null)
+  46 |         }  react-hooks/set-state-in-effect
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\GlobalReminderManager.tsx
+   7:16  warning  'AlertTriangle' is defined but never used  @typescript-eslint/no-unused-vars
+  87:54  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\NewClientDialog.tsx
+    4:20  warning  'useEffect' is defined but never used     @typescript-eslint/no-unused-vars
+    5:10  warning  'Upload' is defined but never used        @typescript-eslint/no-unused-vars
+    5:18  warning  'FileJson' is defined but never used      @typescript-eslint/no-unused-vars
+   61:34  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   96:18  warning  'err' is defined but never used           @typescript-eslint/no-unused-vars
+  169:23  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\PaymentTracker.tsx
+  4:84  warning  'X' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\ReminderAlert.tsx
+  4:31  warning  'Clock' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\Sidebar.tsx
+   6:40  warning  'BrainCircuit' is defined but never used                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+  81:17  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\charts\ProcessPieChart.tsx
+  26:85  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  48:75  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\charts\TrendChart.tsx
+  16:82  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  45:36  warning  'title' is defined but never used         @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\providers\settings-provider.tsx
+  44:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\settings\GeneralSettings.tsx
+  21:13  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\settings\GeneralSettings.tsx:21:13
+  19 |     useEffect(() => {
+  20 |         if (!isLoading) {
+> 21 |             setFormData({
+     |             ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  22 |                 appName: config.appName,
+  23 |                 logoUrl: config.logoUrl || '',
+  24 |             })  react-hooks/set-state-in-effect
+  32:14  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  75:33  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              @next/next/no-img-element
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\settings\NotificationSettings.tsx
+  177:42  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\settings\ServiceSettings.tsx
+   8:33  warning  'Save' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+  33:9   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\settings\ServiceSettings.tsx:33:9
+  31 |
+  32 |     useEffect(() => {
+> 33 |         fetchItems()
+     |         ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  34 |     }, [])
+  35 |
+  36 |     const handleCellClick = (id: number, field: string) => {  react-hooks/set-state-in-effect
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\middleware.ts
+  25:58  warning  'options' is defined but never used  @typescript-eslint/no-unused-vars
+
+Ô£û 82 problems (14 errors, 68 warnings)
+

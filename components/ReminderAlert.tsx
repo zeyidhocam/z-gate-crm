@@ -74,20 +74,31 @@ export function ReminderAlert() {
                         )}
                     </div>
                     <div className="flex-1">
-                        <div className={cn(
-                            "font-bold text-lg",
-                            overdueReminders.length > 0 ? "text-red-400" : "text-amber-400"
-                        )}>
-                            {totalUrgent} Hatırlatma
-                        </div>
-                        <div className="text-sm text-slate-500">
-                            {overdueReminders.length > 0 && (
-                                <span className="text-red-400 font-bold mr-2">{overdueReminders.length} gecikmiş</span>
-                            )}
-                            {todayReminders.length > 0 && (
-                                <span className="text-amber-400 font-bold">{todayReminders.length} bugün</span>
-                            )}
-                        </div>
+                        {overdueReminders.length > 0 ? (
+                            <div className="flex flex-col">
+                                <span className={cn(
+                                    "font-bold text-lg",
+                                    "text-red-400"
+                                )}>
+                                    {overdueReminders.length} Gecikmiş İşlem!
+                                </span>
+                                <span className="text-sm text-slate-500">
+                                    {todayReminders.length > 0 ? `+${todayReminders.length} tane de bugün var` : "Lütfen kontrol edin"}
+                                </span>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col">
+                                <span className={cn(
+                                    "font-bold text-lg",
+                                    "text-amber-400"
+                                )}>
+                                    Bugün {todayReminders.length} Hatırlatma
+                                </span>
+                                <span className="text-sm text-slate-500">
+                                    Zamanı gelen işlemleri incele
+                                </span>
+                            </div>
+                        )}
                     </div>
                     <ChevronRight className="text-slate-600" size={20} />
                 </div>

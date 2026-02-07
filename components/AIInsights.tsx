@@ -14,6 +14,7 @@ interface Client {
     created_at: string
     reservation_at: string | null
     price_agreed: number | null
+    process_name?: string | null
     process_types?: { name: string } | null
 }
 
@@ -26,7 +27,7 @@ export function AIInsights({ clients }: AIInsightsProps) {
     const popularProcess = useMemo(() => {
         const counts: Record<string, number> = {}
         clients.forEach(c => {
-            const name = c.process_types?.name || (c as any).process_name || 'Belirtilmemiş'
+            const name = c.process_types?.name || c.process_name || 'Belirtilmemiş'
             counts[name] = (counts[name] || 0) + 1
         })
         const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1])

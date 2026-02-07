@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useSettings } from "@/components/providers/settings-provider"
+import { useSettings, UIConfig } from "@/components/providers/settings-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,25 +11,32 @@ import { Separator } from "@/components/ui/separator"
 export function GeneralSettings() {
     const { config, updateConfig, isLoading } = useSettings()
     const [formData, setFormData] = useState({
-        appName: '',
-        logoUrl: '',
+        appName: config.appName,
+        logoUrl: config.logoUrl || '',
     })
     const [saved, setSaved] = useState(false)
 
+    // Config yüklendiğinde formu güncelle - Sadece config değiştiğinde (loading bittiyse)
     useEffect(() => {
         if (!isLoading) {
-            setFormData({
-                appName: config.appName,
-                logoUrl: config.logoUrl || '',
+            setFormData(prev => {
+                if (prev.appName !== config.appName || prev.logoUrl !== (config.logoUrl || '')) {
+                    return {
+                        ...prev,
+                        appName: config.appName,
+                        logoUrl: config.logoUrl || '',
+                    }
+                }
+                return prev
             })
         }
-    }, [config, isLoading])
+    }, [isLoading, config.appName, config.logoUrl])
 
     const handleSave = async () => {
         await updateConfig({
             appName: formData.appName,
             logoUrl: formData.logoUrl,
-        } as any)
+        } as Partial<UIConfig>)
 
         setSaved(true)
         setTimeout(() => setSaved(false), 2000)

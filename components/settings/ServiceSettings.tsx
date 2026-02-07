@@ -22,22 +22,19 @@ export function ServiceSettings() {
     // For auto-focus
     const inputRef = useRef<HTMLInputElement>(null)
 
-    useEffect(() => {
-        fetchItems()
-    }, [])
-
-    useEffect(() => {
-        if (editingParams && inputRef.current) {
-            inputRef.current.focus()
-        }
-    }, [editingParams])
-
     const fetchItems = async () => {
         setLoading(true)
         const { data } = await supabase.from('process_types').select('*').order('id', { ascending: true })
         if (data) setItems(data)
         setLoading(false)
     }
+
+    useEffect(() => {
+        const load = async () => {
+            await fetchItems()
+        }
+        load()
+    }, [])
 
     const handleCellClick = (id: number, field: string) => {
         setEditingParams({ id, field })
@@ -47,26 +44,16 @@ export function ServiceSettings() {
         setEditingParams(null)
     }
 
-    const handleChange = async (id: number, field: keyof ProcessType, value: any) => {
+    const handleChange = async (id: number, field: keyof ProcessType, value: string | number) => {
         // Validation for price
         if (field === 'price' && isNaN(Number(value))) return
 
         // Optimistic
         setItems(items.map(item => item.id === id ? { ...item, [field]: value } : item))
-
-        // Debounce or just save on blur? User requested "Blur (clicking outside) saves it".
-        // But we need to update state immediately for input to work.
-        // The save happens in handleBlur logic implicitly if we tracked dirty state, 
-        // but explicit save on change is safer for "Excel-like" feel if we don't want to lose data.
-        // Actually, let's trigger update on DB "on the fly" or on Blur.
-        // For simplicity and robustness, lets just update DB on every keystroke with debounce? 
-        // No, user said "Blur (clicking outside) saves it". 
-        // So we will perform the UPDATE in handleBlur. But handleBlur doesn't verify value change easily.
-        // Let's create a specific update function called on Blur.
     }
 
     // Explicit save function for Blur
-    const saveChange = async (id: number, field: string, value: any) => {
+    const saveChange = async (id: number, field: string, value: string | number) => {
         await supabase.from('process_types').update({ [field]: value }).eq('id', id)
     }
 

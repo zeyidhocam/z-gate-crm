@@ -119,12 +119,12 @@ export async function POST(request: Request) {
 
             await sendMessage(token, chatId, `✅ <b>Kayıt Başarılı!</b>\n\n👤 <b>İsim:</b> ${newClient.full_name}\n📞 <b>Tel:</b> ${newClient.phone || '-'}\n💰 <b>Fiyat:</b> ${newClient.price_agreed?.toLocaleString('tr-TR')} ₺`)
 
-        } catch (e) {
+        } catch (e: unknown) {
             if (e instanceof SyntaxError) {
                 await sendMessage(token, chatId, "⚠️ <b>JSON Hatası:</b> Gönderdiğin formatı anlayamadım.\n\nLütfen tırnak işaretlerine ve parantezlere dikkat et.")
             } else {
                 console.error('Db Error:', e)
-                const errorMsg = (e as any)?.message || (e as any)?.details || "Bilinmeyen hata"
+                const errorMsg = e instanceof Error ? e.message : "Bilinmeyen hata"
                 await sendMessage(token, chatId, `❌ <b>Veritabanı Hatası:</b>\n\n<code>${errorMsg}</code>`)
             }
         }

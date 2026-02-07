@@ -58,7 +58,7 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
             return
         }
 
-        const parsePrice = (raw: any) => {
+        const parsePrice = (raw: string | number | null | undefined) => {
             if (!raw) return ""
             // "8.500 TL" -> "8500"
             // "12.500,50" -> "12500.50"
@@ -166,9 +166,10 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
                 if (onSuccess) onSuccess()
             }, 1000)
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error(err)
-            setError(err.message || "Bir hata oluştu")
+            const errorMsg = err instanceof Error ? err.message : "Bir hata oluştu"
+            setError(errorMsg)
         } finally {
             setLoading(false)
         }

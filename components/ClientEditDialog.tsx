@@ -12,10 +12,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 export interface Client {
     id: string
     full_name: string | null
+    name: string | null
     phone: string | null
     notes: string | null
     price_agreed: number | null
     process_type_id: number | null
+    status?: string | null
+    ai_summary?: string | null
     // Add other fields as needed for the form
 }
 
@@ -33,13 +36,17 @@ interface ClientEditDialogProps {
 }
 
 export function ClientEditDialog({ client, open, onOpenChange, onSave, processTypes }: ClientEditDialogProps) {
-    const [formData, setFormData] = useState<Client | null>(null)
+    const [formData, setFormData] = useState<Client | null>(client ? { ...client } : null)
 
-    useEffect(() => {
-        if (client) {
-            setFormData({ ...client })
-        }
-    }, [client])
+    const [prevClientId, setPrevClientId] = useState<string | null>(null)
+
+    if (client && client.id !== prevClientId) {
+        setFormData({ ...client })
+        setPrevClientId(client.id)
+    } else if (!client && prevClientId !== null) {
+        setFormData(null)
+        setPrevClientId(null)
+    }
 
     const handleSave = () => {
         if (formData) {

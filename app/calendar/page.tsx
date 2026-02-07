@@ -42,7 +42,7 @@ export default function CalendarPage() {
                 .not('reservation_at', 'is', null)
 
             if (error) throw error
-            setReservations(data as any[] || [])
+            setReservations(data as Reservation[] || [])
         } catch (error) {
             console.error('Error fetching reservations:', error)
         } finally {

@@ -1,0 +1,240 @@
+﻿
+> oracle_web@0.1.0 lint
+> eslint
+
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\app\analysis\page.tsx
+    5:10  warning  'DollarSign' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+   14:16  warning  'TabsContent' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+   55:12  warning  'loading' is assigned a value but never used                                                                         @typescript-eslint/no-unused-vars
+   73:8   warning  React Hook useEffect has a missing dependency: 'SESSION_DURATION'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  143:18  warning  'error' is defined but never used                                                                                    @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\app\api\cron\daily-report\route.ts
+  7:27  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\app\api\telegram\webhook\route.ts
+  127:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  127:63  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\app\calendar\page.tsx
+   4:70  warning  'User' is defined but never used          @typescript-eslint/no-unused-vars
+  45:37  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\app\clients\page.tsx
+    4:32   warning  'MessageCircle' is defined but never used                                                              @typescript-eslint/no-unused-vars
+    4:90   warning  'Pin' is defined but never used                                                                        @typescript-eslint/no-unused-vars
+    4:111  warning  'Plus' is defined but never used                                                                       @typescript-eslint/no-unused-vars
+   59:10   warning  'Label' is defined but never used                                                                      @typescript-eslint/no-unused-vars
+   60:10   warning  'Textarea' is defined but never used                                                                   @typescript-eslint/no-unused-vars
+   61:10   warning  'Select' is defined but never used                                                                     @typescript-eslint/no-unused-vars
+   61:18   warning  'SelectContent' is defined but never used                                                              @typescript-eslint/no-unused-vars
+   61:33   warning  'SelectItem' is defined but never used                                                                 @typescript-eslint/no-unused-vars
+   61:45   warning  'SelectTrigger' is defined but never used                                                              @typescript-eslint/no-unused-vars
+   61:60   warning  'SelectValue' is defined but never used                                                                @typescript-eslint/no-unused-vars
+   72:12   warning  'loading' is assigned a value but never used                                                           @typescript-eslint/no-unused-vars
+  129:33   error    Unexpected any. Specify a different type                                                               @typescript-eslint/no-explicit-any
+  129:44   warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+  149:11   warning  'handleWhatsApp' is assigned a value but never used                                                    @typescript-eslint/no-unused-vars
+  528:42   error    Unexpected any. Specify a different type                                                               @typescript-eslint/no-explicit-any
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\app\customers\page.tsx
+    4:64  warning  'Clock' is defined but never used                                                                                  @typescript-eslint/no-unused-vars
+    4:71  warning  'Star' is defined but never used                                                                                   @typescript-eslint/no-unused-vars
+    4:77  warning  'ChevronRight' is defined but never used                                                                           @typescript-eslint/no-unused-vars
+   79:8   warning  React Hook useEffect has a missing dependency: 'fetchCustomers'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   91:41  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+   97:66  error    Unexpected any. Specify a different type                                                                           @typescript-eslint/no-explicit-any
+  200:11  warning  'groupedByStage' is assigned a value but never used                                                                @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\app\finance\page.tsx
+    8:69   warning  'LineChart' is defined but never used     @typescript-eslint/no-unused-vars
+    8:80   warning  'Line' is defined but never used          @typescript-eslint/no-unused-vars
+    8:101  warning  'Legend' is defined but never used        @typescript-eslint/no-unused-vars
+   90:32   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  113:61   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  181:74   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  182:101  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\app\page.tsx
+   77:10  warning  'loading' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  159:38  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  159:77  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\app\reminders\page.tsx
+    4:45   warning  'Phone' is defined but never used         @typescript-eslint/no-unused-vars
+    4:111  warning  'X' is defined but never used             @typescript-eslint/no-unused-vars
+   96:32   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  111:34   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\app\reservations\page.tsx
+   10:31   warning  'CalendarDays' is defined but never used                 @typescript-eslint/no-unused-vars
+   10:121  warning  'Bell' is defined but never used                         @typescript-eslint/no-unused-vars
+   15:10   warning  'Popover' is defined but never used                      @typescript-eslint/no-unused-vars
+   15:19   warning  'PopoverContent' is defined but never used               @typescript-eslint/no-unused-vars
+   15:35   warning  'PopoverTrigger' is defined but never used               @typescript-eslint/no-unused-vars
+   17:10   warning  'Calendar' is defined but never used                     @typescript-eslint/no-unused-vars
+   48:12   warning  'reservationDate' is assigned a value but never used     @typescript-eslint/no-unused-vars
+   48:29   warning  'setReservationDate' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  123:39   error    Unexpected any. Specify a different type                 @typescript-eslint/no-explicit-any
+  179:11   warning  'handleReservation' is assigned a value but never used   @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\app\settings\page.tsx
+   5:10  warning  'Button' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+   6:10  warning  'Input' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+   7:10  warning  'Label' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+   9:5   warning  'Select' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+  10:5   warning  'SelectContent' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+  11:5   warning  'SelectItem' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+  12:5   warning  'SelectTrigger' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               @typescript-eslint/no-unused-vars
+  13:5   warning  'SelectValue' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+  16:10  warning  'Separator' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   @typescript-eslint/no-unused-vars
+  17:10  warning  'Switch' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+  18:10  warning  'Textarea' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+  33:20  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\app\settings\page.tsx:33:20
+  31 |     useEffect(() => {
+  32 |         const saved = localStorage.getItem('settingsActiveTab')
+> 33 |         if (saved) setActiveTab(saved)
+     |                    ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  34 |     }, [])
+  35 |
+  36 |     useEffect(() => {  react-hooks/set-state-in-effect
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\AIInsights.tsx
+   4:57  warning  'Users' is defined but never used              @typescript-eslint/no-unused-vars
+   5:38  warning  'format' is defined but never used             @typescript-eslint/no-unused-vars
+   6:10  warning  'tr' is defined but never used                 @typescript-eslint/no-unused-vars
+  29:57  error    Unexpected any. Specify a different type       @typescript-eslint/no-explicit-any
+  59:11  warning  'avgPrice' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\ClientEditDialog.tsx
+  40:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\ClientEditDialog.tsx:40:13
+  38 |     useEffect(() => {
+  39 |         if (client) {
+> 40 |             setFormData({ ...client })
+     |             ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  41 |         }
+  42 |     }, [client])
+  43 |  react-hooks/set-state-in-effect
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\GlobalReminderManager.tsx
+   7:16  warning  'AlertTriangle' is defined but never used  @typescript-eslint/no-unused-vars
+  87:54  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\NewClientDialog.tsx
+    4:20  warning  'useEffect' is defined but never used     @typescript-eslint/no-unused-vars
+    5:10  warning  'Upload' is defined but never used        @typescript-eslint/no-unused-vars
+    5:18  warning  'FileJson' is defined but never used      @typescript-eslint/no-unused-vars
+   61:34  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   96:18  warning  'err' is defined but never used           @typescript-eslint/no-unused-vars
+  169:23  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\PaymentTracker.tsx
+  4:84  warning  'X' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\ReminderAlert.tsx
+  4:31  warning  'Clock' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\Sidebar.tsx
+   6:40  warning  'BrainCircuit' is defined but never used                                                                                                                                                                                                                                                 @typescript-eslint/no-unused-vars
+  81:17  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\charts\ProcessPieChart.tsx
+  26:83  warning  'name' is defined but never used          @typescript-eslint/no-unused-vars
+  26:91  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  48:45  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\charts\TrendChart.tsx
+  16:52  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  29:27  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  45:36  warning  'title' is defined but never used         @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\providers\settings-provider.tsx
+  44:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\settings\GeneralSettings.tsx
+  21:13  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\settings\GeneralSettings.tsx:21:13
+  19 |     useEffect(() => {
+  20 |         if (!isLoading) {
+> 21 |             setFormData({
+     |             ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  22 |                 appName: config.appName,
+  23 |                 logoUrl: config.logoUrl || '',
+  24 |             })  react-hooks/set-state-in-effect
+  32:14  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  75:33  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              @next/next/no-img-element
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\settings\NotificationSettings.tsx
+  121:41  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  121:72  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  122:68  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  124:62  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  124:92  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  177:42  warning  'e' is defined but never used                                    @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\settings\ServiceSettings.tsx
+   8:33  warning  'Save' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+  26:9   error    Error: Cannot access variable before it is declared
+
+`fetchItems` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\settings\ServiceSettings.tsx:26:9
+  24 |
+  25 |     useEffect(() => {
+> 26 |         fetchItems()
+     |         ^^^^^^^^^^ `fetchItems` accessed before it is declared
+  27 |     }, [])
+  28 |
+  29 |     useEffect(() => {
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\settings\ServiceSettings.tsx:35:5
+  33 |     }, [editingParams])
+  34 |
+> 35 |     const fetchItems = async () => {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 36 |         setLoading(true)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 37 |         const { data } = await supabase.from('process_types').select('*').order('id', { ascending: true })
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 38 |         if (data) setItems(data)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 39 |         setLoading(false)
+     | ^^^^^^^^^^^^^^^^^^^^^^^^
+> 40 |     }
+     | ^^^^^^ `fetchItems` is declared here
+  41 |
+  42 |     const handleCellClick = (id: number, field: string) => {
+  43 |         setEditingParams({ id, field })  react-hooks/immutability
+  50:78  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  69:65  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\middleware.ts
+  25:58  warning  'options' is defined but never used  @typescript-eslint/no-unused-vars
+
+Ô£û 107 problems (37 errors, 70 warnings)
+  0 errors and 1 warning potentially fixable with the `--fix` option.
+

@@ -41,16 +41,16 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
             .from('system_settings')
             .select('*')
             .single()
-            .then(({ data }: { data: any }) => {
+            .then(({ data }: { data: Record<string, string | number | null> | null }) => {
                 if (data) {
                     setConfig({
-                        appName: data.site_title || DEFAULT_CONFIG.appName,
-                        logoUrl: data.logo_url || '',
+                        appName: (data.site_title as string) || DEFAULT_CONFIG.appName,
+                        logoUrl: (data.logo_url as string) || '',
                         theme: 'ocean-elite',  // Her zaman ocean-elite
-                        fontFamily: data.font_family || DEFAULT_CONFIG.fontFamily,
-                        fontWeight: data.font_weight || DEFAULT_CONFIG.fontWeight,
-                        fontScale: data.font_scale || DEFAULT_CONFIG.fontScale,
-                        panelWidth: data.panel_width || DEFAULT_CONFIG.panelWidth,
+                        fontFamily: (data.font_family as UIConfig['fontFamily']) || DEFAULT_CONFIG.fontFamily,
+                        fontWeight: (data.font_weight as UIConfig['fontWeight']) || DEFAULT_CONFIG.fontWeight,
+                        fontScale: (data.font_scale as UIConfig['fontScale']) || DEFAULT_CONFIG.fontScale,
+                        panelWidth: (data.panel_width as UIConfig['panelWidth']) || DEFAULT_CONFIG.panelWidth,
                     })
                 }
                 setIsLoading(false)

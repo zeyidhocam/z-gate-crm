@@ -13,7 +13,7 @@ interface TrendChartProps {
 }
 
 // Custom tooltip
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: { active?: boolean, payload?: Array<{ value: number, payload: any }>, label?: string }) => {
     if (active && payload && payload.length) {
         return (
             <div className="bg-[#0c1929] border border-cyan-500/30 rounded-xl px-4 py-3 shadow-xl shadow-cyan-500/10">
@@ -26,7 +26,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 }
 
 // Custom dot component
-const CustomDot = (props: any) => {
+const CustomDot = (props: { cx?: number, cy?: number, value?: number }) => {
     const { cx, cy, value } = props
     if (value === 0) return null
     return (

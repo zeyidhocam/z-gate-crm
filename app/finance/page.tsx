@@ -14,9 +14,11 @@ interface Client {
     full_name: string | null
     name: string | null
     price_agreed: number | null
+    price: number | null
     status: string
     created_at: string
     reservation_at: string | null
+    process_name?: string | null
     process_types?: { name: string } | null
 }
 
@@ -87,7 +89,7 @@ export default function FinancePage() {
                 .eq('is_confirmed', true)
 
             if (error) throw error
-            setClients(data as any[] || [])
+            setClients(data as unknown as Client[] || [])
         } catch (error) {
             console.error('Error fetching finance data:', error)
         } finally {
@@ -110,7 +112,7 @@ export default function FinancePage() {
         let clientCount = 0
 
         clients.forEach(client => {
-            const price = client.price_agreed || (client as any).price || 0
+            const price = client.price_agreed || client.price || 0
             const createdDate = parseISO(client.created_at)
 
             totalRevenue += price
@@ -178,8 +180,8 @@ export default function FinancePage() {
     const processRevenue = useMemo(() => {
         const revenue: Record<string, number> = {}
         clients.forEach(client => {
-            const processName = client.process_types?.name || (client as any).process_name || 'Belirtilmemiş'
-            revenue[processName] = (revenue[processName] || 0) + (client.price_agreed || (client as any).price || 0)
+            const processName = client.process_types?.name || client.process_name || 'Belirtilmemiş'
+            revenue[processName] = (revenue[processName] || 0) + (client.price_agreed || client.price || 0)
         })
         return Object.entries(revenue)
             .map(([name, value]) => ({ name, value }))

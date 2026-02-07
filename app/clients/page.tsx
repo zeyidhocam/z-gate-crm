@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect, Suspense } from "react"
 import { Search, ChevronRight, MessageCircle, Edit, CalendarDays, Copy, Check, Sparkles, Pin, Clock, Archive, Plus, User, Info } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { cn } from "@/lib/utils"
@@ -65,7 +65,7 @@ import { useSearchParams } from "next/navigation"
 
 // ... imports
 
-export default function ClientsPage() {
+const ClientsContent = () => {
     const searchParams = useSearchParams()
     const [clients, setClients] = useState<Client[]>([])
     const [processTypes, setProcessTypes] = useState<{ id: number, name: string }[]>([])
@@ -530,5 +530,13 @@ export default function ClientsPage() {
                 processTypes={processTypes}
             />
         </div >
+    )
+}
+
+export default function ClientsPage() {
+    return (
+        <React.Suspense fallback={<div className="p-8 text-white">Yükleniyor...</div>}>
+            <ClientsContent />
+        </React.Suspense>
     )
 }
