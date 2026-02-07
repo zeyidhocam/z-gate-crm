@@ -112,7 +112,7 @@ export default function DashboardPage() {
       // 2. Fetch All Active Data for Stats
       const { data: clientsData, error } = await supabase
         .from('clients')
-        .select('id, full_name, name, phone, status, reservation_at, price_agreed, price, created_at, process_types(name), process_name')
+        .select('id, full_name, name, phone, status, reservation_at, price_agreed, price, created_at, updated_at, process_types(name), process_name')
 
       if (error) throw error
 

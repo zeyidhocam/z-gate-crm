@@ -45,7 +45,7 @@ export function AIInsights({ clients }: AIInsightsProps) {
     // Dönüşüm oranı (Yeni → Sabit)
     const conversionRate = useMemo(() => {
         const newCount = clients.filter(c => c.status === 'Yeni').length
-        const fixedCount = clients.filter(c => c.status === 'Sabit').length
+        const fixedCount = clients.filter(c => c.status === 'Aktif').length
         const total = newCount + fixedCount
         return total > 0 ? Math.round((fixedCount / total) * 100) : 0
     }, [clients])
