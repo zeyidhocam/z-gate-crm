@@ -93,15 +93,15 @@ export function JsonImportDialog({ onSuccess }: JsonImportDialogProps) {
         } catch (err: unknown) {
             console.error(err)
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            let errorMessage = (err as any)?.message || "Bilinmeyen bir hata oluştu"
+            const errorMessage = err instanceof Error ? err.message : "Bilinmeyen bir hata oluştu"
+            let resolvedErrorMessage = errorMessage
 
             // Check for missing table error
-            if (errorMessage.includes("Could not find the table") || errorMessage.includes("relation") && errorMessage.includes("does not exist")) {
-                errorMessage = "Veritabanı tabloları bulunamadı! Lütfen Supabase SQL Editor'e giderek size verdiğim 'supabase_schema.sql' kodlarını çalıştırın."
+            if (resolvedErrorMessage.includes("Could not find the table") || resolvedErrorMessage.includes("relation") && resolvedErrorMessage.includes("does not exist")) {
+                resolvedErrorMessage = "Veritabanı tabloları bulunamadı! Lütfen Supabase SQL Editor'e giderek size verdiğim 'supabase_schema.sql' kodlarını çalıştırın."
             }
 
-            setError(errorMessage)
+            setError(resolvedErrorMessage)
         } finally {
             setIsLoading(false)
             // Reset input

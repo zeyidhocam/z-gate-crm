@@ -32,6 +32,8 @@ interface Client {
   created_at: string
   reservation_at: string | null
   price_agreed: number | null
+  phone?: string | null
+  process_name?: string | null
   process_types?: { name: string } | null
 }
 
@@ -74,7 +76,6 @@ const PROCESS_COLORS: Record<string, string> = {
 export default function DashboardPage() {
   const [leads, setLeads] = useState<Lead[]>([])
   const [allClients, setAllClients] = useState<Client[]>([])
-  const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({
     reservation: 0,
     new: 0,
@@ -90,8 +91,6 @@ export default function DashboardPage() {
 
   const fetchData = async () => {
     try {
-      setLoading(true)
-
       // 1. Auto-Archive Logic TEMPORARILY DISABLED
       // const now = new Date()
       // const { data: pastReservations } = await supabase
@@ -112,19 +111,18 @@ export default function DashboardPage() {
       // 2. Fetch All Active Data for Stats
       const { data: clientsData, error } = await supabase
         .from('clients')
-        .select('*')
+        .select('id, full_name, name, phone, status, reservation_at, price_agreed, process_name, created_at, process_types(name)')
 
       if (error) throw error
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setAllClients(clientsData as any[] || [])
+      const clients = clientsData ?? []
+      setAllClients(clients)
 
       // Calculate Stats
       const newStats = { reservation: 0, new: 0, tracking: 0, fixed: 0, archive: 0, total: 0 }
       const mappedLeads: Lead[] = []
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ; (clientsData as any[] || []).forEach(client => {
+        clients.forEach(client => {
           if (client.status === 'Rezervasyon') newStats.reservation++
           else if (client.status === 'Yeni') newStats.new++
           else if (client.status === 'Takip') newStats.tracking++
@@ -146,8 +144,6 @@ export default function DashboardPage() {
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error)
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -156,7 +152,7 @@ export default function DashboardPage() {
     const counts: Record<string, number> = {}
     allClients.forEach(client => {
       // Fallback: eski kayıtlarda process_name, yeni kayıtlarda process_types.name
-      const processName = (client as any).process_types?.name || (client as any).process_name || 'Belirtilmemiş'
+      const processName = client.process_types?.name || client.process_name || 'Belirtilmemiş'
       counts[processName] = (counts[processName] || 0) + 1
     })
     return Object.entries(counts)

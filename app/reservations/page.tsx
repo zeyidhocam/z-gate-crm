@@ -7,7 +7,7 @@ import { tr } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 // Icons
 import {
-    Calendar as CalendarIcon, CalendarDays, Copy, Check, ChevronRight, MessageCircle, Edit, User, CheckCircle, XCircle, Bell
+    Calendar as CalendarIcon, Copy, Check, ChevronRight, MessageCircle, Edit, User, CheckCircle, XCircle
 } from "lucide-react"
 // UI Components
 import { Button } from "@/components/ui/button"
@@ -36,6 +36,22 @@ interface Lead {
 interface GroupedReservations {
     date: Date
     leads: Lead[]
+}
+
+interface ReservationClientRow {
+    id: string
+    full_name: string | null
+    name: string | null
+    phone: string | null
+    process_types?: { name: string } | null
+    process_name?: string | null
+    price_agreed?: number | null
+    price?: number | null
+    status: string
+    reservation_at: string | null
+    notes?: string | null
+    ai_summary?: string | null
+    process_type_id?: number | null
 }
 
 export default function ReservationsPage() {
@@ -120,7 +136,7 @@ export default function ReservationsPage() {
                 const grouped: GroupedReservations[] = []
                 const initialExpanded: Record<string, boolean> = {}
 
-                data.forEach((client: any) => {
+                data.forEach((client: ReservationClientRow) => {
                     // Map client to lead structure
                     const lead: Lead = {
                         id: client.id,

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, Bell, BrainCircuit, Settings, Calendar, DollarSign, CalendarDays, Wallet, Send } from 'lucide-react'
+import { LayoutDashboard, Users, Bell, Settings, Calendar, DollarSign, CalendarDays, Wallet, Send } from 'lucide-react'
 import { toast } from 'sonner'
 import { twMerge } from 'tailwind-merge'
 import { useSettings } from '@/components/providers/settings-provider'
@@ -19,8 +19,7 @@ export function Sidebar() {
         try {
             setSendingReport(true)
             const res = await fetch('/api/cron/daily-report')
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const data = await res.json() as any
+            const data: { ok?: boolean; error?: string } = await res.json()
 
             if (data.ok) {
                 toast.success("Rapor başarıyla Telegram'a gönderildi!")
@@ -45,8 +44,7 @@ export function Sidebar() {
 
             if (data) {
                 const now = new Date()
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const count = data.filter((r: any) => {
+                const count = (data as { reminder_date: string }[]).filter((r) => {
                     const date = new Date(r.reminder_date)
                     return date <= now || date.toDateString() === now.toDateString()
                 }).length
