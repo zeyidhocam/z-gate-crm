@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { CalendarCheck, CalendarDays, CalendarRange, CalendarX, User, Phone, PieChart as PieChartIcon, BarChart3, Check } from 'lucide-react'
 import Link from 'next/link'
 import { KPICard } from '@/components/KPICard'
@@ -9,11 +9,12 @@ import { TrendChart } from '@/components/charts/TrendChart'
 import { ConversionCard } from '@/components/charts/ConversionCard'
 import { AIInsights } from '@/components/AIInsights'
 import { ReminderAlert } from '@/components/ReminderAlert'
+import { supabase } from '@/lib/supabase'
 import { format, parseISO, isSameDay, subDays } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
 
-export interface Lead {
+interface Lead {
     id: string
     name: string
     phone?: string | null
@@ -23,17 +24,15 @@ export interface Lead {
     process_name?: string | null
 }
 
-export interface Client {
+interface Client {
     id: string
     full_name: string | null
-    name: string | null // Legacy support
-    phone: string | null
-    status: string | null
+    name: string | null
+    status: string
     created_at: string
     reservation_at: string | null
     price_agreed: number | null
-    process_name?: string | null // Legacy support
-    // Relational data mapped
+    process_name?: string | null
     process_types?: { name: string } | null
 }
 
@@ -73,50 +72,84 @@ const PROCESS_COLORS: Record<string, string> = {
     'default': '#6366f1'
 }
 
-interface DashboardContentProps {
-    initialClients: Client[]
-}
+export default function DashboardContent() {
+    const [leads, setLeads] = useState<Lead[]>([])
+    const [allClients, setAllClients] = useState<Client[]>([])
+    const [loading, setLoading] = useState(true)
+    const [stats, setStats] = useState({
+        reservation: 0,
+        new: 0,
+        tracking: 0,
+        fixed: 0,
+        archive: 0,
+        total: 0
+    })
 
-export default function DashboardContent({ initialClients }: DashboardContentProps) {
-    // Use passed props directly, mapped to Client type
-    // No internal fetching state needed if we rely on server data
-    // But we might want to allow client-side refresh? For now, stick to server data to ensure display.
+    useEffect(() => {
+        fetchData()
+    }, [])
 
-    const allClients = initialClients
+    const fetchData = async () => {
+        try {
+            setLoading(true)
 
-    // Calculate Stats
-    const stats = useMemo(() => {
-        const s = { reservation: 0, new: 0, tracking: 0, fixed: 0, archive: 0, total: 0 }
-        allClients.forEach(client => {
-            const status = client.status
-            if (status === 'Rezervasyon') s.reservation++
-            else if (status === 'Yeni') s.new++
-            else if (status === 'Takip') s.tracking++
-            else if (status === 'Aktif') s.fixed++
-            else if (status === 'Arşiv') s.archive++
-            s.total++
-        })
-        return s
-    }, [allClients])
+            // 1. Auto-Archive Logic TEMPORARILY DISABLED
+            // const now = new Date()
+            // const { data: pastReservations } = await supabase
+            //   .from('clients')
+            //   .select('id, reservation_at')
+            //   .eq('status', 'Rezervasyon')
+            //   .lt('reservation_at', now.toISOString())
 
-    const leads = useMemo(() => {
-        const list: Lead[] = []
-        allClients.forEach(client => {
-            if (client.status === 'Rezervasyon' && client.reservation_at) {
-                list.push({
-                    id: client.id,
-                    name: client.full_name || client.name || 'İsimsiz',
-                    phone: client.phone,
-                    status: client.status,
-                    reservation_at: client.reservation_at,
-                    price: client.price_agreed || undefined, // map to price
-                    process_name: client.process_types?.name || client.process_name
+            // if (pastReservations && pastReservations.length > 0) {
+            //   console.log(`Auto-archiving ${pastReservations.length} records...`)
+            //   const idsToArchive = (pastReservations as any[]).map(r => r.id)
+            //   await supabase
+            //     .from('clients')
+            //     .update({ status: 'Arşiv' })
+            //     .in('id', idsToArchive)
+            //   }
+
+            // 2. Fetch All Active Data for Stats
+            const { data: clientsData, error } = await supabase
+                .from('clients')
+                .select('*, process_types(name)')
+
+            if (error) throw error
+
+            setAllClients((clientsData as Client[] || []))
+
+            // Calculate Stats
+            const newStats = { reservation: 0, new: 0, tracking: 0, fixed: 0, archive: 0, total: 0 }
+            const mappedLeads: Lead[] = []
+
+                ; (clientsData as Client[] || []).forEach(client => {
+                    if (client.status === 'Rezervasyon') newStats.reservation++
+                    else if (client.status === 'Yeni') newStats.new++
+                    else if (client.status === 'Takip') newStats.tracking++
+                    else if (client.status === 'Aktif') newStats.fixed++
+                    else if (client.status === 'Arşiv') newStats.archive++
+                    newStats.total++
+
+                    if (client.status === 'Rezervasyon' && client.reservation_at) {
+                        mappedLeads.push({
+                            ...client,
+                            name: client.full_name || client.name || 'İsimsiz',
+                            price: client.price_agreed || undefined,
+                            process_name: client.process_types?.name || client.process_name
+                        })
+                    }
                 })
-            }
-        })
-        return list.sort((a, b) => new Date(a.reservation_at!).getTime() - new Date(b.reservation_at!).getTime())
-    }, [allClients])
 
+            setStats(newStats)
+            setLeads(mappedLeads.sort((a, b) => new Date(a.reservation_at!).getTime() - new Date(b.reservation_at!).getTime()))
+
+        } catch (error) {
+            console.error('Error fetching dashboard data:', error)
+        } finally {
+            setLoading(false)
+        }
+    }
 
     // Process distribution data for pie chart
     const processData = useMemo(() => {
@@ -293,7 +326,7 @@ export default function DashboardContent({ initialClients }: DashboardContentPro
                         description="Sadık müşteri sayısı"
                     />
                     {/* AI Insights */}
-                    <AIInsights clients={allClients as any} />
+                    <AIInsights clients={allClients} />
                 </div>
             </div>
 
