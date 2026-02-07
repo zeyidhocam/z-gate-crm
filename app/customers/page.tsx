@@ -335,6 +335,9 @@ export default function CustomersPage() {
                                                     ? format(parseISO(customer.confirmed_at), 'dd MMM yyyy', { locale: tr })
                                                     : '-'}
                                             </span>
+                                            <span className="flex items-center gap-1.5 text-xs text-slate-600 font-medium ml-2 border-l border-slate-700 pl-3">
+                                                Kayıt: {customer.created_at ? format(parseISO(customer.created_at), 'dd MMM yyyy', { locale: tr }) : '-'}
+                                            </span>
                                         </div>
                                     </div>
 

@@ -86,7 +86,7 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
                 process_name: parsed.process_name || parsed.islem || "",
                 price: parsePrice(parsed.price || parsed.ucret || parsed.price_agreed),
                 notes: parsed.notes || parsed.detay || "",
-                status: parsed.status || parsed.durum || "Yeni"
+                status: "Yeni" // JSON'dan ne gelirse gelsin, manuel yapıştırmada "Yeni" olsun
             })
 
             setJsonStatus('valid')

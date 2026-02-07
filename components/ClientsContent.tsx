@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"
 import { Calendar } from "@/components/ui/calendar"
 import { tr } from "date-fns/locale"
+import { format } from "date-fns"
 import { WhatsAppButton } from "@/components/WhatsAppButton"
 import { ReminderButton } from "@/components/ReminderButton"
 import { NewClientDialog } from "@/components/NewClientDialog"
@@ -321,6 +322,9 @@ export default function ClientsContent() {
                                                         {client.full_name || client.name || 'İsimsiz'}
                                                     </div>
                                                     <div className="text-[13px] font-semibold text-slate-500/90 truncate font-sans">{client.phone || '-'}</div>
+                                                    <div className="text-[10px] text-slate-600 font-medium">
+                                                        {client.created_at ? format(new Date(client.created_at), 'd MMMM yyyy', { locale: tr }) : ''}
+                                                    </div>
                                                 </div>
 
                                                 {/* Process & Price Agreed */}

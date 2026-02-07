@@ -29,6 +29,7 @@ interface Lead {
     ai_summary?: string
     notes?: string
     process_type_id?: number | null
+    created_at?: string
 }
 
 interface GroupedReservations {
@@ -130,7 +131,8 @@ export default function ReservationsPage() {
                         status: client.status,
                         reservation_at: client.reservation_at,
                         ai_summary: client.notes || client.ai_summary,
-                        process_type_id: client.process_type_id
+                        process_type_id: client.process_type_id,
+                        created_at: client.created_at
                     }
 
                     if (!lead.reservation_at) return
@@ -305,6 +307,9 @@ export default function ReservationsPage() {
                                                             {lead.name}
                                                         </div>
                                                         <div className="text-[12px] font-semibold text-slate-500/90 truncate font-sans">{lead.phone || '-'}</div>
+                                                        <div className="text-[10px] text-slate-600 font-medium">
+                                                            {lead.created_at ? format(parseISO(lead.created_at), 'd MMMM yyyy', { locale: tr }) : ''}
+                                                        </div>
                                                     </div>
 
                                                     {/* Process & Price */}

@@ -1,0 +1,21 @@
+﻿
+> oracle_web@0.1.0 lint
+> eslint
+
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\ClientsContent.tsx
+  123:48  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\charts\ProcessPieChart.tsx
+  48:121  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\charts\TrendChart.tsx
+   5:11   warning  'TrendData' is defined but never used     @typescript-eslint/no-unused-vars
+  16:114  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\settings\ServiceSettings.tsx
+  8:10  warning  'Package' is defined but never used  @typescript-eslint/no-unused-vars
+
+Ô£û 5 problems (2 errors, 3 warnings)
+  0 errors and 1 warning potentially fixable with the `--fix` option.
+

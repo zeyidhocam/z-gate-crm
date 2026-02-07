@@ -1,0 +1,72 @@
+﻿
+> oracle_web@0.1.0 lint
+> eslint
+
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\app\calendar\page.tsx
+  4:70  warning  'User' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\app\customers\page.tsx
+  77:8  warning  React Hook useEffect has a missing dependency: 'fetchCustomers'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\app\finance\page.tsx
+  8:69  warning  'LineChart' is defined but never used  @typescript-eslint/no-unused-vars
+  8:80  warning  'Line' is defined but never used       @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\AIInsights.tsx
+  59:11  warning  'avgPrice' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\ClientsContent.tsx
+   68:12  warning  'loading' is assigned a value but never used                                                           @typescript-eslint/no-unused-vars
+  125:32  error    Unexpected any. Specify a different type                                                               @typescript-eslint/no-explicit-any
+  125:43  warning  Unused eslint-disable directive (no problems were reported from '@typescript-eslint/no-explicit-any')
+  146:11  warning  'handleWhatsApp' is assigned a value but never used                                                    @typescript-eslint/no-unused-vars
+  525:42  error    Unexpected any. Specify a different type                                                               @typescript-eslint/no-explicit-any
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\DashboardContent.tsx
+   81:12  warning  'loading' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  140:18  warning  'error' is defined but never used             @typescript-eslint/no-unused-vars
+  140:25  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\GlobalReminderManager.tsx
+  7:16  warning  'CheckCircle' is defined but never used         @typescript-eslint/no-unused-vars
+  7:29  warning  'Trash2' is defined but never used              @typescript-eslint/no-unused-vars
+  9:11  warning  'ReminderWithClient' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\NewClientDialog.tsx
+  95:18  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\PaymentTracker.tsx
+  4:10   warning  'CreditCard' is defined but never used   @typescript-eslint/no-unused-vars
+  4:22   warning  'History' is defined but never used      @typescript-eslint/no-unused-vars
+  4:31   warning  'Plus' is defined but never used         @typescript-eslint/no-unused-vars
+  4:37   warning  'Trash2' is defined but never used       @typescript-eslint/no-unused-vars
+  4:71   warning  'FileText' is defined but never used     @typescript-eslint/no-unused-vars
+  4:81   warning  'CheckCircle' is defined but never used  @typescript-eslint/no-unused-vars
+  4:107  warning  'TrendingUp' is defined but never used   @typescript-eslint/no-unused-vars
+  4:154  warning  'X' is defined but never used            @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\Sidebar.tsx
+  80:17  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\charts\ProcessPieChart.tsx
+  48:121  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\charts\TrendChart.tsx
+  15:114  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\settings\GeneralSettings.tsx
+  83:33  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\settings\NotificationSettings.tsx
+  177:42  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\components\settings\ServiceSettings.tsx
+  8:33  warning  'Save' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\deniz\.gemini\antigravity\scratch\oracle-crm\middleware.ts
+  25:58  warning  'options' is defined but never used  @typescript-eslint/no-unused-vars
+
+Ô£û 32 problems (5 errors, 27 warnings)
+  0 errors and 1 warning potentially fixable with the `--fix` option.
+

@@ -105,7 +105,7 @@ export async function POST(request: Request) {
                     phone: data.phone || null,
                     notes: data.notes || data.note || "Telegram üzerinden oluşturuldu",
                     price_agreed: price,
-                    status: data.status || 'Rehber',
+                    status: 'Yeni', // Telegram'dan gelen kayıtlar her zaman "Yeni" statüsünde başlar
                     process_name: data.process_name || null,
                     ai_summary: data.ai_summary || null,
                     reservation_at: data.reservation_at ? new Date(data.reservation_at).toISOString() : null,
