@@ -87,15 +87,19 @@ export async function GET(request: Request) {
         const dateStr = startOfTrtDay.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Istanbul' })
 
         const message = `
-<b>📅 Günlük Rapor - ${dateStr}</b>
+<b>🔔 Z-GAME CRM GÜNLÜK RAPOR</b>
+<pre>📅 ${dateStr}</pre>
 
-🚀 <b>Yeni Kayıtlar:</b> ${newLeadsCount || 0}
-📅 <b>Bugünkü Randevular:</b> ${reservationsCount || 0}
-✅ <b>Yeni Müşteriler:</b> ${newCustomersCount}
-💰 <b>Günlük Ciro:</b> ${revenue.toLocaleString('tr-TR')} ₺
-❌ <b>İptal / Arşiv:</b> ${archivedCount}
+<b>📊 GÜNLÜK ÖZET</b>
+━━━━━━━━━━━━━━━━━━━━
+🚀 <b>Yeni Kayıtlar:</b>   <code>${newLeadsCount || 0}</code>
+✅ <b>Yeni Müşteriler:</b> <code>${newCustomersCount || 0}</code>
+📅 <b>Bugünkü Randevular:</b> <code>${reservationsCount || 0}</code>
+❌ <b>İptal / Arşiv:</b>   <code>${archivedCount}</code>
 
-<i>System generated report.</i>
+<b>💰 FİNANSAL DURUM</b>
+━━━━━━━━━━━━━━━━━━━━
+💵 <b>Günlük Ciro:</b> <b>${revenue.toLocaleString('tr-TR')} ₺</b>
 `
 
         // 4. Send to Telegram
