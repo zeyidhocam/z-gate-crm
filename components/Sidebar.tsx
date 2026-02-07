@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, Bell, BrainCircuit, Settings, Calendar, DollarSign, CalendarDays, Wallet } from 'lucide-react'
+import { LayoutDashboard, Users, Bell, BrainCircuit, Settings, Calendar, DollarSign, CalendarDays, Wallet, Send } from 'lucide-react'
+import { toast } from 'sonner'
 import { twMerge } from 'tailwind-merge'
 import { useSettings } from '@/components/providers/settings-provider'
 import { supabase } from '@/lib/supabase'
@@ -12,6 +13,27 @@ export function Sidebar() {
     const pathname = usePathname()
     const { config } = useSettings()
     const [reminderCount, setReminderCount] = useState(0)
+    const [sendingReport, setSendingReport] = useState(false)
+
+    const handleManualReport = async () => {
+        try {
+            setSendingReport(true)
+            const res = await fetch('/api/cron/daily-report')
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const data = await res.json() as any
+
+            if (data.ok) {
+                toast.success("Rapor başarıyla Telegram'a gönderildi!")
+            } else {
+                toast.error("Rapor gönderilemedi: " + (data.error || "Bilinmeyen hata"))
+            }
+        } catch (error) {
+            console.error(error)
+            toast.error("İstek sırasında bir hata oluştu")
+        } finally {
+            setSendingReport(false)
+        }
+    }
 
     // Fetch reminder count
     useEffect(() => {
@@ -121,8 +143,16 @@ export function Sidebar() {
             </nav>
 
             {/* Bottom decoration */}
-            <div className="mt-auto pt-6 border-t border-cyan-500/10">
-                <div className="px-2 text-xs text-slate-600">
+            <div className="mt-auto pt-6 border-t border-cyan-500/10 space-y-4">
+                <button
+                    onClick={handleManualReport}
+                    disabled={sendingReport}
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 hover:from-cyan-500/20 hover:to-blue-500/20 border border-cyan-500/20 rounded-xl py-2.5 text-xs font-bold text-cyan-400 transition-all disabled:opacity-50 hover:shadow-[0_0_15px_rgba(34,211,238,0.2)] group"
+                >
+                    <Send size={14} className={twMerge("transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5", sendingReport && "animate-pulse")} />
+                    {sendingReport ? "Gönderiliyor..." : "Manuel Rapor Gönder"}
+                </button>
+                <div className="px-2 text-[10px] text-slate-600 text-center font-mono">
                     Ocean Elite v1.0
                 </div>
             </div>
