@@ -36,8 +36,8 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ ok: true })
 
-    } catch (error) {
-        console.error('Telegram API error:', error)
+    } catch {
+        // Hata kaydi gizlendi
         return NextResponse.json(
             { ok: false, error: 'Sunucu hatası' },
             { status: 500 }

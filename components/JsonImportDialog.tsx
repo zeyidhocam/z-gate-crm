@@ -91,7 +91,7 @@ export function JsonImportDialog({ onSuccess }: JsonImportDialogProps) {
 
 
         } catch (err: unknown) {
-            console.error(err)
+            // Hata kaydi gizlendi
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             let errorMessage = (err as any)?.message || "Bilinmeyen bir hata oluştu"

@@ -2,17 +2,15 @@
 
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 
-interface TrendData {
-    date: string
-    value: number
-}
+
 
 interface TrendChartProps {
-    data: TrendData[]
-    title?: string
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data: any[]
 }
 
 // Custom tooltip
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CustomTooltip = ({ active, payload, label }: { active?: boolean, payload?: Array<{ value: number, payload: any }>, label?: string }) => {
     if (active && payload && payload.length) {
         return (
@@ -42,7 +40,7 @@ const CustomDot = (props: { cx?: number, cy?: number, value?: number }) => {
     )
 }
 
-export function TrendChart({ data, title }: TrendChartProps) {
+export function TrendChart({ data }: TrendChartProps) {
     if (!data || data.length === 0) {
         return (
             <div className="h-[220px] flex items-center justify-center text-slate-500 text-sm">

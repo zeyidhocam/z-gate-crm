@@ -19,6 +19,7 @@ export function GeneralSettings() {
     // Config yüklendiğinde formu güncelle - Sadece config değiştiğinde (loading bittiyse)
     useEffect(() => {
         if (!isLoading) {
+            // eslint-disable-next-line
             setFormData(prev => {
                 if (prev.appName !== config.appName || prev.logoUrl !== (config.logoUrl || '')) {
                     return {
@@ -79,6 +80,7 @@ export function GeneralSettings() {
                         </div>
                         {formData.logoUrl && (
                             <div className="w-11 h-11 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center overflow-hidden shrink-0">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img src={formData.logoUrl} alt="Logo Preview" className="w-full h-full object-cover" />
                             </div>
                         )}

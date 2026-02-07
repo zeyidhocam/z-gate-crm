@@ -17,8 +17,8 @@ try {
     ) {
         client = createBrowserClient(supabaseUrl, supabaseAnonKey)
     }
-} catch (error) {
-    console.warn('Supabase client initialization failed:', error)
+} catch {
+    // Supabase baslatma hatasi gizlendi
 }
 
 // Fallback mock client

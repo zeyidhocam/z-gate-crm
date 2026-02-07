@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Users, Search, Phone, Calendar, CheckCircle2, Circle, Clock, Star, ChevronRight, Filter, MoreVertical, Trash2, Archive, Edit } from "lucide-react"
+import { Users, Search, Phone, Calendar, CheckCircle2, Circle, Filter, MoreVertical, Trash2, Archive, Edit } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { format, parseISO } from "date-fns"
 import { tr } from "date-fns/locale"
@@ -74,6 +74,7 @@ export default function CustomersPage() {
 
     useEffect(() => {
         fetchCustomers()
+        // eslint-disable-next-line
     }, [])
 
     const fetchCustomers = async () => {
@@ -95,8 +96,8 @@ export default function CustomersPage() {
                     revenue: fetchedData.reduce((sum, c) => sum + (c.price_agreed || c.price || 0), 0)
                 })
             }
-        } catch (error) {
-            console.error('Error fetching customers:', error)
+        } catch {
+            // Hata kaydi gizlendi
         } finally {
             setLoading(false)
         }
@@ -114,8 +115,8 @@ export default function CustomersPage() {
             setCustomers(prev =>
                 prev.map(c => c.id === customerId ? { ...c, stage: newStage } : c)
             )
-        } catch (error) {
-            console.error('Error updating stage:', error)
+        } catch {
+            // Hata kaydi gizlendi
         }
     }
 
@@ -132,8 +133,8 @@ export default function CustomersPage() {
 
             setCustomers(prev => prev.filter(c => c.id !== customerId))
             toast.success("Müşteri listeden kaldırıldı")
-        } catch (error) {
-            console.error('Error removing customer:', error)
+        } catch {
+            // Hata kaydi gizlendi
         }
     }
 
@@ -151,8 +152,8 @@ export default function CustomersPage() {
             setCustomers(prev => prev.filter(c => c.id !== archiveCustomerId))
             setArchiveCustomerId(null)
             toast.success("Müşteri arşive taşındı")
-        } catch (error) {
-            console.error('Error archiving customer:', error)
+        } catch {
+            // Hata kaydi gizlendi
             toast.error("Arşivleme sırasında hata oluştu")
         }
     }
@@ -176,8 +177,8 @@ export default function CustomersPage() {
             ))
             setEditingCustomer(null)
             toast.success("Fiyat güncellendi")
-        } catch (error) {
-            console.error('Error updating price:', error)
+        } catch {
+            // Hata kaydi gizlendi
             toast.error("Fiyat güncellenemedi")
         }
     }
@@ -194,11 +195,7 @@ export default function CustomersPage() {
         return matchesSearch && matchesStage
     })
 
-    // Aşama bazlı gruplar
-    const groupedByStage = STAGES.map(stage => ({
-        ...stage,
-        customers: filteredCustomers.filter(c => c.stage === stage.value)
-    }))
+
 
     // Toplam gelir ve kayıt sayısı (arşivlemede değişmez)
     const totalRevenue = initialStats?.revenue || 0

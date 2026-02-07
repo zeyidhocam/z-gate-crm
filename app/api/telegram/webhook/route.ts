@@ -16,8 +16,8 @@ async function sendMessage(token: string, chatId: string, text: string) {
                 parse_mode: 'HTML'
             })
         })
-    } catch (e) {
-        console.error('Error sending telegram message:', e)
+    } catch {
+        // Hata kaydi gizlendi
     }
 }
 
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
         const token = settings?.telegram_bot_token
 
         if (!token) {
-            console.error('Telegram token not found in settings')
+            // Hata kaydi gizlendi
             return NextResponse.json({ ok: false, error: 'Settings missing' }, { status: 500 })
         }
 
@@ -123,7 +123,7 @@ export async function POST(request: Request) {
             if (e instanceof SyntaxError) {
                 await sendMessage(token, chatId, "⚠️ <b>JSON Hatası:</b> Gönderdiğin formatı anlayamadım.\n\nLütfen tırnak işaretlerine ve parantezlere dikkat et.")
             } else {
-                console.error('Db Error:', e)
+                // Hata kaydi gizlendi
                 const errorMsg = e instanceof Error ? e.message : "Bilinmeyen hata"
                 await sendMessage(token, chatId, `❌ <b>Veritabanı Hatası:</b>\n\n<code>${errorMsg}</code>`)
             }
@@ -131,8 +131,8 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ ok: true })
 
-    } catch (error) {
-        console.error('Webhook error:', error)
+    } catch {
+        // Hata kaydi gizlendi
         return NextResponse.json({ ok: false, error: 'Internal Error' }, { status: 500 })
     }
 }

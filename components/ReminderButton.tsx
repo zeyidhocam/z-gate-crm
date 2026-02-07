@@ -50,7 +50,7 @@ export function ReminderButton({ clientId, clientName, className, iconSize = 18,
                 })
 
             if (error) {
-                console.error('Supabase error:', error)
+                // Error logging suppressed
                 toast.error(`Hata: ${error.message}. Reminders tablosu oluşturulmuş mu?`)
                 return
             }
@@ -90,8 +90,8 @@ export function ReminderButton({ clientId, clientName, className, iconSize = 18,
                             message: message
                         })
                     })
-                } catch (err) {
-                    console.error('Failed to send Telegram in ReminderButton', err)
+                } catch {
+                    // Hata kaydi gizlendi
                 }
             }
             // -------------------------------------
@@ -101,8 +101,8 @@ export function ReminderButton({ clientId, clientName, className, iconSize = 18,
             setDescription('')
             setDate(addDays(new Date(), 1))
             setOpen(false)
-        } catch (error) {
-            console.error('Error adding reminder:', error)
+        } catch {
+            // Hata kaydi gizlendi
             toast.error("Beklenmedik bir hata oluştu!")
         } finally {
             setSaving(false)

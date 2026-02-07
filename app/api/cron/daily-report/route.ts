@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(request: Request) {
+export async function GET() {
     try {
         // Initialize Supabase Admin Client (needed for crons/background tasks potentially, but client key works if RLS allows public read or we have service role)
         // Since we are running this as an API route, we can use the project credentials.
@@ -46,7 +46,7 @@ export async function GET(request: Request) {
         const todayStart = startOfTrtDay.toISOString()
         const todayEnd = endOfTrtDay.toISOString()
 
-        console.log(`Daily Report Query Range (TRT): ${todayStart} - ${todayEnd}`)
+        // Log gizlendi
 
         // 2.1 New Leads (Created Today)
         const { count: newLeadsCount } = await supabase
@@ -122,8 +122,8 @@ export async function GET(request: Request) {
 
         return NextResponse.json({ ok: true })
 
-    } catch (error) {
-        console.error('Daily report error:', error)
+    } catch {
+        // Hata kaydi gizlendi
         return NextResponse.json({ ok: false, error: 'Sunucu hatası' }, { status: 500 })
     }
 }

@@ -4,24 +4,9 @@ import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
 import { toast } from "sonner"
 import { isBefore, isToday, parseISO } from "date-fns"
-import { Bell, AlertTriangle } from "lucide-react"
+import { Bell } from "lucide-react"
 
-interface ReminderWithClient {
-    id: string
-    title: string
-    reminder_date: string
-    is_completed: boolean
-    clients: {
-        full_name: string | null
-        name: string | null
-        phone: string | null
-        process_name?: string | null
-        process_types?: { name: string } | null
-        price_agreed?: number | null
-        price?: number | null
-        payment_balance?: number | null
-    } | null
-}
+
 
 export function GlobalReminderManager() {
     const [hasChecked, setHasChecked] = useState(false)
@@ -139,16 +124,16 @@ export function GlobalReminderManager() {
                             })
 
                             localStorage.setItem('last_telegram_sent_at', now.toISOString())
-                            console.log('Telegram notification sent')
-                        } catch (err) {
-                            console.error('Failed to send Telegram', err)
+                            // Basarili log gizlendi
+                        } catch {
+                            // Hata logu gizlendi
                         }
                     }
                 }
 
                 setHasChecked(true)
-            } catch (error) {
-                console.error("Reminder check failed", error)
+            } catch {
+                // Hata logu gizlendi
             }
         }
 

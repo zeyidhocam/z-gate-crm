@@ -14,6 +14,8 @@ import { format, parseISO, isSameDay, subDays } from 'date-fns'
 import { tr } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
 
+import { toast } from "sonner"
+
 interface Lead {
     id: string
     name: string
@@ -28,6 +30,7 @@ interface Client {
     id: string
     full_name: string | null
     name: string | null
+    phone: string | null // Added for leads mapping
     status: string
     created_at: string
     reservation_at: string | null
@@ -75,7 +78,6 @@ const PROCESS_COLORS: Record<string, string> = {
 export default function DashboardContent() {
     const [leads, setLeads] = useState<Lead[]>([])
     const [allClients, setAllClients] = useState<Client[]>([])
-    const [loading, setLoading] = useState(true)
     const [stats, setStats] = useState({
         reservation: 0,
         new: 0,
@@ -91,31 +93,17 @@ export default function DashboardContent() {
 
     const fetchData = async () => {
         try {
-            setLoading(true)
-
-            // 1. Auto-Archive Logic TEMPORARILY DISABLED
-            // const now = new Date()
-            // const { data: pastReservations } = await supabase
-            //   .from('clients')
-            //   .select('id, reservation_at')
-            //   .eq('status', 'Rezervasyon')
-            //   .lt('reservation_at', now.toISOString())
-
-            // if (pastReservations && pastReservations.length > 0) {
-            //   console.log(`Auto-archiving ${pastReservations.length} records...`)
-            //   const idsToArchive = (pastReservations as any[]).map(r => r.id)
-            //   await supabase
-            //     .from('clients')
-            //     .update({ status: 'Arşiv' })
-            //     .in('id', idsToArchive)
-            //   }
 
             // 2. Fetch All Active Data for Stats
+            // Using exact syntax from ClientsContent that works
             const { data: clientsData, error } = await supabase
                 .from('clients')
-                .select('*, process_types(name)')
+                .select('*, process_types ( name )')
 
-            if (error) throw error
+            if (error) {
+                toast.error(`Veri çekilemedi: ${error.message}`)
+                throw error
+            }
 
             setAllClients((clientsData as Client[] || []))
 
@@ -133,8 +121,11 @@ export default function DashboardContent() {
 
                     if (client.status === 'Rezervasyon' && client.reservation_at) {
                         mappedLeads.push({
-                            ...client,
+                            id: client.id,
                             name: client.full_name || client.name || 'İsimsiz',
+                            status: client.status,
+                            phone: client.phone, // Ensure phone is mapped
+                            reservation_at: client.reservation_at,
                             price: client.price_agreed || undefined,
                             process_name: client.process_types?.name || client.process_name
                         })
@@ -144,10 +135,10 @@ export default function DashboardContent() {
             setStats(newStats)
             setLeads(mappedLeads.sort((a, b) => new Date(a.reservation_at!).getTime() - new Date(b.reservation_at!).getTime()))
 
-        } catch (error) {
-            console.error('Error fetching dashboard data:', error)
+        } catch {
+            // Error handled above with toast or silently failed
         } finally {
-            setLoading(false)
+            // Loading removed
         }
     }
 
@@ -308,7 +299,7 @@ export default function DashboardContent() {
                         <BarChart3 size={18} className="text-cyan-400" />
                         <h3 className="font-bold text-slate-200">Son 30 Gün</h3>
                     </div>
-                    <TrendChart data={trendData} title="Yeni Kayıt" />
+                    <TrendChart data={trendData} />
                 </div>
 
                 {/* Conversion Stats */}

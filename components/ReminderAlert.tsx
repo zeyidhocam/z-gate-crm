@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Bell, AlertTriangle, Clock, ChevronRight } from "lucide-react"
+import { Bell, AlertTriangle, ChevronRight } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { parseISO, isBefore, isToday } from "date-fns"
 import { cn } from "@/lib/utils"

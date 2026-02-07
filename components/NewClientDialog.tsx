@@ -1,8 +1,7 @@
-
 'use client'
 
-import { useState, useEffect } from "react"
-import { Upload, FileJson, CheckCircle, AlertCircle, Plus, User, Phone, Tag, DollarSign, FileText, Code } from "lucide-react"
+import { useState } from "react"
+import { CheckCircle, AlertCircle, Plus, User, Phone, Tag, DollarSign, FileText, Code } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -93,7 +92,7 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
             setJsonStatus('valid')
             setJsonMessage("✅ Form başarıyla dolduruldu! 'Kaydet' butonuna basabilirsiniz.")
 
-        } catch (err) {
+        } catch {
             setJsonStatus('invalid')
             setJsonMessage("❌ Geçersiz JSON formatı. Lütfen kontrol edin.")
         }
@@ -167,7 +166,7 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
             }, 1000)
 
         } catch (err: unknown) {
-            console.error(err)
+            // Hata kaydi gizlendi
             const errorMsg = err instanceof Error ? err.message : "Bir hata oluştu"
             setError(errorMsg)
         } finally {

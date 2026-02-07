@@ -59,8 +59,8 @@ export function NotificationSettings() {
             if (error) throw error
 
             toast.success("Ayarlar veritabanına kaydedildi")
-        } catch (error) {
-            console.error('Error saving settings:', error)
+        } catch {
+            // Hata kaydi gizlendi
             toast.error("Ayarlar kaydedilirken hata oluştu")
         } finally {
             setLoading(false)
@@ -92,9 +92,9 @@ export function NotificationSettings() {
             } else {
                 toast.error(`Hata: ${data.error || 'Bilinmeyen hata'}`)
             }
-        } catch (error) {
+        } catch {
             toast.error("Bağlantı hatası")
-            console.error(error)
+            // Hata kaydi gizlendi
         } finally {
             setTesting(false)
         }
@@ -174,7 +174,7 @@ export function NotificationSettings() {
                                     const data = await res.json()
                                     if (data.ok) toast.success("Rapor başarıyla gönderildi!")
                                     else toast.error("Rapor gönderilemedi: " + data.error)
-                                } catch (e) {
+                                } catch {
                                     toast.error("Bir hata oluştu")
                                 }
                             }}

@@ -7,14 +7,12 @@ import { tr } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 // Icons
 import {
-    Calendar as CalendarIcon, CalendarDays, Copy, Check, ChevronRight, MessageCircle, Edit, User, CheckCircle, XCircle, Bell
+    Calendar as CalendarIcon, Copy, Check, ChevronRight, MessageCircle, Edit, User, CheckCircle, XCircle
 } from "lucide-react"
 // UI Components
 import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"
-import { Calendar } from "@/components/ui/calendar"
 import { ClientEditDialog, Client } from "@/components/ClientEditDialog"
 import { ReminderButton } from "@/components/ReminderButton"
 
@@ -45,7 +43,6 @@ export default function ReservationsPage() {
     // UI State - localStorage ile kalıcı
     const [expanded, setExpanded] = useState<Record<string, boolean>>({})
     const [copiedText, setCopiedText] = useState<string | null>(null)
-    const [reservationDate, setReservationDate] = useState<Date | undefined>(new Date())
     const [editingClient, setEditingClient] = useState<Client | null>(null)
     const [processTypes, setProcessTypes] = useState<{ id: number, name: string }[]>([])
 
@@ -89,7 +86,7 @@ export default function ReservationsPage() {
             setEditingClient(null)
             fetchReservations()
         } else {
-            console.error('Error updating client:', error)
+            // Hata kaydi gizlendi
         }
     }
 
@@ -154,8 +151,8 @@ export default function ReservationsPage() {
                 setReservations(grouped)
                 setExpanded(initialExpanded)
             }
-        } catch (error) {
-            console.error('Error fetching reservations:', error)
+        } catch {
+            // Hata kaydi gizlendi
         } finally {
             setLoading(false)
         }
@@ -178,11 +175,7 @@ export default function ReservationsPage() {
         window.open(`https://web.whatsapp.com/send?phone=${finalPhone}`, '_blank')
     }
 
-    const handleReservation = async (leadId: string, date: Date | undefined) => {
-        if (!date) return
-        await supabase.from('clients').update({ reservation_at: date.toISOString() }).eq('id', leadId)
-        fetchReservations() // Refresh to move into correct date bucket
-    }
+
 
     // Müşteriyi onayla ve Müşteriler sayfasına aktar
     const confirmCustomer = async (lead: Lead) => {
@@ -199,8 +192,8 @@ export default function ReservationsPage() {
 
             if (error) throw error
             fetchReservations()
-        } catch (error) {
-            console.error('Error confirming customer:', error)
+        } catch {
+            // Hata kaydi gizlendi
         }
     }
 
@@ -214,8 +207,8 @@ export default function ReservationsPage() {
 
             if (error) throw error
             fetchReservations()
-        } catch (error) {
-            console.error('Error rejecting customer:', error)
+        } catch {
+            // Hata kaydi gizlendi
         }
     }
 

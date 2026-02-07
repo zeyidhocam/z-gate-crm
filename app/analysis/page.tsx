@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useEffect } from "react"
-import { DollarSign, Plus, Trash2, TrendingDown, TrendingUp, Wallet, Home, Zap, ShoppingCart, Car, User, ArrowUpRight, ArrowDownRight, Lock, Unlock, KeyRound, Briefcase, Gift } from "lucide-react"
+import { Plus, Trash2, TrendingDown, TrendingUp, Wallet, Home, Zap, ShoppingCart, Car, User, ArrowUpRight, ArrowDownRight, Lock, Unlock, KeyRound, Briefcase, Gift } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { supabase } from "@/lib/supabase"
@@ -11,7 +11,7 @@ import { tr } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface Transaction {
     id: string
@@ -49,10 +49,8 @@ export default function AnalysisPage() {
     const [error, setError] = useState(false)
     const DEFAULT_PIN = "1881"
     const LOCK_KEY = "expenses_session_timestamp"
-    const SESSION_DURATION = 24 * 60 * 60 * 1000 // 24 hours
 
     const [transactions, setTransactions] = useState<Transaction[]>([])
-    const [loading, setLoading] = useState(true)
 
     // Form
     const [activeTab, setActiveTab] = useState<'income' | 'expense'>('expense')
@@ -64,7 +62,8 @@ export default function AnalysisPage() {
         const savedTime = localStorage.getItem(LOCK_KEY)
         if (savedTime) {
             const timeDiff = Date.now() - parseInt(savedTime)
-            if (timeDiff < SESSION_DURATION) {
+            // 24 hours = 86400000 ms
+            if (timeDiff < 86400000) {
                 setIsLocked(false)
             } else {
                 localStorage.removeItem(LOCK_KEY)
@@ -94,7 +93,6 @@ export default function AnalysisPage() {
     }
 
     const fetchData = async () => {
-        setLoading(true)
         try {
             const { data } = await supabase
                 .from('expenses')
@@ -102,10 +100,10 @@ export default function AnalysisPage() {
                 .order('date', { ascending: false })
 
             setTransactions(data || [])
-        } catch (error) {
-            console.error('Error:', error)
+        } catch {
+            // Hata kaydi gizlendi
         } finally {
-            setLoading(false)
+            // Loading removed
         }
     }
 
@@ -140,7 +138,7 @@ export default function AnalysisPage() {
             fetchData()
             toast.success(activeTab === 'income' ? "Gelir eklendi" : "Gider eklendi")
 
-        } catch (error) {
+        } catch {
             toast.error("Hata! SQL kodunu çalıştırdınız mı?")
         }
     }

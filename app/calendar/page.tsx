@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, User, Phone } from "lucide-react"
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, Phone } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, parseISO, addMonths, subMonths, getDay } from "date-fns"
 import { tr } from "date-fns/locale"
@@ -43,8 +43,8 @@ export default function CalendarPage() {
 
             if (error) throw error
             setReservations(data as Reservation[] || [])
-        } catch (error) {
-            console.error('Error fetching reservations:', error)
+        } catch {
+            // Hata kaydi gizlendi
         } finally {
             setLoading(false)
         }

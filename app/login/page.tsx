@@ -33,8 +33,8 @@ export default function LoginPage() {
             toast.success("Giriş Başarılı", { description: "Yönlendiriliyorsunuz..." })
             router.push("/")
             router.refresh()
-        } catch (error) {
-            console.error(error)
+        } catch {
+            // Hata kaydi gizlendi
             toast.error("Bir hata oluştu")
             setLoading(false)
         }

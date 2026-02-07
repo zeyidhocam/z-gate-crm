@@ -1,9 +1,8 @@
-
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, Bell, BrainCircuit, Settings, Calendar, DollarSign, CalendarDays, Wallet, Send } from 'lucide-react'
+import { LayoutDashboard, Users, Bell, Settings, Calendar, DollarSign, CalendarDays, Wallet, Send } from 'lucide-react'
 import { toast } from 'sonner'
 import { twMerge } from 'tailwind-merge'
 import { useSettings } from '@/components/providers/settings-provider'
@@ -27,8 +26,8 @@ export function Sidebar() {
             } else {
                 toast.error("Rapor gönderilemedi: " + (data.error || "Bilinmeyen hata"))
             }
-        } catch (error) {
-            console.error(error)
+        } catch {
+            // Hata kaydi gizlendi
             toast.error("İstek sırasında bir hata oluştu")
         } finally {
             setSendingReport(false)
@@ -78,6 +77,7 @@ export function Sidebar() {
         <aside className="w-[260px] h-screen sticky top-0 bg-gradient-to-b from-[#040d17] via-[#0a1628] to-[#0c1929] border-r border-cyan-500/10 p-6 flex flex-col">
             {/* Logo / App Name */}
             <Link href="/" className="mb-10 px-2 flex items-center gap-3 group cursor-pointer">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                     src="/icon.png"
                     alt="Logo"

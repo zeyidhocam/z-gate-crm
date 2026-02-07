@@ -1,9 +1,8 @@
 "use client"
 
 import { useMemo } from "react"
-import { Sparkles, TrendingUp, AlertTriangle, Calendar, Users, Award } from "lucide-react"
-import { differenceInDays, parseISO, format } from "date-fns"
-import { tr } from "date-fns/locale"
+import { Sparkles, TrendingUp, AlertTriangle, Calendar, Award } from "lucide-react"
+import { differenceInDays, parseISO } from "date-fns"
 import { cn } from "@/lib/utils"
 
 interface Client {
@@ -54,14 +53,6 @@ export function AIInsights({ clients }: AIInsightsProps) {
     // Yaklaşan rezervasyon sayısı
     const upcomingCount = useMemo(() => {
         return clients.filter(c => c.status === 'Rezervasyon').length
-    }, [clients])
-
-    // Ortalama fiyat
-    const avgPrice = useMemo(() => {
-        const validClients = clients.filter(c => c.price_agreed && c.price_agreed > 0)
-        if (validClients.length === 0) return 0
-        const total = validClients.reduce((sum, c) => sum + (c.price_agreed || 0), 0)
-        return Math.round(total / validClients.length)
     }, [clients])
 
     const insights = [

@@ -23,7 +23,7 @@ const COLORS = [
 ]
 
 // Custom label renderer
-const renderCustomLabel = ({ cx = 0, cy = 0, midAngle = 0, innerRadius = 0, outerRadius = 0, percent = 0, name = "" }: { cx?: number, cy?: number, midAngle?: number, innerRadius?: number, outerRadius?: number, percent?: number, name?: string }) => {
+const renderCustomLabel = ({ cx = 0, cy = 0, midAngle = 0, innerRadius = 0, outerRadius = 0, percent = 0 }: { cx?: number, cy?: number, midAngle?: number, innerRadius?: number, outerRadius?: number, percent?: number }) => {
     if (percent < 0.08) return null
     const RADIAN = Math.PI / 180
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5
@@ -45,6 +45,7 @@ const renderCustomLabel = ({ cx = 0, cy = 0, midAngle = 0, innerRadius = 0, oute
 }
 
 // Custom tooltip
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CustomTooltip = ({ active, payload }: { active?: boolean, payload?: Array<{ name: string, value: number, payload: any }> }) => {
     if (active && payload && payload.length) {
         return (

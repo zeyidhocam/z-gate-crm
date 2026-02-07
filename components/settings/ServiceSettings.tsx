@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import { Plus, Trash2, Loader2, Save } from "lucide-react"
+import { Plus, Trash2, Loader2 } from "lucide-react"
 
 interface ProcessType {
     id: number

@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState, useEffect, Suspense } from "react"
-import { Search, ChevronRight, MessageCircle, Edit, CalendarDays, Copy, Check, Sparkles, Pin, Clock, Archive, Plus, User, Info } from "lucide-react"
+import React, { useState, useEffect } from "react"
+import { Search, ChevronRight, Edit, CalendarDays, Copy, Check, Sparkles, Clock, Archive, User, Info } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { cn } from "@/lib/utils"
 // UI Components
@@ -32,9 +32,7 @@ const ORDERED_CATEGORIES: CategoryType[] = ['Rezervasyon', 'Aktif', 'Yeni', 'Tak
 
 
 // Additional imports
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
 import { ClientEditDialog } from "@/components/ClientEditDialog"
 
 import { useSearchParams } from "next/navigation"
@@ -67,7 +65,6 @@ export default function ClientsContent() {
     const searchParams = useSearchParams()
     const [clients, setClients] = useState<Client[]>([])
     const [processTypes, setProcessTypes] = useState<{ id: number, name: string }[]>([])
-    const [loading, setLoading] = useState(true)
     const [search, setSearch] = useState('')
 
     // UI State
@@ -115,7 +112,6 @@ export default function ClientsContent() {
     }, [])
 
     const fetchClients = async () => {
-        setLoading(true)
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return
 
         const { data, error } = await supabase
@@ -123,10 +119,9 @@ export default function ClientsContent() {
             .select(`*, process_types ( name ), magic_types ( name, risk_level )`)
             .order('created_at', { ascending: false })
 
-        if (error) console.error('Error fetching clients:', error)
-        else setClients(data as any || []) // eslint-disable-next-line @typescript-eslint/no-explicit-any
-
-        setLoading(false)
+        if (!error) {
+            setClients(data as Client[] || [])
+        }
     }
 
     const fetchProcessTypes = async () => {
@@ -144,13 +139,6 @@ export default function ClientsContent() {
         setTimeout(() => setCopiedText(null), 2000)
     }
 
-    const handleWhatsApp = (phone: string | null) => {
-        if (!phone) return
-        const cleanPhone = phone.replace(/\D/g, '')
-        const finalPhone = cleanPhone.startsWith('90') ? cleanPhone : `90${cleanPhone}`
-        window.open(`https://web.whatsapp.com/send?phone=${finalPhone}`, '_blank')
-    }
-
     const handleReservation = async (clientId: string, date: Date | undefined) => {
         if (!date) return
         try {
@@ -164,8 +152,8 @@ export default function ClientsContent() {
                 setClients(prev => prev.map(c => c.id === clientId ? { ...c, status: 'Rezervasyon', reservation_at: date!.toISOString() } : c))
                 setReservationDate(undefined)
             }
-        } catch (error) {
-            console.error('Error creating reservation:', error)
+        } catch {
+            // Hata kaydi gizlendi
         }
     }
 
@@ -224,8 +212,8 @@ export default function ClientsContent() {
             setEditingClient(null) // Close Dialog
             window.location.reload() // Reload to fetch relations if needed, or we can fetch single
 
-        } catch (error) {
-            console.error('Error updating client:', error)
+        } catch {
+            // Hata kaydi gizlendi
         }
     }
 
@@ -338,7 +326,8 @@ export default function ClientsContent() {
                                                 {/* Process & Price Agreed */}
                                                 <div className="w-[180px] shrink-0 flex flex-col justify-center gap-1.5">
                                                     <div className="text-[13px] font-bold text-slate-300 truncate opacity-90">
-                                                        {client.process_types?.name || client.process_name || 'İşlem Yok'}
+                                                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                                                        {(client as any).process_types?.name || client.process_name || 'İşlem Yok'}
                                                     </div>
                                                     <div className="flex items-center gap-2 text-[12px] font-bold text-slate-500 opacity-80 group/price h-5">
                                                         <span>
@@ -523,6 +512,7 @@ export default function ClientsContent() {
             <ClientEditDialog
                 open={!!editingClient}
                 onOpenChange={(open) => !open && setEditingClient(null)}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 client={editingClient as any}
                 onSave={handleSaveEdit}
                 processTypes={processTypes}

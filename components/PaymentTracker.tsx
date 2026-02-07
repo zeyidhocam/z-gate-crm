@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Wallet, Save, Clock, AlertCircle, CheckCircle2, Calendar as CalendarIcon, X } from "lucide-react"
+import { Calendar as CalendarIcon, AlertCircle, Wallet, Save, Clock, CheckCircle2 } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -49,8 +49,8 @@ export function PaymentTracker({ clientId, initialNote, initialBalance, initialD
             onSave(note || null, numBalance, isoDate)
             setIsOpen(false)
             toast.success("Ödeme bilgileri güncellendi.")
-        } catch (error) {
-            console.error('Error saving payment info:', error)
+        } catch {
+            // Hata kaydi gizlendi
             toast.error("Kaydedilemedi.")
         } finally {
             setSaving(false)

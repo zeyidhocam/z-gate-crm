@@ -5,7 +5,7 @@ import { DollarSign, TrendingUp, TrendingDown, Calendar, Download, Users, Credit
 import { supabase } from "@/lib/supabase"
 import { format, parseISO, subDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from "date-fns"
 import { tr } from "date-fns/locale"
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid, Legend } from "recharts"
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
@@ -90,8 +90,8 @@ export default function FinancePage() {
 
             if (error) throw error
             setClients(data as unknown as Client[] || [])
-        } catch (error) {
-            console.error('Error fetching finance data:', error)
+        } catch {
+            // Hata kaydi gizlendi
         } finally {
             setLoading(false)
         }

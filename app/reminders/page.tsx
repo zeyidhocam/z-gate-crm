@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { Bell, Clock, AlertTriangle, UserX, Phone, Calendar, TrendingDown, Filter, Plus, CheckCircle, Trash2, X } from "lucide-react"
+import { Bell, Clock, AlertTriangle, UserX, Calendar, TrendingDown, Filter, Plus, CheckCircle, Trash2 } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { format, parseISO, differenceInDays, isBefore, isToday, addDays } from "date-fns"
 import { tr } from "date-fns/locale"
@@ -94,8 +94,8 @@ export default function RemindersPage() {
 
             if (error) throw error
             setClients((data as unknown as Client[]) || [])
-        } catch (error) {
-            console.error('Error fetching clients:', error)
+        } catch {
+            // Hata kaydi gizlendi
         }
     }
 
@@ -109,8 +109,8 @@ export default function RemindersPage() {
 
             if (error) throw error
             setReminders((data as unknown as Reminder[]) || [])
-        } catch (error) {
-            console.error('Error fetching reminders:', error)
+        } catch {
+            // Hata kaydi gizlendi
         } finally {
             setLoading(false)
         }
@@ -136,8 +136,8 @@ export default function RemindersPage() {
             setNewDate(addDays(new Date(), 1))
             setDialogOpen(false)
             fetchReminders()
-        } catch (error) {
-            console.error('Error adding reminder:', error)
+        } catch {
+            // Hata kaydi gizlendi
         }
     }
 
@@ -150,8 +150,8 @@ export default function RemindersPage() {
 
             if (error) throw error
             fetchReminders()
-        } catch (error) {
-            console.error('Error toggling reminder:', error)
+        } catch {
+            // Hata kaydi gizlendi
         }
     }
 
@@ -164,8 +164,8 @@ export default function RemindersPage() {
 
             if (error) throw error
             fetchReminders()
-        } catch (error) {
-            console.error('Error deleting reminder:', error)
+        } catch {
+            // Hata kaydi gizlendi
         }
     }
 
