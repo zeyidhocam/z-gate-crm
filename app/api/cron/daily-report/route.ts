@@ -28,18 +28,25 @@ export async function GET(request: Request) {
 
         const { telegram_bot_token: token, telegram_chat_id: chatId } = settings
 
-        // 2. Calculate Daily Stats
-        // "Today" definition: From 00:00:00 to 23:59:59 of current day (Server time? Or TR time? Let's assume server UTC or handle timezone offset if needed.)
-        // For simplicity, we'll use UTC dates as stored in DB.
+        // 2. Calculate Daily Stats (Turkey Time: UTC+3)
+        // We want the report to cover 00:00:00 to 23:59:59 TRT.
+        // 00:00 TRT = Previous Day 21:00 UTC
+        // 23:59 TRT = Current Day 20:59 UTC
 
         const now = new Date()
-        const startOfDay = new Date(now)
-        startOfDay.setHours(0, 0, 0, 0)
-        const endOfDay = new Date(now)
-        endOfDay.setHours(23, 59, 59, 999)
 
-        const todayStart = startOfDay.toISOString()
-        const todayEnd = endOfDay.toISOString()
+        // Get current date string in TRT (e.g. "2024-02-07")
+        const trtDateStr = now.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' }) // YYYY-MM-DD format
+
+        // Construct start and end times in TRT, then parse as ISO to get UTC offsets correctly
+        // We can manually construct the ISO string with offset +0300
+        const startOfTrtDay = new Date(`${trtDateStr}T00:00:00.000+03:00`)
+        const endOfTrtDay = new Date(`${trtDateStr}T23:59:59.999+03:00`)
+
+        const todayStart = startOfTrtDay.toISOString()
+        const todayEnd = endOfTrtDay.toISOString()
+
+        console.log(`Daily Report Query Range (TRT): ${todayStart} - ${todayEnd}`)
 
         // 2.1 New Leads (Created Today)
         const { count: newLeadsCount } = await supabase
@@ -48,21 +55,18 @@ export async function GET(request: Request) {
             .gte('created_at', todayStart)
             .lte('created_at', todayEnd)
 
-        // 2.2 Reservations (Reservation Date is Today) - "Bugün rezervasyonu olanlar"
-        // User asked "kaç kişi rez oldu" -> Could mean "Reservations MADE today" or "Appointments FOR today".
-        // Let's report "Bugünkü Randevular" which is more actionable for a daily report.
+        // 2.2 Reservations (Reservation Date is Today) - "Bugün randevusu olanlar"
         const { count: reservationsCount } = await supabase
             .from('clients')
             .select('*', { count: 'exact', head: true })
             .gte('reservation_at', todayStart)
             .lte('reservation_at', todayEnd)
-        // Optional: .eq('status', 'Rezervasyon') if we only want active ones
 
         // 2.3 New Customers (Confirmed Today)
         const { data: newCustomers } = await supabase
             .from('clients')
             .select('price_agreed')
-            .eq('status', 'Aktif') // or check confirmed_at
+            .eq('status', 'Aktif')
             .gte('confirmed_at', todayStart)
             .lte('confirmed_at', todayEnd)
 
@@ -70,21 +74,23 @@ export async function GET(request: Request) {
         const revenue = newCustomers?.reduce((sum, client) => sum + (client.price_agreed || 0), 0) || 0
 
         // 2.4 Cancellations/Archives (Updated to Archive Today)
-        const { count: archivedCount } = await supabase
+        const { count: archivedResult } = await supabase
             .from('clients')
             .select('*', { count: 'exact', head: true })
             .eq('status', 'Arşiv')
             .gte('updated_at', todayStart)
             .lte('updated_at', todayEnd)
 
+        const archivedCount = archivedResult || 0
+
         // 3. Format Message
-        const dateStr = now.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })
+        const dateStr = startOfTrtDay.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/Istanbul' })
 
         const message = `
 <b>📅 Günlük Rapor - ${dateStr}</b>
 
-🚀 <b>Yeni Kayıtlar:</b> ${newLeadsCount}
-📅 <b>Bugünkü Randevular:</b> ${reservationsCount}
+🚀 <b>Yeni Kayıtlar:</b> ${newLeadsCount || 0}
+📅 <b>Bugünkü Randevular:</b> ${reservationsCount || 0}
 ✅ <b>Yeni Müşteriler:</b> ${newCustomersCount}
 💰 <b>Günlük Ciro:</b> ${revenue.toLocaleString('tr-TR')} ₺
 ❌ <b>İptal / Arşiv:</b> ${archivedCount}
