@@ -99,6 +99,8 @@ export default function ReservationsPage() {
 
             // Auto Archive Logic
             const now = new Date()
+            now.setHours(0, 0, 0, 0)
+
             await supabase
                 .from('clients')
                 .update({ status: 'Arşiv' })

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
+import { supabase } from "@/lib/supabase"
 // import { useSettings } from "@/components/providers/settings-provider"
 
 export function NotificationSettings() {
@@ -30,22 +31,40 @@ export function NotificationSettings() {
     // Let's use localStorage for the credentials to keep it simple and secure enough for this local-first app context.
 
     useEffect(() => {
-        const savedToken = localStorage.getItem('telegram_bot_token')
-        const savedChatId = localStorage.getItem('telegram_chat_id')
-        if (savedToken) setTelegramToken(savedToken)
-        if (savedChatId) setTelegramChatId(savedChatId)
+        const fetchSettings = async () => {
+            const { data } = await supabase
+                .from('system_settings')
+                .select('telegram_bot_token, telegram_chat_id')
+                .single()
+
+            if (data) {
+                setTelegramToken(data.telegram_bot_token || "")
+                setTelegramChatId(data.telegram_chat_id || "")
+            }
+        }
+        fetchSettings()
     }, [])
 
-    const handleSave = () => {
+    const handleSave = async () => {
         setLoading(true)
-        localStorage.setItem('telegram_bot_token', telegramToken)
-        localStorage.setItem('telegram_chat_id', telegramChatId)
+        try {
+            const { error } = await supabase
+                .from('system_settings')
+                .update({
+                    telegram_bot_token: telegramToken,
+                    telegram_chat_id: telegramChatId
+                })
+                .eq('id', 1)
 
-        // Also simulate an API save if we had one, but localStorage is fine for the client-side reminder manager we built
-        setTimeout(() => {
+            if (error) throw error
+
+            toast.success("Ayarlar veritabanına kaydedildi")
+        } catch (error) {
+            console.error('Error saving settings:', error)
+            toast.error("Ayarlar kaydedilirken hata oluştu")
+        } finally {
             setLoading(false)
-            toast.success("Ayarlar cihazınıza kaydedildi")
-        }, 500)
+        }
     }
 
     const handleTest = async () => {
@@ -144,7 +163,24 @@ export function NotificationSettings() {
                             className="bg-transparent border-slate-700 hover:bg-slate-800 text-slate-300"
                         >
                             {testing ? <span className="animate-spin mr-2">⏳</span> : <Bell size={16} className="mr-2" />}
-                            Test Mesajı Gönder
+                            Test Mesajı
+                        </Button>
+                        <Button
+                            variant="secondary"
+                            onClick={async () => {
+                                try {
+                                    toast.info("Günlük rapor hazırlanıyor...")
+                                    const res = await fetch('/api/cron/daily-report')
+                                    const data = await res.json()
+                                    if (data.ok) toast.success("Rapor başarıyla gönderildi!")
+                                    else toast.error("Rapor gönderilemedi: " + data.error)
+                                } catch (e) {
+                                    toast.error("Bir hata oluştu")
+                                }
+                            }}
+                            className="bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-600/30"
+                        >
+                            📊 Raporu Şimdi Gönder
                         </Button>
                     </div>
                 </CardContent>
