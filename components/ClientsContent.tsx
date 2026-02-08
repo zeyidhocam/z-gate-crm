@@ -437,11 +437,12 @@ export default function ClientsContent() {
                                                     </Dialog>
 
                                                     {/* Actions */}
-                                                    <div className="flex gap-1.5 shrink-0 ml-auto w-[200px] justify-end">
+                                                    <div className="flex gap-2 shrink-0 ml-auto w-[240px] justify-end">
                                                         <ReminderButton
                                                             clientId={client.id}
                                                             clientName={client.full_name || client.name || 'Müşteri'}
-                                                            iconSize={18}
+                                                            iconSize={20}
+                                                            className="h-10 w-10 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 hover:text-amber-400 rounded-xl transition-all"
                                                             clientDetails={{
                                                                 phone: client.phone,
                                                                 process: client.process_types?.name || client.process_name,
@@ -451,8 +452,8 @@ export default function ClientsContent() {
 
                                                         <Popover>
                                                             <PopoverTrigger asChild>
-                                                                <Button variant="ghost" size="icon" className="h-9 w-9 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded-xl transition-all" title="Randevu Oluştur">
-                                                                    <CalendarDays size={18} />
+                                                                <Button variant="ghost" size="icon" className="h-10 w-10 bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 hover:text-blue-400 rounded-xl transition-all" title="Randevu Oluştur">
+                                                                    <CalendarDays size={20} />
                                                                 </Button>
                                                             </PopoverTrigger>
                                                             <PopoverContent className="w-auto p-0 bg-slate-950 border-slate-800" align="end">
@@ -473,8 +474,11 @@ export default function ClientsContent() {
 
                                                         <WhatsAppButton
                                                             phone={client.phone}
-                                                            clientName={client.full_name || client.name || 'Değerli Müşteri'}
-                                                            size="sm"
+                                                            clientName={client.full_name || client.name || undefined}
+                                                            size="default"
+                                                            className="h-10 w-10 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 hover:text-[#25D366] rounded-xl"
+                                                            processName={client.process_types?.name || client.process_name}
+                                                            reservationDate={client.reservation_at}
                                                         />
 
                                                         {/* ARCHIVE BUTTON */}
@@ -483,10 +487,10 @@ export default function ClientsContent() {
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 onClick={() => handleArchive(client.id, client.status || 'Yeni')}
-                                                                className="h-9 w-9 text-slate-400 hover:text-slate-300 hover:bg-slate-500/10 rounded-xl transition-all"
+                                                                className="h-10 w-10 bg-slate-500/10 text-slate-400 hover:bg-slate-500/20 hover:text-slate-300 rounded-xl transition-all"
                                                                 title="Arşive Taşı"
                                                             >
-                                                                <Archive size={18} />
+                                                                <Archive size={20} />
                                                             </Button>
                                                         )}
 
@@ -495,10 +499,10 @@ export default function ClientsContent() {
                                                             variant="ghost"
                                                             size="icon"
                                                             onClick={() => setEditingClient(client)}
-                                                            className="h-9 w-9 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 rounded-xl transition-all"
+                                                            className="h-10 w-10 bg-orange-500/10 text-orange-500 hover:bg-orange-500/20 hover:text-orange-400 rounded-xl transition-all"
                                                             title="Düzenle"
                                                         >
-                                                            <Edit size={18} />
+                                                            <Edit size={20} />
                                                         </Button>
                                                     </div>
                                                 </div>

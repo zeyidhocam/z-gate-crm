@@ -484,7 +484,14 @@ export default function RemindersPage() {
                                     <div className="text-xs text-slate-500">Son işlem</div>
                                     <div className="text-sm text-slate-400">{format(client.lastDate, 'dd MMM yyyy', { locale: tr })}</div>
                                 </div>
-                                <WhatsAppButton phone={client.phone} clientName={client.full_name || client.name || 'Değerli Müşteri'} size="sm" />
+                                <WhatsAppButton
+                                    phone={client.phone}
+                                    clientName={client.full_name || client.name || undefined}
+                                    size="default"
+                                    className="h-10 w-10 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 hover:text-[#25D366] rounded-xl"
+                                    processName={client.process_types?.name}
+                                    reservationDate={client.reservation_at}
+                                />
                             </div>
                         ))}
 
@@ -556,9 +563,9 @@ function ReminderCard({
                 variant="ghost"
                 size="icon"
                 onClick={() => onDelete(reminder.id)}
-                className="h-8 w-8 text-slate-600 hover:text-red-400 hover:bg-red-500/10"
+                className="h-10 w-10 bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-all"
             >
-                <Trash2 size={16} />
+                <Trash2 size={20} />
             </Button>
         </div>
     )

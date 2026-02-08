@@ -15,6 +15,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"
 import { ClientEditDialog, Client } from "@/components/ClientEditDialog"
 import { ReminderButton } from "@/components/ReminderButton"
+import { WhatsAppButton } from "@/components/WhatsAppButton"
 
 
 // Types
@@ -170,12 +171,7 @@ export default function ReservationsPage() {
         setTimeout(() => setCopiedText(null), 2000)
     }
 
-    const handleWhatsApp = (phone: string | null) => {
-        if (!phone) return
-        const cleanPhone = phone.replace(/\D/g, '')
-        const finalPhone = cleanPhone.startsWith('90') ? cleanPhone : `90${cleanPhone}`
-        window.open(`https://web.whatsapp.com/send?phone=${finalPhone}`, '_blank')
-    }
+
 
 
 
@@ -390,11 +386,12 @@ export default function ReservationsPage() {
                                                     </div>
 
                                                     {/* Actions */}
-                                                    <div className="w-[140px] shrink-0 flex justify-end gap-1.5">
+                                                    <div className="w-[180px] shrink-0 flex justify-end gap-2">
                                                         <ReminderButton
                                                             clientId={lead.id}
                                                             clientName={lead.name}
-                                                            iconSize={18}
+                                                            iconSize={20}
+                                                            className="h-10 w-10 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 hover:text-amber-400 rounded-xl transition-all"
                                                         />
 
                                                         <Button
@@ -409,21 +406,20 @@ export default function ReservationsPage() {
                                                                 price_agreed: lead.price || null,
                                                                 process_type_id: lead.process_type_id || null
                                                             })}
-                                                            className="h-9 w-9 text-orange-400 hover:text-orange-300 hover:bg-orange-500/10 rounded-xl transition-all"
+                                                            className="h-10 w-10 bg-orange-500/10 text-orange-500 hover:bg-orange-500/20 hover:text-orange-400 rounded-xl transition-all"
                                                             title="Düzenle"
                                                         >
-                                                            <Edit size={18} />
+                                                            <Edit size={20} />
                                                         </Button>
 
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            onClick={() => handleWhatsApp(lead.phone || null)}
-                                                            className="h-9 w-9 text-green-400 hover:text-green-300 hover:bg-green-500/10 rounded-xl transition-all"
-                                                            title="WhatsApp Web"
-                                                        >
-                                                            <MessageCircle size={18} />
-                                                        </Button>
+                                                        <WhatsAppButton
+                                                            phone={lead.phone}
+                                                            clientName={lead.name}
+                                                            size="default"
+                                                            className="h-10 w-10 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 hover:text-[#25D366] rounded-xl"
+                                                            processName={lead.process_name}
+                                                            reservationDate={lead.reservation_at}
+                                                        />
                                                     </div>
                                                 </div>
                                             )

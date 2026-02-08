@@ -42,6 +42,7 @@ interface Customer {
     financial_note: string | null
     payment_balance: number | null
     payment_due_date: string | null
+    reservation_at: string | null
 }
 
 const STAGES = [
@@ -82,7 +83,7 @@ export default function CustomersPage() {
             setLoading(true)
             const { data, error } = await supabase
                 .from('clients')
-                .select('id, full_name, name, phone, price_agreed, price, process_name, process_types(name), stage, confirmed_at, created_at, notes, financial_note, payment_balance, payment_due_date')
+                .select('id, full_name, name, phone, price_agreed, price, process_name, process_types(name), stage, confirmed_at, created_at, notes, financial_note, payment_balance, payment_due_date, reservation_at')
                 .eq('is_confirmed', true)
                 .order('confirmed_at', { ascending: false })
 
@@ -403,7 +404,8 @@ export default function CustomersPage() {
                                         <ReminderButton
                                             clientId={customer.id}
                                             clientName={customer.full_name || customer.name || 'Müşteri'}
-                                            iconSize={18}
+                                            iconSize={20}
+                                            className="h-10 w-10 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 hover:text-amber-400 rounded-xl transition-all"
                                             clientDetails={{
                                                 phone: customer.phone,
                                                 process: processName,
@@ -413,13 +415,16 @@ export default function CustomersPage() {
                                         />
                                         <WhatsAppButton
                                             phone={customer.phone}
-                                            clientName={customer.full_name || customer.name || 'Değerli Müşteri'}
-                                            size="sm"
+                                            clientName={customer.full_name || customer.name || undefined}
+                                            size="default"
+                                            className="h-10 w-10 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 hover:text-[#25D366] rounded-xl"
+                                            processName={processName}
+                                            reservationDate={customer.reservation_at}
                                         />
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-500 hover:text-slate-300">
-                                                    <MoreVertical size={16} />
+                                                <Button variant="ghost" size="sm" className="h-10 w-10 p-0 bg-slate-800/50 text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 rounded-xl">
+                                                    <MoreVertical size={20} />
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className="bg-[#0c1929] border-cyan-500/20">
