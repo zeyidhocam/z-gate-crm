@@ -1,8 +1,8 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Users, Bell, Settings, Calendar, DollarSign, CalendarDays, Wallet, Send } from 'lucide-react'
+import { LayoutDashboard, Users, Bell, Settings, Calendar, DollarSign, CalendarDays, Wallet, Send, Menu, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { twMerge } from 'tailwind-merge'
 import { useSettings } from '@/components/providers/settings-provider'
@@ -13,6 +13,24 @@ export function Sidebar() {
     const { config } = useSettings()
     const [reminderCount, setReminderCount] = useState(0)
     const [sendingReport, setSendingReport] = useState(false)
+    const [mobileOpen, setMobileOpen] = useState(false)
+
+    // Sayfa değiştiğinde mobil menüyü kapat
+    useEffect(() => {
+        setMobileOpen(false)
+    }, [pathname])
+
+    // Mobil menü açıkken body scroll'u engelle
+    useEffect(() => {
+        if (mobileOpen) {
+            document.body.style.overflow = 'hidden'
+        } else {
+            document.body.style.overflow = ''
+        }
+        return () => { document.body.style.overflow = '' }
+    }, [mobileOpen])
+
+    const closeMobile = useCallback(() => setMobileOpen(false), [])
 
     const handleManualReport = async () => {
         try {
@@ -73,19 +91,19 @@ export function Sidebar() {
         { label: 'Ayarlar', icon: Settings, path: '/settings' },
     ]
 
-    return (
-        <aside className="w-[260px] h-screen sticky top-0 bg-gradient-to-b from-[#040d17] via-[#0a1628] to-[#0c1929] border-r border-cyan-500/10 p-6 flex flex-col">
+    const sidebarContent = (
+        <>
             {/* Logo / App Name */}
-            <Link href="/" className="mb-10 px-2 flex items-center gap-3 group cursor-pointer">
+            <Link href="/" className="mb-8 lg:mb-10 px-2 flex items-center gap-3 group cursor-pointer">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                     src="/icon.png"
                     alt="Logo"
-                    className="w-12 h-12 rounded-xl shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform"
+                    className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform"
                 />
-                <div>
+                <div className="min-w-0">
                     <h1
-                        className="text-2xl font-black tracking-tight text-gradient-ocean group-hover:opacity-80 transition-opacity"
+                        className="text-xl lg:text-2xl font-black tracking-tight text-gradient-ocean group-hover:opacity-80 transition-opacity truncate"
                         title={config.appName}
                     >
                         {config.appName}
@@ -95,7 +113,7 @@ export function Sidebar() {
             </Link>
 
             {/* Navigation Items */}
-            <nav className="flex flex-col gap-1">
+            <nav className="flex flex-col gap-1 overflow-y-auto flex-1">
                 {items.map((item) => {
                     const isActive = pathname === item.path || (item.path !== '/' && pathname.startsWith(item.path))
 
@@ -104,7 +122,7 @@ export function Sidebar() {
                             key={item.path}
                             href={item.path}
                             className={twMerge(
-                                "group relative flex items-center gap-4 px-4 py-3.5 rounded-xl font-semibold text-[15px] transition-all duration-150",
+                                "group relative flex items-center gap-3 lg:gap-4 px-3 lg:px-4 py-3 lg:py-3.5 rounded-xl font-semibold text-sm lg:text-[15px] transition-all duration-150",
                                 "hover:bg-cyan-500/10 hover:translate-x-1",
                                 isActive
                                     ? "bg-gradient-to-r from-cyan-500/20 via-cyan-500/10 to-transparent text-cyan-300 border-l-[3px] border-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.15)]"
@@ -113,10 +131,10 @@ export function Sidebar() {
                         >
                             {/* Icon */}
                             <item.icon
-                                size={22}
+                                size={20}
                                 strokeWidth={2}
                                 className={twMerge(
-                                    "transition-all duration-150",
+                                    "shrink-0 transition-all duration-150",
                                     isActive
                                         ? "text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.6)]"
                                         : "text-slate-500 group-hover:text-cyan-400"
@@ -124,7 +142,7 @@ export function Sidebar() {
                             />
 
                             {/* Label */}
-                            <span className="flex-1">{item.label}</span>
+                            <span className="flex-1 truncate">{item.label}</span>
 
                             {/* Badge */}
                             {item.badge ? (
@@ -135,7 +153,7 @@ export function Sidebar() {
 
                             {/* Active indicator */}
                             {isActive && !item.badge && (
-                                <div className="absolute right-4 w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.8)] animate-pulse" />
+                                <div className="absolute right-3 lg:right-4 w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.8)] animate-pulse" />
                             )}
                         </Link>
                     )
@@ -143,7 +161,7 @@ export function Sidebar() {
             </nav>
 
             {/* Bottom decoration */}
-            <div className="mt-auto pt-6 border-t border-cyan-500/10 space-y-4">
+            <div className="mt-auto pt-4 lg:pt-6 border-t border-cyan-500/10 space-y-3 lg:space-y-4">
                 <button
                     onClick={handleManualReport}
                     disabled={sendingReport}
@@ -156,6 +174,49 @@ export function Sidebar() {
                     Ocean Elite v1.0
                 </div>
             </div>
-        </aside>
+        </>
+    )
+
+    return (
+        <>
+            {/* Mobil Üst Bar (Hamburger Menü) */}
+            <div className="lg:hidden fixed top-0 left-0 right-0 z-50 h-14 bg-[#040d17]/95 backdrop-blur-md border-b border-cyan-500/10 flex items-center justify-between px-4">
+                <Link href="/" className="flex items-center gap-2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/icon.png" alt="Logo" className="w-8 h-8 rounded-lg" />
+                    <span className="text-lg font-black text-gradient-ocean truncate">{config.appName}</span>
+                </Link>
+                <button
+                    onClick={() => setMobileOpen(!mobileOpen)}
+                    className="w-11 h-11 flex items-center justify-center rounded-xl text-cyan-400 hover:bg-cyan-500/10 transition-colors"
+                    aria-label="Menüyü aç/kapat"
+                >
+                    {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+                </button>
+            </div>
+
+            {/* Mobil Overlay */}
+            {mobileOpen && (
+                <div
+                    className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+                    onClick={closeMobile}
+                />
+            )}
+
+            {/* Mobil Sidebar (Kayar Panel) */}
+            <aside
+                className={twMerge(
+                    "lg:hidden fixed top-14 left-0 bottom-0 z-50 w-[280px] bg-gradient-to-b from-[#040d17] via-[#0a1628] to-[#0c1929] border-r border-cyan-500/10 p-4 flex flex-col transition-transform duration-300 ease-in-out overflow-y-auto",
+                    mobileOpen ? "translate-x-0" : "-translate-x-full"
+                )}
+            >
+                {sidebarContent}
+            </aside>
+
+            {/* Masaüstü Sidebar (Her zamanki gibi) */}
+            <aside className="hidden lg:flex w-[260px] h-screen sticky top-0 bg-gradient-to-b from-[#040d17] via-[#0a1628] to-[#0c1929] border-r border-cyan-500/10 p-6 flex-col shrink-0">
+                {sidebarContent}
+            </aside>
+        </>
     )
 }

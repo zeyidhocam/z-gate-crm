@@ -201,15 +201,15 @@ export default function DashboardContent() {
     const sortedDates = Object.keys(groupedReservations).sort((a, b) => a.localeCompare(b))
 
     return (
-        <div className="p-8 max-w-[1600px] mx-auto space-y-8">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
             {/* Header - Ocean Elite */}
             <div className="flex items-center gap-3">
-                <div className="p-3 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
-                    <CalendarCheck className="text-cyan-400" size={32} />
+                <div className="p-2.5 sm:p-3 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
+                    <CalendarCheck className="text-cyan-400" size={24} />
                 </div>
                 <div>
-                    <h1 className="text-3xl font-bold text-gradient-ocean">Gösterge Paneli</h1>
-                    <p className="text-slate-400">Genel durum ve yaklaşan randevular</p>
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gradient-ocean">Gösterge Paneli</h1>
+                    <p className="text-xs sm:text-sm text-slate-400">Genel durum ve yaklaşan randevular</p>
                 </div>
             </div>
 
@@ -219,7 +219,7 @@ export default function DashboardContent() {
             </div>
 
             {/* KPI Cards - Ocean Elite Colors */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-fr">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 auto-rows-fr">
                 <Link href="/reservations">
                     <KPICard
                         title="Yaklaşan Rezervasyon"
@@ -283,7 +283,7 @@ export default function DashboardContent() {
             </div>
 
             {/* Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
                 {/* Process Distribution */}
                 <div className="p-5 rounded-2xl bg-gradient-to-br from-[#0c1929]/90 via-[#0a1628]/80 to-[#040d17]/90 border border-cyan-500/20">
                     <div className="flex items-center gap-2 mb-4">
@@ -330,8 +330,8 @@ export default function DashboardContent() {
                         <p className="text-sm text-slate-600 mt-2">Kayıtlar ekranından yeni bir tarih belirleyebilirsiniz.</p>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto pb-6 custom-scrollbar">
-                        <div className="flex gap-4 min-w-max px-1">
+                    <div className="overflow-x-auto pb-4 lg:pb-6 custom-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+                        <div className="flex gap-3 sm:gap-4 min-w-max px-1">
                             {sortedDates.slice(0, 5).map(dateStr => {
                                 const items = groupedReservations[dateStr]
                                 const dateObj = parseISO(dateStr)
@@ -341,7 +341,7 @@ export default function DashboardContent() {
                                     <div
                                         key={dateStr}
                                         className={cn(
-                                            "w-[280px] shrink-0 rounded-2xl border flex flex-col overflow-hidden",
+                                            "w-[260px] sm:w-[280px] shrink-0 rounded-2xl border flex flex-col overflow-hidden",
                                             isToday
                                                 ? "bg-slate-900/80 border-cyan-500/50 shadow-[0_0_30px_-10px_rgba(34,211,238,0.2)]"
                                                 : "bg-slate-900/40 border-slate-800/50"

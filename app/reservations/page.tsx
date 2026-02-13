@@ -219,19 +219,19 @@ export default function ReservationsPage() {
     }
 
     return (
-        <div className="p-8 max-w-[1600px] mx-auto text-slate-200">
-            <div className="mb-8 flex items-end justify-between border-b border-cyan-500/10 pb-6">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto text-slate-200">
+            <div className="mb-4 sm:mb-6 lg:mb-8 flex items-end justify-between border-b border-cyan-500/10 pb-4 sm:pb-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-gradient-ocean">
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gradient-ocean">
                         Rezervasyon Takvimi
                     </h1>
-                    <p className="text-slate-400 mt-2">
+                    <p className="text-xs sm:text-sm text-slate-400 mt-1 sm:mt-2">
                         Tarihe göre planlanmış randevular (Liste Görünümü).
                     </p>
                 </div>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
                 {reservations.length === 0 ? (
                     <div className="text-center py-20 bg-slate-900/30 rounded-2xl border border-slate-800/50 border-dashed">
                         <CalendarIcon size={48} className="mx-auto text-slate-600 mb-4" />
@@ -280,8 +280,8 @@ export default function ReservationsPage() {
                                     <div className="px-4 pb-4 space-y-1">
                                         {/* Wrapper for Headers + List (Updated Widths for Symmetry) */}
 
-                                        {/* Headers */}
-                                        <div className="flex items-center gap-6 px-6 py-2 border-b border-slate-800/50 mb-3 text-sm font-black text-slate-400 uppercase tracking-wide">
+                                        {/* Desktop Headers - Mobilde gizli */}
+                                        <div className="hidden lg:flex items-center gap-6 px-6 py-2 border-b border-slate-800/50 mb-3 text-sm font-black text-slate-400 uppercase tracking-wide">
                                             <div className="w-[200px] shrink-0">İsim & Telefon</div>
                                             <div className="w-[180px] shrink-0">İşlem & Ücret</div>
                                             <div className="w-[180px] shrink-0">Onay</div>
@@ -293,133 +293,75 @@ export default function ReservationsPage() {
                                         {group.leads.map(lead => {
 
                                             return (
-                                                <div
-                                                    key={lead.id}
-                                                    className="flex items-center gap-6 px-6 py-4 rounded-lg hover:bg-slate-800/60 transition-all duration-200 hover:scale-[1.01] hover:shadow-md border border-transparent hover:border-slate-800/50 group bg-slate-900/20"
-                                                >
-                                                    {/* Name & Phone */}
-                                                    <div className="w-[200px] shrink-0 flex flex-col justify-center gap-1">
-                                                        <div className="text-[14px] font-bold text-slate-200 truncate leading-tight">
-                                                            {lead.name}
+                                                <div key={lead.id}>
+                                                    {/* === MOBİL KART (lg altı) === */}
+                                                    <div className="lg:hidden p-3 sm:p-4 rounded-xl bg-slate-900/20 border border-transparent hover:border-slate-800/50 space-y-3">
+                                                        <div className="flex items-start justify-between gap-2">
+                                                            <div className="min-w-0 flex-1">
+                                                                <div className="text-sm font-bold text-slate-200 truncate">{lead.name}</div>
+                                                                <div className="text-xs text-slate-500">{lead.phone || '-'}</div>
+                                                            </div>
+                                                            <span className="text-xs font-bold text-slate-300 shrink-0">
+                                                                {lead.price ? `${lead.price.toLocaleString('tr-TR')} ₺` : '-'}
+                                                            </span>
                                                         </div>
-                                                        <div className="text-[12px] font-semibold text-slate-500/90 truncate font-sans">{lead.phone || '-'}</div>
-                                                        <div className="text-[10px] text-slate-600 font-medium">
-                                                            {lead.created_at ? format(parseISO(lead.created_at), 'd MMMM yyyy', { locale: tr }) : ''}
+                                                        <div className="text-xs text-slate-400 truncate">{lead.process_name || 'İşlem Yok'}</div>
+                                                        {/* Onay Butonları */}
+                                                        <div className="flex items-center gap-2">
+                                                            <Button variant="outline" size="sm" onClick={() => confirmCustomer(lead)} className="flex-1 gap-1 text-xs font-bold border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 h-9">
+                                                                <CheckCircle size={14} /> Onayla
+                                                            </Button>
+                                                            <Button variant="outline" size="sm" onClick={() => rejectCustomer(lead.id)} className="flex-1 gap-1 text-xs font-bold border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 h-9">
+                                                                <XCircle size={14} /> Reddet
+                                                            </Button>
+                                                        </div>
+                                                        {/* Aksiyonlar */}
+                                                        <div className="flex items-center gap-1.5 pt-1 border-t border-slate-800/30">
+                                                            <ReminderButton clientId={lead.id} clientName={lead.name} iconSize={16} className="h-9 w-9 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 rounded-lg transition-all" />
+                                                            <Button variant="ghost" size="icon" onClick={() => setEditingClient({ id: lead.id, full_name: lead.name, name: lead.name, phone: lead.phone || null, notes: lead.notes || lead.ai_summary || null, price_agreed: lead.price || null, process_type_id: lead.process_type_id || null })} className="h-9 w-9 bg-orange-500/10 text-orange-500 hover:bg-orange-500/20 rounded-lg" title="Düzenle"><Edit size={16} /></Button>
+                                                            <WhatsAppButton phone={lead.phone} clientName={lead.name} size="default" className="h-9 w-9 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 rounded-lg" processName={lead.process_name} reservationDate={lead.reservation_at} />
                                                         </div>
                                                     </div>
 
-                                                    {/* Process & Price */}
-                                                    <div className="w-[180px] shrink-0 flex flex-col justify-center gap-1.5">
-                                                        <div className="text-[13px] font-bold text-slate-300 truncate opacity-90">
-                                                            {lead.process_name || 'İşlem Yok'}
+                                                    {/* === MASAÜSTÜ TABLO (lg ve üstü) === */}
+                                                    <div className="hidden lg:flex items-center gap-6 px-6 py-4 rounded-lg hover:bg-slate-800/60 transition-all duration-200 hover:scale-[1.01] hover:shadow-md border border-transparent hover:border-slate-800/50 group bg-slate-900/20">
+                                                        <div className="w-[200px] shrink-0 flex flex-col justify-center gap-1">
+                                                            <div className="text-[14px] font-bold text-slate-200 truncate leading-tight">{lead.name}</div>
+                                                            <div className="text-[12px] font-semibold text-slate-500/90 truncate font-sans">{lead.phone || '-'}</div>
+                                                            <div className="text-[10px] text-slate-600 font-medium">{lead.created_at ? format(parseISO(lead.created_at), 'd MMMM yyyy', { locale: tr }) : ''}</div>
                                                         </div>
-                                                        <div className="text-[12px] font-bold text-slate-500 opacity-80">
-                                                            {lead.price ? `${lead.price.toLocaleString('tr-TR')} ₺` : '-'}
+                                                        <div className="w-[180px] shrink-0 flex flex-col justify-center gap-1.5">
+                                                            <div className="text-[13px] font-bold text-slate-300 truncate opacity-90">{lead.process_name || 'İşlem Yok'}</div>
+                                                            <div className="text-[12px] font-bold text-slate-500 opacity-80">{lead.price ? `${lead.price.toLocaleString('tr-TR')} ₺` : '-'}</div>
                                                         </div>
-                                                    </div>
-
-                                                    {/* Onay Butonları */}
-                                                    <div className="w-[180px] shrink-0 flex items-center gap-2">
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => confirmCustomer(lead)}
-                                                            className="flex-1 gap-1.5 text-xs font-bold border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:text-emerald-300"
-                                                        >
-                                                            <CheckCircle size={14} />
-                                                            Onayla
-                                                        </Button>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => rejectCustomer(lead.id)}
-                                                            className="flex-1 gap-1.5 text-xs font-bold border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-300"
-                                                        >
-                                                            <XCircle size={14} />
-                                                            Reddet
-                                                        </Button>
-                                                    </div>
-
-                                                    {/* AI Summary (Detail) */}
-                                                    <div className="flex-1 pl-4 min-w-0">
-                                                        <Dialog>
-                                                            <DialogTrigger asChild>
-                                                                <button className="text-[10px] font-semibold text-slate-500/80 hover:text-slate-300 transition-colors text-left truncate w-full opacity-90 cursor-pointer flex items-center gap-2">
-                                                                    {lead.ai_summary ? (
-                                                                        <span className="truncate">{lead.ai_summary.replace('[YAPILDI]', '').trim()}</span>
-                                                                    ) : (
-                                                                        <span className="italic opacity-50">Not yok...</span>
-                                                                    )}
-                                                                </button>
-                                                            </DialogTrigger>
-                                                            <DialogContent className="bg-slate-950 border-slate-800">
-                                                                <DialogHeader>
-                                                                    <DialogTitle className="text-slate-100 flex items-center gap-2">
-                                                                        <User size={18} className="text-slate-400" />
-                                                                        {lead.name} - Detaylar
-                                                                    </DialogTitle>
-                                                                </DialogHeader>
-                                                                <div className="mt-4 p-4 bg-slate-900/50 rounded-lg border border-slate-800 space-y-3">
-                                                                    <div>
-                                                                        <div className="text-xs text-slate-500 font-bold mb-1">NOTLAR / DETAY</div>
-                                                                        <div className="text-slate-300 text-sm leading-relaxed max-h-[40vh] overflow-y-auto">
-                                                                            {lead.ai_summary || "Not veya detay bulunamadı."}
-                                                                        </div>
+                                                        <div className="w-[180px] shrink-0 flex items-center gap-2">
+                                                            <Button variant="outline" size="sm" onClick={() => confirmCustomer(lead)} className="flex-1 gap-1.5 text-xs font-bold border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:text-emerald-300"><CheckCircle size={14} />Onayla</Button>
+                                                            <Button variant="outline" size="sm" onClick={() => rejectCustomer(lead.id)} className="flex-1 gap-1.5 text-xs font-bold border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-300"><XCircle size={14} />Reddet</Button>
+                                                        </div>
+                                                        <div className="flex-1 pl-4 min-w-0">
+                                                            <Dialog>
+                                                                <DialogTrigger asChild>
+                                                                    <button className="text-[10px] font-semibold text-slate-500/80 hover:text-slate-300 transition-colors text-left truncate w-full opacity-90 cursor-pointer flex items-center gap-2">
+                                                                        {lead.ai_summary ? (<span className="truncate">{lead.ai_summary.replace('[YAPILDI]', '').trim()}</span>) : (<span className="italic opacity-50">Not yok...</span>)}
+                                                                    </button>
+                                                                </DialogTrigger>
+                                                                <DialogContent className="bg-slate-950 border-slate-800">
+                                                                    <DialogHeader><DialogTitle className="text-slate-100 flex items-center gap-2"><User size={18} className="text-slate-400" />{lead.name} - Detaylar</DialogTitle></DialogHeader>
+                                                                    <div className="mt-4 p-4 bg-slate-900/50 rounded-lg border border-slate-800 space-y-3">
+                                                                        <div><div className="text-xs text-slate-500 font-bold mb-1">NOTLAR / DETAY</div><div className="text-slate-300 text-sm leading-relaxed max-h-[40vh] overflow-y-auto">{lead.ai_summary || "Not veya detay bulunamadı."}</div></div>
                                                                     </div>
-                                                                </div>
-                                                                <DialogFooter className="sm:justify-between gap-2 mt-4">
-                                                                    <Button
-                                                                        variant="outline"
-                                                                        size="sm"
-                                                                        onClick={() => handleCopy(lead.ai_summary || "")}
-                                                                        className="gap-2 border-slate-700 hover:bg-slate-800 hover:text-white"
-                                                                    >
-                                                                        {copiedText === lead.ai_summary ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
-                                                                        {copiedText === lead.ai_summary ? "Kopyalandı" : "Kopyala"}
-                                                                    </Button>
-                                                                    <DialogClose asChild>
-                                                                        <Button variant="ghost" size="sm" className="text-slate-500 hover:text-white">Kapat</Button>
-                                                                    </DialogClose>
-                                                                </DialogFooter>
-                                                            </DialogContent>
-                                                        </Dialog>
-                                                    </div>
-
-                                                    {/* Actions */}
-                                                    <div className="w-[180px] shrink-0 flex justify-end gap-2">
-                                                        <ReminderButton
-                                                            clientId={lead.id}
-                                                            clientName={lead.name}
-                                                            iconSize={20}
-                                                            className="h-10 w-10 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 hover:text-amber-400 rounded-xl transition-all"
-                                                        />
-
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            onClick={() => setEditingClient({
-                                                                id: lead.id,
-                                                                full_name: lead.name,
-                                                                name: lead.name,
-                                                                phone: lead.phone || null,
-                                                                notes: lead.notes || lead.ai_summary || null,
-                                                                price_agreed: lead.price || null,
-                                                                process_type_id: lead.process_type_id || null
-                                                            })}
-                                                            className="h-10 w-10 bg-orange-500/10 text-orange-500 hover:bg-orange-500/20 hover:text-orange-400 rounded-xl transition-all"
-                                                            title="Düzenle"
-                                                        >
-                                                            <Edit size={20} />
-                                                        </Button>
-
-                                                        <WhatsAppButton
-                                                            phone={lead.phone}
-                                                            clientName={lead.name}
-                                                            size="default"
-                                                            className="h-10 w-10 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 hover:text-[#25D366] rounded-xl"
-                                                            processName={lead.process_name}
-                                                            reservationDate={lead.reservation_at}
-                                                        />
+                                                                    <DialogFooter className="sm:justify-between gap-2 mt-4">
+                                                                        <Button variant="outline" size="sm" onClick={() => handleCopy(lead.ai_summary || "")} className="gap-2 border-slate-700 hover:bg-slate-800 hover:text-white">{copiedText === lead.ai_summary ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}{copiedText === lead.ai_summary ? "Kopyalandı" : "Kopyala"}</Button>
+                                                                        <DialogClose asChild><Button variant="ghost" size="sm" className="text-slate-500 hover:text-white">Kapat</Button></DialogClose>
+                                                                    </DialogFooter>
+                                                                </DialogContent>
+                                                            </Dialog>
+                                                        </div>
+                                                        <div className="w-[180px] shrink-0 flex justify-end gap-2">
+                                                            <ReminderButton clientId={lead.id} clientName={lead.name} iconSize={20} className="h-10 w-10 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 hover:text-amber-400 rounded-xl transition-all" />
+                                                            <Button variant="ghost" size="icon" onClick={() => setEditingClient({ id: lead.id, full_name: lead.name, name: lead.name, phone: lead.phone || null, notes: lead.notes || lead.ai_summary || null, price_agreed: lead.price || null, process_type_id: lead.process_type_id || null })} className="h-10 w-10 bg-orange-500/10 text-orange-500 hover:bg-orange-500/20 hover:text-orange-400 rounded-xl transition-all" title="Düzenle"><Edit size={20} /></Button>
+                                                            <WhatsAppButton phone={lead.phone} clientName={lead.name} size="default" className="h-10 w-10 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 hover:text-[#25D366] rounded-xl" processName={lead.process_name} reservationDate={lead.reservation_at} />
+                                                        </div>
                                                     </div>
                                                 </div>
                                             )

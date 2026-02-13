@@ -201,25 +201,25 @@ export default function AnalysisPage() {
     }
 
     return (
-        <div className="p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-500">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto space-y-4 sm:space-y-6 lg:space-y-8 animate-in fade-in duration-500">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent flex items-center gap-3">
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent flex items-center gap-2 sm:gap-3">
                         Şahsi Cüzdan
-                        <span className="px-2 py-0.5 rounded text-xs font-mono bg-green-500/10 text-green-400 border border-green-500/20">GÜVENLİ</span>
+                        <span className="px-2 py-0.5 rounded text-[10px] sm:text-xs font-mono bg-green-500/10 text-green-400 border border-green-500/20">GÜVENLİ</span>
                     </h1>
-                    <p className="text-slate-400 mt-2">Kişisel gelir ve gider yönetim paneli.</p>
+                    <p className="text-xs sm:text-sm text-slate-400 mt-1 sm:mt-2">Kişisel gelir ve gider yönetim paneli.</p>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => { setIsLocked(true); localStorage.removeItem(LOCK_KEY) }} className="border-cyan-500/20 text-cyan-400 hover:bg-cyan-500/10">
-                        <Lock size={16} className="mr-2" /> Kilitle
+                <div className="flex gap-2 self-start sm:self-auto">
+                    <Button variant="outline" onClick={() => { setIsLocked(true); localStorage.removeItem(LOCK_KEY) }} className="border-cyan-500/20 text-cyan-400 hover:bg-cyan-500/10 text-sm">
+                        <Lock size={14} className="mr-1.5" /> Kilitle
                     </Button>
                 </div>
             </div>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                 {/* Gelir Kartı */}
                 <div className="p-6 rounded-2xl bg-[#0c1929] border border-green-500/20 shadow-lg relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
