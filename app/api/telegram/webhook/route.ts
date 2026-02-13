@@ -1,13 +1,14 @@
 
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { matchCommand, commands } from '@/lib/telegram-commands'
 
 export const dynamic = 'force-dynamic'
 
 // Helper to send message back to Telegram
 async function sendMessage(token: string, chatId: string, text: string) {
     try {
-        await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+        const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -16,22 +17,35 @@ async function sendMessage(token: string, chatId: string, text: string) {
                 parse_mode: 'HTML'
             })
         })
-    } catch {
-        // Hata kaydi gizlendi
+
+        const result = await response.json()
+        console.log('[Telegram sendMessage]', { ok: result.ok, chatId })
+
+        if (!result.ok) {
+            console.error('[Telegram sendMessage ERROR]', result)
+        }
+
+        return result
+    } catch (error) {
+        console.error('[sendMessage FETCH ERROR]', error)
+        throw error
     }
 }
 
 export async function POST(request: Request) {
     try {
         const update = await request.json()
+        console.log('[Webhook] Received update:', { hasMessage: !!update.message })
 
         // Basic validation of Telegram Update object
         if (!update.message || !update.message.text) {
+            console.log('[Webhook] No message or text, ignoring')
             return NextResponse.json({ ok: true }) // Acknowledge to stop retries
         }
 
         const chatId = update.message.chat.id
         const text = update.message.text
+        console.log('[Webhook] Message received:', { chatId, text })
 
         // Setup Supabase
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -47,20 +61,29 @@ export async function POST(request: Request) {
             .single()
 
         const token = settings?.telegram_bot_token
+        console.log('[Webhook] Token from DB:', { hasToken: !!token, tokenLength: token?.length })
 
         if (!token) {
-            // Hata kaydi gizlendi
+            console.error('[Webhook ERROR] No token in system_settings!')
             return NextResponse.json({ ok: false, error: 'Settings missing' }, { status: 500 })
         }
 
         // 1. Check for Commands
         if (text.startsWith('/')) {
+            // Special commands (keep original behavior)
             if (text === '/start') {
-                await sendMessage(token, chatId, "👋 Merhaba! Ben Z-Gate CRM asistanıyım.\n\nBana JSON formatında müşteri bilgisi atarsan senin için kayıt oluşturabilirim.\n\n<b>Örnek:</b>\n<code>{\"name\": \"Ahmet Yılmaz\", \"phone\": \"05551112233\"}</code>")
+                await sendMessage(token, chatId, "👋 Merhaba! Ben Z-Gate CRM asistanıyım.\n\nBana JSON formatında müşteri bilgisi atarsan senin için kayıt oluşturabilirim.\n\n<b>Örnek:</b>\n<code>{\"name\": \"Ahmet Yılmaz\", \"phone\": \"05551112233\"}</code>\n\nKomutlar için /yardim yazabilirsin.")
             } else if (text === '/id') {
                 await sendMessage(token, chatId, `🆔 Chat ID: <code>${chatId}</code>`)
             } else {
-                await sendMessage(token, chatId, "❓ Bilinmeyen komut. Yardım için /start yazabilirsin.")
+                // Try command router
+                const matchedCommand = matchCommand(text)
+                if (matchedCommand) {
+                    const response = await commands[matchedCommand](text, chatId.toString(), supabase)
+                    await sendMessage(token, chatId, response)
+                } else {
+                    await sendMessage(token, chatId, "❓ Bilinmeyen komut. Yardım için /yardim yazabilirsin.")
+                }
             }
             return NextResponse.json({ ok: true })
         }
@@ -121,9 +144,10 @@ export async function POST(request: Request) {
 
         } catch (e: unknown) {
             if (e instanceof SyntaxError) {
+                console.log('[Webhook] JSON parse error')
                 await sendMessage(token, chatId, "⚠️ <b>JSON Hatası:</b> Gönderdiğin formatı anlayamadım.\n\nLütfen tırnak işaretlerine ve parantezlere dikkat et.")
             } else {
-                // Hata kaydi gizlendi
+                console.error('[Webhook] Database/Other error:', e)
                 const errorMsg = e instanceof Error ? e.message : "Bilinmeyen hata"
                 await sendMessage(token, chatId, `❌ <b>Veritabanı Hatası:</b>\n\n<code>${errorMsg}</code>`)
             }
@@ -131,8 +155,8 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ ok: true })
 
-    } catch {
-        // Hata kaydi gizlendi
+    } catch (error) {
+        console.error('[Webhook FATAL ERROR]', error)
         return NextResponse.json({ ok: false, error: 'Internal Error' }, { status: 500 })
     }
 }
