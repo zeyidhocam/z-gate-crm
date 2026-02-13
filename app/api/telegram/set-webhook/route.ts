@@ -17,13 +17,11 @@ export async function GET() {
     )
   }
 
-  // Webhook URL'i (production domain)
-  const webhookUrl = `${process.env.VERCEL_URL || process.env.NEXT_PUBLIC_VERCEL_URL || 'http://localhost:3000'}/api/telegram/webhook`
+  // Webhook URL'i (SABIT production domain kullan, VERCEL_URL her deploy'da değişir!)
+  const PRODUCTION_DOMAIN = 'z-gate-crm.vercel.app'
+  const finalWebhookUrl = `https://${PRODUCTION_DOMAIN}/api/telegram/webhook`
 
-  // HTTPS zorunlu (Vercel otomatik sağlar)
-  const finalWebhookUrl = webhookUrl.startsWith('http://localhost')
-    ? webhookUrl
-    : `https://${webhookUrl.replace(/^https?:\/\//, '')}`
+  console.log('[set-webhook] Using webhook URL:', finalWebhookUrl)
 
   try {
     // Telegram API'sine webhook ayarla
