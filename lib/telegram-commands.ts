@@ -324,6 +324,317 @@ export async function handleGelir(
 }
 
 /**
+ * /durum_guncelle [id] [durum] - Müşteri durumunu güncelle
+ */
+export async function handleDurumGuncelle(
+  text: string,
+  chatId: string,
+  supabase: SupabaseClient
+): Promise<string> {
+  try {
+    const parts = text.split(' ')
+
+    if (parts.length < 3) {
+      return `⚠️ <b>Kullanım:</b> /durum_guncelle [id] [durum]
+
+<b>Durumlar:</b>
+• Yeni
+• Görüşüldü
+• Teyit
+• Tamamlandı
+• İptal
+
+<b>Örnek:</b>
+/durum_guncelle 123 Teyit`
+    }
+
+    const clientId = parseInt(parts[1])
+    const newStatus = parts.slice(2).join(' ')
+
+    if (isNaN(clientId)) {
+      return `❌ Geçersiz ID. Sayı olmalı.\n\nÖrnek: /durum_guncelle 123 Teyit`
+    }
+
+    // Müşteri var mı kontrol et
+    const { data: client, error: fetchError } = await supabase
+      .from('clients')
+      .select('id, full_name, name, status')
+      .eq('id', clientId)
+      .single()
+
+    if (fetchError || !client) {
+      return `❌ ID ${clientId} ile müşteri bulunamadı.\n\n💡 /ara komutu ile müşteri ID'sini öğrenebilirsin.`
+    }
+
+    // Durumu güncelle
+    const { error: updateError } = await supabase
+      .from('clients')
+      .update({ status: newStatus })
+      .eq('id', clientId)
+
+    if (updateError) throw updateError
+
+    const clientName = client.full_name || client.name || 'İsimsiz'
+
+    return `✅ <b>Durum Güncellendi!</b>
+
+👤 <b>Müşteri:</b> ${clientName}
+🆔 ID: <code>${clientId}</code>
+📌 <b>Eski Durum:</b> ${client.status || '-'}
+🔄 <b>Yeni Durum:</b> ${newStatus}`
+
+  } catch (error) {
+    console.error('[/durum_guncelle error]', error)
+    return ERRORS.GENERIC_ERROR
+  }
+}
+
+/**
+ * /odeme_guncelle [id] [durum] - Ödeme durumunu güncelle
+ */
+export async function handleOdemeGuncelle(
+  text: string,
+  chatId: string,
+  supabase: SupabaseClient
+): Promise<string> {
+  try {
+    const parts = text.split(' ')
+
+    if (parts.length < 3) {
+      return `⚠️ <b>Kullanım:</b> /odeme_guncelle [id] [durum]
+
+<b>Ödeme Durumları:</b>
+• Ödendi
+• Ödenmedi
+• Kapora
+
+<b>Örnek:</b>
+/odeme_guncelle 123 Ödendi`
+    }
+
+    const clientId = parseInt(parts[1])
+    const paymentStatus = parts.slice(2).join(' ')
+
+    if (isNaN(clientId)) {
+      return `❌ Geçersiz ID. Sayı olmalı.\n\nÖrnek: /odeme_guncelle 123 Ödendi`
+    }
+
+    // Müşteri var mı kontrol et
+    const { data: client, error: fetchError } = await supabase
+      .from('clients')
+      .select('id, full_name, name, payment_status, price_agreed')
+      .eq('id', clientId)
+      .single()
+
+    if (fetchError || !client) {
+      return `❌ ID ${clientId} ile müşteri bulunamadı.\n\n💡 /ara komutu ile müşteri ID'sini öğrenebilirsin.`
+    }
+
+    // Ödeme durumunu güncelle
+    const { error: updateError } = await supabase
+      .from('clients')
+      .update({ payment_status: paymentStatus })
+      .eq('id', clientId)
+
+    if (updateError) throw updateError
+
+    const clientName = client.full_name || client.name || 'İsimsiz'
+    const price = formatCurrency(client.price_agreed)
+
+    return `✅ <b>Ödeme Durumu Güncellendi!</b>
+
+👤 <b>Müşteri:</b> ${clientName}
+🆔 ID: <code>${clientId}</code>
+💰 <b>Tutar:</b> ${price}
+📌 <b>Eski Durum:</b> ${client.payment_status || '-'}
+🔄 <b>Yeni Durum:</b> ${paymentStatus}`
+
+  } catch (error) {
+    console.error('[/odeme_guncelle error]', error)
+    return ERRORS.GENERIC_ERROR
+  }
+}
+
+/**
+ * /not_ekle [id] [not] - Müşteriye not ekle
+ */
+export async function handleNotEkle(
+  text: string,
+  chatId: string,
+  supabase: SupabaseClient
+): Promise<string> {
+  try {
+    const parts = text.split(' ')
+
+    if (parts.length < 3) {
+      return `⚠️ <b>Kullanım:</b> /not_ekle [id] [not metni]
+
+<b>Örnek:</b>
+/not_ekle 123 Müşteri ödeme için yarın arayacak`
+    }
+
+    const clientId = parseInt(parts[1])
+    const newNote = parts.slice(2).join(' ')
+
+    if (isNaN(clientId)) {
+      return `❌ Geçersiz ID. Sayı olmalı.\n\nÖrnek: /not_ekle 123 Not metni`
+    }
+
+    // Müşteri var mı kontrol et ve mevcut notları al
+    const { data: client, error: fetchError } = await supabase
+      .from('clients')
+      .select('id, full_name, name, notes')
+      .eq('id', clientId)
+      .single()
+
+    if (fetchError || !client) {
+      return `❌ ID ${clientId} ile müşteri bulunamadı.\n\n💡 /ara komutu ile müşteri ID'sini öğrenebilirsin.`
+    }
+
+    // Tarih damgası ile not ekle (mevcut notların üstüne)
+    const timestamp = new Date().toLocaleString('tr-TR', { timeZone: 'Europe/Istanbul' })
+    const existingNotes = client.notes || ''
+    const updatedNotes = existingNotes
+      ? `${existingNotes}\n\n[${timestamp}] ${newNote}`
+      : `[${timestamp}] ${newNote}`
+
+    // Notu güncelle
+    const { error: updateError } = await supabase
+      .from('clients')
+      .update({ notes: updatedNotes })
+      .eq('id', clientId)
+
+    if (updateError) throw updateError
+
+    const clientName = client.full_name || client.name || 'İsimsiz'
+
+    return `✅ <b>Not Eklendi!</b>
+
+👤 <b>Müşteri:</b> ${clientName}
+🆔 ID: <code>${clientId}</code>
+📝 <b>Not:</b> ${newNote}
+🕐 <b>Zaman:</b> ${timestamp}`
+
+  } catch (error) {
+    console.error('[/not_ekle error]', error)
+    return ERRORS.GENERIC_ERROR
+  }
+}
+
+/**
+ * /randevu_olustur [id] [tarih] - Randevu oluştur
+ */
+export async function handleRandevuOlustur(
+  text: string,
+  chatId: string,
+  supabase: SupabaseClient
+): Promise<string> {
+  try {
+    const parts = text.split(' ')
+
+    if (parts.length < 3) {
+      return `⚠️ <b>Kullanım:</b> /randevu_olustur [id] [tarih saat]
+
+<b>Tarih Formatları:</b>
+• /randevu_olustur 123 2024-02-15 14:00
+• /randevu_olustur 123 15.02.2024 14:00
+• /randevu_olustur 123 yarın 14:00
+
+<b>Örnek:</b>
+/randevu_olustur 123 2024-02-20 15:30`
+    }
+
+    const clientId = parseInt(parts[1])
+    const dateTimeStr = parts.slice(2).join(' ')
+
+    if (isNaN(clientId)) {
+      return `❌ Geçersiz ID. Sayı olmalı.\n\nÖrnek: /randevu_olustur 123 2024-02-20 15:30`
+    }
+
+    // Müşteri var mı kontrol et
+    const { data: client, error: fetchError } = await supabase
+      .from('clients')
+      .select('id, full_name, name, reservation_at')
+      .eq('id', clientId)
+      .single()
+
+    if (fetchError || !client) {
+      return `❌ ID ${clientId} ile müşteri bulunamadı.\n\n💡 /ara komutu ile müşteri ID'sini öğrenebilirsin.`
+    }
+
+    // Basit tarih parse (ISO format veya TR format)
+    let reservationDate: Date
+
+    try {
+      // "yarın" kontrolü
+      if (dateTimeStr.toLowerCase().includes('yarın') || dateTimeStr.toLowerCase().includes('yarin')) {
+        const tomorrow = new Date()
+        tomorrow.setDate(tomorrow.getDate() + 1)
+
+        // Saat varsa çıkar (örn: "yarın 14:00")
+        const timePart = dateTimeStr.match(/(\d{1,2}):(\d{2})/)
+        if (timePart) {
+          tomorrow.setHours(parseInt(timePart[1]), parseInt(timePart[2]), 0, 0)
+        } else {
+          tomorrow.setHours(9, 0, 0, 0) // Varsayılan: 09:00
+        }
+
+        reservationDate = tomorrow
+      }
+      // ISO format: 2024-02-15 14:00
+      else if (dateTimeStr.match(/^\d{4}-\d{2}-\d{2}/)) {
+        reservationDate = new Date(dateTimeStr)
+      }
+      // TR format: 15.02.2024 14:00
+      else if (dateTimeStr.match(/^\d{2}\.\d{2}\.\d{4}/)) {
+        const [datePart, timePart] = dateTimeStr.split(' ')
+        const [day, month, year] = datePart.split('.')
+        const timeStr = timePart || '09:00'
+        reservationDate = new Date(`${year}-${month}-${day} ${timeStr}`)
+      }
+      // Geçersiz format
+      else {
+        return `❌ Geçersiz tarih formatı.\n\n<b>Desteklenen formatlar:</b>\n• 2024-02-15 14:00\n• 15.02.2024 14:00\n• yarın 14:00`
+      }
+
+      // Geçmiş tarih kontrolü
+      if (reservationDate < new Date()) {
+        return `⚠️ Geçmiş bir tarih giremezsin!\n\nGirilen: ${formatDateTime(reservationDate.toISOString())}\nŞimdi: ${formatDateTime(new Date().toISOString())}`
+      }
+
+    } catch (e) {
+      return `❌ Tarih parse edilemedi.\n\n<b>Örnek:</b> /randevu_olustur 123 2024-02-20 15:30`
+    }
+
+    // Randevuyu güncelle
+    const { error: updateError } = await supabase
+      .from('clients')
+      .update({
+        reservation_at: reservationDate.toISOString(),
+        status: 'Teyit' // Randevu oluşturulunca otomatik olarak Teyit durumuna geç
+      })
+      .eq('id', clientId)
+
+    if (updateError) throw updateError
+
+    const clientName = client.full_name || client.name || 'İsimsiz'
+
+    return `✅ <b>Randevu Oluşturuldu!</b>
+
+👤 <b>Müşteri:</b> ${clientName}
+🆔 ID: <code>${clientId}</code>
+📅 <b>Randevu Tarihi:</b> ${formatDateTime(reservationDate.toISOString())}
+🔄 <b>Durum:</b> Teyit
+
+${client.reservation_at ? `📌 <b>Eski Randevu:</b> ${formatDateTime(client.reservation_at)}` : ''}`
+
+  } catch (error) {
+    console.error('[/randevu_olustur error]', error)
+    return ERRORS.GENERIC_ERROR
+  }
+}
+
+/**
  * /yardim - Komut listesi ve yardım
  */
 export async function handleHelp(
@@ -339,6 +650,12 @@ export async function handleHelp(
 /ara [isim/tel] - Müşteri ara
 /bekleyen - Ödeme bekleyenler
 /gelir [bugün/hafta/ay] - Gelir raporu
+
+<b>✏️ MÜŞTERİ YÖNETİMİ</b>
+/durum_guncelle [id] [durum] - Durum değiştir
+/odeme_guncelle [id] [durum] - Ödeme güncelle
+/not_ekle [id] [not] - Not ekle
+/randevu_olustur [id] [tarih] - Randevu oluştur
 
 <b>ℹ️ DİĞER</b>
 /start - Hoş geldin mesajı
@@ -357,12 +674,23 @@ JSON formatında müşteri ekle:
  * Komut registry - Tüm komutlar burada tanımlı
  */
 export const commands: Record<string, CommandHandler> = {
+  // Faz 1: Sorgulama & Raporlama
   '/bugun': handleBugun,
   '/bugün': handleBugun, // Türkçe ü ile
   '/ara': handleAra,
   '/bekleyen': handleBekleyen,
   '/gelir': handleGelir,
   '/gelır': handleGelir, // Türkçe ı ile (olası yazım hatası)
+
+  // Faz 2: Müşteri Yönetimi
+  '/durum_guncelle': handleDurumGuncelle,
+  '/odeme_guncelle': handleOdemeGuncelle,
+  '/ödeme_guncelle': handleOdemeGuncelle, // Türkçe ö ile
+  '/not_ekle': handleNotEkle,
+  '/randevu_olustur': handleRandevuOlustur,
+  '/randevu_oluştur': handleRandevuOlustur, // Türkçe ş ile
+
+  // Yardım
   '/yardim': handleHelp,
   '/yardım': handleHelp, // Türkçe ım ile
   '/help': handleHelp, // İngilizce alias
