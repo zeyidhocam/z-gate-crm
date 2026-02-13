@@ -358,9 +358,12 @@ JSON formatında müşteri ekle:
  */
 export const commands: Record<string, CommandHandler> = {
   '/bugun': handleBugun,
+  '/bugün': handleBugun, // Türkçe ü ile
   '/ara': handleAra,
   '/bekleyen': handleBekleyen,
   '/gelir': handleGelir,
+  '/gelır': handleGelir, // Türkçe ı ile (olası yazım hatası)
   '/yardim': handleHelp,
+  '/yardım': handleHelp, // Türkçe ım ile
   '/help': handleHelp, // İngilizce alias
 }
