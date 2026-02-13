@@ -222,22 +222,22 @@ export default function FinancePage() {
     }
 
     return (
-        <div className="p-8 max-w-[1600px] mx-auto space-y-8">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                    <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-                        <DollarSign className="text-emerald-400" size={32} />
+                    <div className="p-2.5 sm:p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                        <DollarSign className="text-emerald-400" size={24} />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-bold text-gradient-ocean">Finans</h1>
-                        <p className="text-slate-400">Gelir takibi ve finansal raporlar</p>
+                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gradient-ocean">Finans</h1>
+                        <p className="text-xs sm:text-sm text-slate-400">Gelir takibi ve finansal raporlar</p>
                     </div>
                 </div>
 
                 <Button
                     onClick={exportToExcel}
-                    className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white gap-2"
+                    className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white gap-2 text-sm self-start sm:self-auto"
                 >
                     <Download size={16} />
                     Excel İndir
@@ -245,7 +245,7 @@ export default function FinancePage() {
             </div>
 
             {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                 <FinanceCard
                     title="Toplam Gelir"
                     value={`${stats.totalRevenue.toLocaleString('tr-TR')} ₺`}

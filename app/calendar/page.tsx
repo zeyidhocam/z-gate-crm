@@ -94,37 +94,37 @@ export default function CalendarPage() {
     }
 
     return (
-        <div className="p-8 max-w-[1200px] mx-auto space-y-8">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-[1200px] mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
                 <div className="flex items-center gap-3">
-                    <div className="p-3 bg-purple-500/10 rounded-xl border border-purple-500/20">
-                        <CalendarIcon className="text-purple-400" size={32} />
+                    <div className="p-2.5 sm:p-3 bg-purple-500/10 rounded-xl border border-purple-500/20">
+                        <CalendarIcon className="text-purple-400" size={24} />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-bold text-gradient-ocean">Takvim</h1>
-                        <p className="text-slate-400">Rezervasyonları takvimde görüntüle</p>
+                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gradient-ocean">Takvim</h1>
+                        <p className="text-xs sm:text-sm text-slate-400">Rezervasyonları takvimde görüntüle</p>
                     </div>
                 </div>
 
                 {/* Month Navigation */}
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 sm:gap-4 self-center">
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
-                        className="text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10"
+                        className="text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 h-9 w-9 sm:h-10 sm:w-10"
                     >
                         <ChevronLeft size={20} />
                     </Button>
-                    <span className="text-lg font-bold text-slate-200 min-w-[180px] text-center">
+                    <span className="text-sm sm:text-lg font-bold text-slate-200 min-w-[140px] sm:min-w-[180px] text-center capitalize">
                         {format(currentMonth, 'MMMM yyyy', { locale: tr })}
                     </span>
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-                        className="text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10"
+                        className="text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 h-9 w-9 sm:h-10 sm:w-10"
                     >
                         <ChevronRight size={20} />
                     </Button>
@@ -132,11 +132,11 @@ export default function CalendarPage() {
             </div>
 
             {/* Calendar Grid */}
-            <div className="rounded-2xl bg-gradient-to-br from-[#0c1929]/90 via-[#0a1628]/80 to-[#040d17]/90 border border-cyan-500/20 overflow-hidden">
+            <div className="rounded-xl sm:rounded-2xl bg-gradient-to-br from-[#0c1929]/90 via-[#0a1628]/80 to-[#040d17]/90 border border-cyan-500/20 overflow-hidden">
                 {/* Weekday Headers */}
                 <div className="grid grid-cols-7 border-b border-cyan-500/10">
                     {WEEKDAYS.map(day => (
-                        <div key={day} className="py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wide">
+                        <div key={day} className="py-2 sm:py-4 text-center text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wide">
                             {day}
                         </div>
                     ))}
@@ -146,7 +146,7 @@ export default function CalendarPage() {
                 <div className="grid grid-cols-7">
                     {calendarDays.map((day, index) => {
                         if (!day) {
-                            return <div key={`empty-${index}`} className="h-28 border-b border-r border-cyan-500/5" />
+                            return <div key={`empty-${index}`} className="h-16 sm:h-20 lg:h-28 border-b border-r border-cyan-500/5" />
                         }
 
                         const dayReservations = getReservationsForDate(day)
@@ -158,14 +158,14 @@ export default function CalendarPage() {
                                 key={day.toISOString()}
                                 onClick={() => handleDateClick(day)}
                                 className={cn(
-                                    "h-28 p-2 border-b border-r border-cyan-500/5 transition-all",
+                                    "h-16 sm:h-20 lg:h-28 p-1 sm:p-2 border-b border-r border-cyan-500/5 transition-all",
                                     hasReservations && "cursor-pointer hover:bg-cyan-500/5",
                                     isToday && "bg-cyan-500/10"
                                 )}
                             >
                                 {/* Day Number */}
                                 <div className={cn(
-                                    "w-7 h-7 flex items-center justify-center rounded-full text-sm font-bold mb-1",
+                                    "w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-full text-xs sm:text-sm font-bold mb-0.5 sm:mb-1",
                                     isToday
                                         ? "bg-cyan-500 text-white"
                                         : isSameMonth(day, currentMonth)
@@ -176,18 +176,20 @@ export default function CalendarPage() {
                                 </div>
 
                                 {/* Reservations Preview */}
-                                <div className="space-y-1">
-                                    {dayReservations.slice(0, 2).map(res => (
+                                <div className="space-y-0.5 sm:space-y-1">
+                                    {dayReservations.slice(0, window.innerWidth < 640 ? 1 : 2).map(res => (
                                         <div
                                             key={res.id}
-                                            className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 truncate font-medium"
+                                            className="text-[8px] sm:text-[10px] px-1 sm:px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 truncate font-medium"
                                         >
-                                            {format(parseISO(res.reservation_at), 'HH:mm')} - {res.full_name || res.name}
+                                            <span className="hidden sm:inline">{format(parseISO(res.reservation_at), 'HH:mm')} - </span>
+                                            <span className="sm:hidden">{format(parseISO(res.reservation_at), 'HH:mm')}</span>
+                                            <span className="hidden sm:inline">{res.full_name || res.name}</span>
                                         </div>
                                     ))}
-                                    {dayReservations.length > 2 && (
-                                        <div className="text-[10px] text-slate-500 font-bold px-1">
-                                            +{dayReservations.length - 2} daha
+                                    {dayReservations.length > (typeof window !== 'undefined' && window.innerWidth < 640 ? 1 : 2) && (
+                                        <div className="text-[8px] sm:text-[10px] text-slate-500 font-bold px-1">
+                                            +{dayReservations.length - 1} daha
                                         </div>
                                     )}
                                 </div>

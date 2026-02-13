@@ -1,5 +1,5 @@
 
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import "@/app/globals.css"
 import "@fontsource/montserrat/400.css"
 import "@fontsource/montserrat/600.css"
@@ -8,6 +8,12 @@ import { Sidebar } from '@/components/Sidebar'
 import { GlobalReminderManager } from '@/components/GlobalReminderManager'
 import { SettingsProvider } from '@/components/providers/settings-provider'
 import { Toaster } from 'sonner'
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+}
 
 export const metadata: Metadata = {
   title: 'Z-Gate CRM',
@@ -29,7 +35,7 @@ export default function RootLayout({
         <SettingsProvider>
           <GlobalReminderManager />
           <Sidebar />
-          <main className="flex-1 min-h-screen overflow-auto app-gradient-bg">
+          <main className="flex-1 min-h-screen overflow-auto app-gradient-bg pt-14 lg:pt-0">
             {children}
           </main>
           <Toaster position="top-center" theme="dark" />

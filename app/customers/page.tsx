@@ -211,35 +211,35 @@ export default function CustomersPage() {
     }
 
     return (
-        <div className="p-8 max-w-[1600px] mx-auto space-y-6">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto space-y-4 sm:space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                    <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-                        <Users className="text-emerald-400" size={32} />
+                    <div className="p-2.5 sm:p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                        <Users className="text-emerald-400" size={24} />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-bold text-gradient-ocean">Müşteriler</h1>
-                        <p className="text-slate-400">Onaylanmış müşteriler ve aşama takibi</p>
+                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gradient-ocean">Müşteriler</h1>
+                        <p className="text-xs sm:text-sm text-slate-400">Onaylanmış müşteriler ve aşama takibi</p>
                     </div>
                 </div>
 
                 {/* Stats */}
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-4 sm:gap-6">
                     <div className="text-right">
-                        <div className="text-2xl font-black text-emerald-400">{totalCount}</div>
-                        <div className="text-xs text-slate-500 font-bold">Müşteri</div>
+                        <div className="text-lg sm:text-2xl font-black text-emerald-400">{totalCount}</div>
+                        <div className="text-[10px] sm:text-xs text-slate-500 font-bold">Müşteri</div>
                     </div>
                     <div className="text-right">
-                        <div className="text-2xl font-black text-cyan-400">{totalRevenue.toLocaleString('tr-TR')} ₺</div>
-                        <div className="text-xs text-slate-500 font-bold">Toplam Gelir</div>
+                        <div className="text-lg sm:text-2xl font-black text-cyan-400">{totalRevenue.toLocaleString('tr-TR')} ₺</div>
+                        <div className="text-[10px] sm:text-xs text-slate-500 font-bold">Toplam Gelir</div>
                     </div>
                 </div>
             </div>
 
             {/* Search & Filter */}
-            <div className="flex items-center gap-4">
-                <div className="relative flex-1 max-w-md">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+                <div className="relative flex-1 sm:max-w-md">
                     <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                     <Input
                         placeholder="Müşteri ara..."
@@ -248,14 +248,14 @@ export default function CustomersPage() {
                         className="pl-10 bg-[#0c1929] border-cyan-500/20 text-slate-200"
                     />
                 </div>
-                <div className="flex items-center gap-2">
-                    <Filter size={16} className="text-slate-500" />
+                <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0">
+                    <Filter size={14} className="text-slate-500 shrink-0" />
                     <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setStageFilter(null)}
                         className={cn(
-                            "text-xs font-bold",
+                            "text-[10px] sm:text-xs font-bold shrink-0 px-2 sm:px-3",
                             stageFilter === null ? "bg-cyan-500/20 text-cyan-300" : "text-slate-400"
                         )}
                     >
@@ -268,7 +268,7 @@ export default function CustomersPage() {
                             size="sm"
                             onClick={() => setStageFilter(stage.value)}
                             className={cn(
-                                "text-xs font-bold",
+                                "text-[10px] sm:text-xs font-bold shrink-0 px-2 sm:px-3",
                                 stageFilter === stage.value ? `${stage.color}/20 ${stage.textColor}` : "text-slate-400"
                             )}
                         >
@@ -295,153 +295,93 @@ export default function CustomersPage() {
                         return (
                             <div
                                 key={customer.id}
-                                className="group p-5 rounded-2xl bg-gradient-to-r from-[#0c1929]/90 to-[#0a1628]/80 border border-cyan-500/10 hover:border-cyan-500/30 transition-all"
+                                className="group p-3 sm:p-4 lg:p-5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-[#0c1929]/90 to-[#0a1628]/80 border border-cyan-500/10 hover:border-cyan-500/30 transition-all"
                             >
-                                <div className="flex items-center gap-6">
-                                    {/* Stage Indicator */}
-                                    <div className={cn(
-                                        "w-16 h-16 rounded-xl flex flex-col items-center justify-center shrink-0",
-                                        currentStage.color + "/10",
-                                        "border",
-                                        currentStage.color.replace("bg-", "border-") + "/30"
-                                    )}>
-                                        <span className={cn("text-xl font-black", currentStage.textColor)}>
-                                            {customer.stage}
-                                        </span>
+                                {/* === MOBİL LAYOUT (lg altı) === */}
+                                <div className="lg:hidden space-y-3">
+                                    {/* Üst satır: Aşama + İsim + Fiyat */}
+                                    <div className="flex items-start gap-3">
+                                        <div className={cn(
+                                            "w-10 h-10 rounded-lg flex items-center justify-center shrink-0",
+                                            currentStage.color + "/10", "border", currentStage.color.replace("bg-", "border-") + "/30"
+                                        )}>
+                                            <span className={cn("text-base font-black", currentStage.textColor)}>{customer.stage}</span>
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-bold text-sm text-slate-200 truncate">{customer.full_name || customer.name || 'İsimsiz'}</span>
+                                                <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0", currentStage.color + "/20", currentStage.textColor)}>{currentStage.description}</span>
+                                            </div>
+                                            <div className="text-xs text-slate-500">{customer.phone || '-'}</div>
+                                        </div>
+                                        <div className="text-right shrink-0">
+                                            <div className="text-sm font-black text-emerald-400">{price.toLocaleString('tr-TR')} ₺</div>
+                                            <div className="text-[10px] text-slate-500 truncate max-w-[100px]">{processName}</div>
+                                        </div>
+                                    </div>
+
+                                    {/* Aşama butonları */}
+                                    <div className="flex items-center gap-1.5">
+                                        {STAGES.map(stage => (
+                                            <button key={stage.value} onClick={() => updateStage(customer.id, stage.value)} className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-all", customer.stage >= stage.value ? stage.color + " text-white shadow-lg" : "bg-slate-800/50 text-slate-600")} title={stage.label}>
+                                                {customer.stage >= stage.value ? <CheckCircle2 size={14} /> : <Circle size={14} />}
+                                            </button>
+                                        ))}
+                                        <div className="flex-1" />
+                                        {/* Aksiyon butonları */}
+                                        <PaymentTracker clientId={customer.id} initialNote={customer.financial_note || null} initialBalance={customer.payment_balance || null} initialDueDate={customer.payment_due_date || null} onSave={(newNote, newBalance, newDate) => { setCustomers(prev => prev.map(c => c.id === customer.id ? { ...c, financial_note: newNote, payment_balance: newBalance, payment_due_date: newDate } : c)) }} />
+                                        <ReminderButton clientId={customer.id} clientName={customer.full_name || customer.name || 'Müşteri'} iconSize={16} className="h-9 w-9 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 rounded-lg transition-all" clientDetails={{ phone: customer.phone, process: processName, balance: customer.payment_balance, price: price }} />
+                                        <WhatsAppButton phone={customer.phone} clientName={customer.full_name || customer.name || undefined} size="default" className="h-9 w-9 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 rounded-lg" processName={processName} reservationDate={customer.reservation_at} />
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="sm" className="h-9 w-9 p-0 bg-slate-800/50 text-slate-400 hover:text-slate-200 rounded-lg"><MoreVertical size={16} /></Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="bg-[#0c1929] border-cyan-500/20">
+                                                <DropdownMenuItem onClick={() => setArchiveCustomerId(customer.id)} className="text-slate-300 focus:text-slate-200"><Archive size={14} className="mr-2" />Arşive Taşı</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => removeCustomer(customer.id)} className="text-red-400 focus:text-red-400"><Trash2 size={14} className="mr-2" />Listeden Kaldır</DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
+                                </div>
+
+                                {/* === MASAÜSTÜ LAYOUT (lg ve üstü) === */}
+                                <div className="hidden lg:flex items-center gap-6">
+                                    <div className={cn("w-16 h-16 rounded-xl flex flex-col items-center justify-center shrink-0", currentStage.color + "/10", "border", currentStage.color.replace("bg-", "border-") + "/30")}>
+                                        <span className={cn("text-xl font-black", currentStage.textColor)}>{customer.stage}</span>
                                         <span className="text-[9px] text-slate-500 font-bold uppercase">Aşama</span>
                                     </div>
-
-                                    {/* Customer Info */}
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-3 mb-1">
-                                            <span className="font-bold text-lg text-slate-200">
-                                                {customer.full_name || customer.name || 'İsimsiz'}
-                                            </span>
-                                            <span className={cn(
-                                                "text-xs font-bold px-2 py-0.5 rounded-full",
-                                                currentStage.color + "/20",
-                                                currentStage.textColor
-                                            )}>
-                                                {currentStage.description}
-                                            </span>
+                                            <span className="font-bold text-lg text-slate-200">{customer.full_name || customer.name || 'İsimsiz'}</span>
+                                            <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full", currentStage.color + "/20", currentStage.textColor)}>{currentStage.description}</span>
                                         </div>
                                         <div className="flex items-center gap-4 text-sm text-slate-500">
-                                            <span className="flex items-center gap-1.5">
-                                                <Phone size={14} />
-                                                {customer.phone || '-'}
-                                            </span>
-                                            <span className="flex items-center gap-1.5">
-                                                <Calendar size={14} />
-                                                {customer.confirmed_at
-                                                    ? format(parseISO(customer.confirmed_at), 'dd MMM yyyy', { locale: tr })
-                                                    : '-'}
-                                            </span>
-                                            <span className="flex items-center gap-1.5 text-xs text-slate-600 font-medium ml-2 border-l border-slate-700 pl-3">
-                                                Kayıt: {customer.created_at ? format(parseISO(customer.created_at), 'dd MMM yyyy', { locale: tr }) : '-'}
-                                            </span>
+                                            <span className="flex items-center gap-1.5"><Phone size={14} />{customer.phone || '-'}</span>
+                                            <span className="flex items-center gap-1.5"><Calendar size={14} />{customer.confirmed_at ? format(parseISO(customer.confirmed_at), 'dd MMM yyyy', { locale: tr }) : '-'}</span>
+                                            <span className="flex items-center gap-1.5 text-xs text-slate-600 font-medium ml-2 border-l border-slate-700 pl-3">Kayıt: {customer.created_at ? format(parseISO(customer.created_at), 'dd MMM yyyy', { locale: tr }) : '-'}</span>
                                         </div>
                                     </div>
-
-                                    {/* Process & Price */}
                                     <div className="text-right shrink-0 group/price">
                                         <div className="text-sm font-bold text-slate-300 mb-1">{processName}</div>
                                         <div className="flex items-center justify-end gap-2 text-lg font-black text-emerald-400">
                                             <span>{price.toLocaleString('tr-TR')} ₺</span>
                                             <div className="flex items-center gap-1">
-                                                <PaymentTracker
-                                                    clientId={customer.id}
-                                                    initialNote={customer.financial_note || null}
-                                                    initialBalance={customer.payment_balance || null}
-                                                    initialDueDate={customer.payment_due_date || null}
-                                                    onSave={(newNote, newBalance, newDate) => {
-                                                        setCustomers(prev => prev.map(c => c.id === customer.id ? {
-                                                            ...c,
-                                                            financial_note: newNote,
-                                                            payment_balance: newBalance,
-                                                            payment_due_date: newDate
-                                                        } : c))
-                                                    }}
-                                                />
-                                                <button
-                                                    onClick={() => {
-                                                        setEditingCustomer(customer)
-                                                        setEditPrice(String(customer.price_agreed || customer.price || ''))
-                                                    }}
-                                                    className="opacity-0 group-hover/price:opacity-100 p-1 hover:bg-slate-700/50 rounded transition-all text-cyan-400 cursor-pointer"
-                                                    title="Hızlı Düzenle"
-                                                >
-                                                    <Edit size={14} />
-                                                </button>
+                                                <PaymentTracker clientId={customer.id} initialNote={customer.financial_note || null} initialBalance={customer.payment_balance || null} initialDueDate={customer.payment_due_date || null} onSave={(newNote, newBalance, newDate) => { setCustomers(prev => prev.map(c => c.id === customer.id ? { ...c, financial_note: newNote, payment_balance: newBalance, payment_due_date: newDate } : c)) }} />
+                                                <button onClick={() => { setEditingCustomer(customer); setEditPrice(String(customer.price_agreed || customer.price || '')) }} className="opacity-0 group-hover/price:opacity-100 p-1 hover:bg-slate-700/50 rounded transition-all text-cyan-400 cursor-pointer" title="Hızlı Düzenle"><Edit size={14} /></button>
                                             </div>
                                         </div>
                                     </div>
-
-                                    {/* Stage Buttons */}
                                     <div className="flex items-center gap-1 shrink-0">
-                                        {STAGES.map(stage => (
-                                            <button
-                                                key={stage.value}
-                                                onClick={() => updateStage(customer.id, stage.value)}
-                                                className={cn(
-                                                    "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
-                                                    customer.stage >= stage.value
-                                                        ? stage.color + " text-white shadow-lg"
-                                                        : "bg-slate-800/50 text-slate-600 hover:bg-slate-700"
-                                                )}
-                                                title={stage.label}
-                                            >
-                                                {customer.stage >= stage.value ? (
-                                                    <CheckCircle2 size={16} />
-                                                ) : (
-                                                    <Circle size={16} />
-                                                )}
-                                            </button>
-                                        ))}
+                                        {STAGES.map(stage => (<button key={stage.value} onClick={() => updateStage(customer.id, stage.value)} className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-all", customer.stage >= stage.value ? stage.color + " text-white shadow-lg" : "bg-slate-800/50 text-slate-600 hover:bg-slate-700")} title={stage.label}>{customer.stage >= stage.value ? <CheckCircle2 size={16} /> : <Circle size={16} />}</button>))}
                                     </div>
-
-                                    {/* Actions */}
                                     <div className="flex items-center gap-2 shrink-0">
-                                        <ReminderButton
-                                            clientId={customer.id}
-                                            clientName={customer.full_name || customer.name || 'Müşteri'}
-                                            iconSize={20}
-                                            className="h-10 w-10 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 hover:text-amber-400 rounded-xl transition-all"
-                                            clientDetails={{
-                                                phone: customer.phone,
-                                                process: processName,
-                                                balance: customer.payment_balance,
-                                                price: price
-                                            }}
-                                        />
-                                        <WhatsAppButton
-                                            phone={customer.phone}
-                                            clientName={customer.full_name || customer.name || undefined}
-                                            size="default"
-                                            className="h-10 w-10 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 hover:text-[#25D366] rounded-xl"
-                                            processName={processName}
-                                            reservationDate={customer.reservation_at}
-                                        />
+                                        <ReminderButton clientId={customer.id} clientName={customer.full_name || customer.name || 'Müşteri'} iconSize={20} className="h-10 w-10 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 hover:text-amber-400 rounded-xl transition-all" clientDetails={{ phone: customer.phone, process: processName, balance: customer.payment_balance, price: price }} />
+                                        <WhatsAppButton phone={customer.phone} clientName={customer.full_name || customer.name || undefined} size="default" className="h-10 w-10 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 hover:text-[#25D366] rounded-xl" processName={processName} reservationDate={customer.reservation_at} />
                                         <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="sm" className="h-10 w-10 p-0 bg-slate-800/50 text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 rounded-xl">
-                                                    <MoreVertical size={20} />
-                                                </Button>
-                                            </DropdownMenuTrigger>
+                                            <DropdownMenuTrigger asChild><Button variant="ghost" size="sm" className="h-10 w-10 p-0 bg-slate-800/50 text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 rounded-xl"><MoreVertical size={20} /></Button></DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className="bg-[#0c1929] border-cyan-500/20">
-                                                <DropdownMenuItem
-                                                    onClick={() => setArchiveCustomerId(customer.id)}
-                                                    className="text-slate-300 focus:text-slate-200"
-                                                >
-                                                    <Archive size={14} className="mr-2" />
-                                                    Arşive Taşı
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem
-                                                    onClick={() => removeCustomer(customer.id)}
-                                                    className="text-red-400 focus:text-red-400"
-                                                >
-                                                    <Trash2 size={14} className="mr-2" />
-                                                    Listeden Kaldır
-                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => setArchiveCustomerId(customer.id)} className="text-slate-300 focus:text-slate-200"><Archive size={14} className="mr-2" />Arşive Taşı</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => removeCustomer(customer.id)} className="text-red-400 focus:text-red-400"><Trash2 size={14} className="mr-2" />Listeden Kaldır</DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </div>

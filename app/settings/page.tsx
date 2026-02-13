@@ -25,16 +25,16 @@ export default function SettingsPage() {
     }, [activeTab])
 
     return (
-        <div className="p-8 max-w-[1700px] mx-auto min-h-screen">
-            <div className="flex items-center gap-4 mb-10 border-b border-slate-800 pb-8">
-                <div className="p-4 bg-primary/10 rounded-2xl border border-primary/20 shadow-lg shadow-primary/5">
-                    <Settings className="text-primary" size={32} />
+        <div className="p-4 sm:p-6 lg:p-8 max-w-[1700px] mx-auto min-h-screen">
+            <div className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-10 border-b border-slate-800 pb-4 sm:pb-8">
+                <div className="p-3 sm:p-4 bg-primary/10 rounded-xl sm:rounded-2xl border border-primary/20 shadow-lg shadow-primary/5">
+                    <Settings className="text-primary" size={24} />
                 </div>
                 <div>
-                    <h1 className="text-4xl font-black text-primary tracking-tight">
+                    <h1 className="text-xl sm:text-2xl lg:text-4xl font-black text-primary tracking-tight">
                         Yönetim Paneli
                     </h1>
-                    <p className="text-slate-400 mt-2 font-medium">
+                    <p className="text-xs sm:text-sm text-slate-400 mt-1 sm:mt-2 font-medium">
                         Hizmet ve fiyat yönetimi, sistem görünümü ve genel ayarlar.
                     </p>
                 </div>
