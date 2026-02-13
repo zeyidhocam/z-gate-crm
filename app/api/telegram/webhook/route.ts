@@ -1,6 +1,7 @@
 
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { matchCommand, commands } from '@/lib/telegram-commands'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,12 +56,20 @@ export async function POST(request: Request) {
 
         // 1. Check for Commands
         if (text.startsWith('/')) {
+            // Special commands (keep original behavior)
             if (text === '/start') {
-                await sendMessage(token, chatId, "👋 Merhaba! Ben Z-Gate CRM asistanıyım.\n\nBana JSON formatında müşteri bilgisi atarsan senin için kayıt oluşturabilirim.\n\n<b>Örnek:</b>\n<code>{\"name\": \"Ahmet Yılmaz\", \"phone\": \"05551112233\"}</code>")
+                await sendMessage(token, chatId, "👋 Merhaba! Ben Z-Gate CRM asistanıyım.\n\nBana JSON formatında müşteri bilgisi atarsan senin için kayıt oluşturabilirim.\n\n<b>Örnek:</b>\n<code>{\"name\": \"Ahmet Yılmaz\", \"phone\": \"05551112233\"}</code>\n\nKomutlar için /yardim yazabilirsin.")
             } else if (text === '/id') {
                 await sendMessage(token, chatId, `🆔 Chat ID: <code>${chatId}</code>`)
             } else {
-                await sendMessage(token, chatId, "❓ Bilinmeyen komut. Yardım için /start yazabilirsin.")
+                // Try command router
+                const matchedCommand = matchCommand(text)
+                if (matchedCommand) {
+                    const response = await commands[matchedCommand](text, chatId.toString(), supabase)
+                    await sendMessage(token, chatId, response)
+                } else {
+                    await sendMessage(token, chatId, "❓ Bilinmeyen komut. Yardım için /yardim yazabilirsin.")
+                }
             }
             return NextResponse.json({ ok: true })
         }
