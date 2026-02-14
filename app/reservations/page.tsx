@@ -241,7 +241,7 @@ export default function ReservationsPage() {
             <div className="mb-8 flex items-end justify-between border-b border-cyan-500/10 pb-6">
                 <div>
                     <h1 className="text-3xl font-bold text-gradient-ocean">
-                        Rezervasyon Takvimi <span className="text-xs text-slate-500 font-normal ml-2 opacity-50">v1.2</span>
+                        Rezervasyon Takvimi <span className="text-xs text-slate-500 font-normal ml-2 opacity-50">v1.3</span>
                     </h1>
                     <p className="text-slate-400 mt-2">
                         Tarihe göre planlanmış randevular (Liste Görünümü).
