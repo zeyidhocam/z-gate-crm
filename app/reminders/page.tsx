@@ -222,24 +222,24 @@ export default function RemindersPage() {
     }
 
     return (
-        <div className="p-8 max-w-[1600px] mx-auto space-y-6">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto space-y-4 sm:space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                    <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/20">
-                        <Bell className="text-amber-400" size={32} />
+                    <div className="p-2.5 sm:p-3 bg-amber-500/10 rounded-xl border border-amber-500/20">
+                        <Bell className="text-amber-400" size={24} />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-bold text-gradient-ocean">Hatırlatmalar</h1>
-                        <p className="text-slate-400">Manuel ve otomatik hatırlatmalar</p>
+                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gradient-ocean">Hatırlatmalar</h1>
+                        <p className="text-xs sm:text-sm text-slate-400">Manuel ve otomatik hatırlatmalar</p>
                     </div>
                 </div>
 
                 {/* Add Reminder Button */}
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button className="gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold">
-                            <Plus size={18} />
+                        <Button className="gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold text-sm self-start sm:self-auto">
+                            <Plus size={16} />
                             Hatırlatma Ekle
                         </Button>
                     </DialogTrigger>
@@ -304,7 +304,7 @@ export default function RemindersPage() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <div className="p-4 rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/20">
                     <div className="flex items-center gap-3">
                         <Bell className="text-amber-400" size={24} />
@@ -344,28 +344,28 @@ export default function RemindersPage() {
             </div>
 
             {/* Tabs */}
-            <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+            <div className="flex items-center gap-1 sm:gap-2 border-b border-slate-800 pb-2 overflow-x-auto">
                 <Button
                     variant="ghost"
                     onClick={() => setActiveTab('manual')}
                     className={cn(
-                        "text-sm font-bold",
+                        "text-xs sm:text-sm font-bold shrink-0",
                         activeTab === 'manual' ? "text-cyan-400 bg-cyan-500/10" : "text-slate-500"
                     )}
                 >
-                    <Bell size={16} className="mr-2" />
-                    Manuel Hatırlatmalar ({activeReminders.length})
+                    <Bell size={14} className="mr-1.5 sm:mr-2" />
+                    Manuel ({activeReminders.length})
                 </Button>
                 <Button
                     variant="ghost"
                     onClick={() => setActiveTab('auto')}
                     className={cn(
-                        "text-sm font-bold",
+                        "text-xs sm:text-sm font-bold shrink-0",
                         activeTab === 'auto' ? "text-cyan-400 bg-cyan-500/10" : "text-slate-500"
                     )}
                 >
-                    <TrendingDown size={16} className="mr-2" />
-                    İnaktif Müşteriler ({inactiveClients.length})
+                    <TrendingDown size={14} className="mr-1.5 sm:mr-2" />
+                    İnaktif ({inactiveClients.length})
                 </Button>
             </div>
 

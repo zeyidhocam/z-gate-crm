@@ -175,6 +175,13 @@
     background-attachment: fixed;
   }
 
+  /* Mobilde background-attachment: fixed performans sorunu yaratır */
+  @media (max-width: 1023px) {
+    .app-gradient-bg {
+      background-attachment: scroll;
+    }
+  }
+
   /* Cam Efektli Kart */
   .glass-card {
     background: rgba(15, 25, 40, 0.6);

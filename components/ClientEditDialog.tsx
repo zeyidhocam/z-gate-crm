@@ -59,15 +59,15 @@ export function ClientEditDialog({ client, open, onOpenChange, onSave, processTy
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="bg-[#0c1929] border-cyan-500/20 text-slate-200 max-w-2xl">
+            <DialogContent className="bg-[#0c1929] border-cyan-500/20 text-slate-200 max-w-[calc(100vw-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle className="text-xl font-bold text-gradient-ocean flex items-center gap-2">
-                        <Edit size={22} className="text-cyan-400" />
+                    <DialogTitle className="text-lg sm:text-xl font-bold text-gradient-ocean flex items-center gap-2">
+                        <Edit size={20} className="text-cyan-400" />
                         Müşteri Düzenle
                     </DialogTitle>
                 </DialogHeader>
 
-                <div className="grid grid-cols-2 gap-6 py-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 py-4">
                     <div className="space-y-2">
                         <Label className="text-slate-500 text-xs font-bold uppercase">İsim Soyisim</Label>
                         <Input
@@ -112,7 +112,7 @@ export function ClientEditDialog({ client, open, onOpenChange, onSave, processTy
                         </Select>
                     </div>
 
-                    <div className="col-span-2 space-y-2">
+                    <div className="col-span-1 sm:col-span-2 space-y-2">
                         <Label className="text-slate-500 text-xs font-bold uppercase">Notlar & Detaylar</Label>
                         <Textarea
                             value={formData.notes || ''}
