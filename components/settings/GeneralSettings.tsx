@@ -19,18 +19,19 @@ export function GeneralSettings() {
     // Config yüklendiğinde formu güncelle - Sadece config değiştiğinde (loading bittiyse)
     useEffect(() => {
         if (!isLoading) {
-            // eslint-disable-next-line
             setFormData(prev => {
-                if (prev.appName !== config.appName || prev.logoUrl !== (config.logoUrl || '')) {
+                const newLogo = config.logoUrl || ''
+                if (prev.appName !== config.appName || prev.logoUrl !== newLogo) {
                     return {
                         ...prev,
                         appName: config.appName,
-                        logoUrl: config.logoUrl || '',
+                        logoUrl: newLogo,
                     }
                 }
                 return prev
             })
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isLoading, config.appName, config.logoUrl])
 
     const handleSave = async () => {

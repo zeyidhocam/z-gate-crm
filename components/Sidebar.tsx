@@ -8,7 +8,7 @@ import { twMerge } from 'tailwind-merge'
 import { useSettings } from '@/components/providers/settings-provider'
 import { supabase } from '@/lib/supabase'
 
-export function Sidebar() {
+export function Sidebar({ className }: { className?: string }) {
     const pathname = usePathname()
     const { config } = useSettings()
     const [reminderCount, setReminderCount] = useState(0)
@@ -74,7 +74,7 @@ export function Sidebar() {
     ]
 
     return (
-        <aside className="w-[260px] h-screen sticky top-0 bg-gradient-to-b from-[#040d17] via-[#0a1628] to-[#0c1929] border-r border-cyan-500/10 p-6 flex flex-col">
+        <aside className={twMerge("w-[260px] h-screen sticky top-0 bg-gradient-to-b from-[#040d17] via-[#0a1628] to-[#0c1929] border-r border-cyan-500/10 p-6 flex flex-col", className)}>
             {/* Logo / App Name */}
             <Link href="/" className="mb-10 px-2 flex items-center gap-3 group cursor-pointer">
                 {/* eslint-disable-next-line @next/next/no-img-element */}

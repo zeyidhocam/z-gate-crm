@@ -22,11 +22,37 @@ try {
 }
 
 // Fallback mock client
+const createMockBuilder = () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const builder: any = {
+        select: () => builder,
+        insert: () => builder,
+        update: () => builder,
+        delete: () => builder,
+        eq: () => builder,
+        neq: () => builder,
+        gt: () => builder,
+        lt: () => builder,
+        gte: () => builder,
+        lte: () => builder,
+        in: () => builder,
+        is: () => builder,
+        like: () => builder,
+        ilike: () => builder,
+        contains: () => builder,
+        range: () => builder,
+        single: () => builder,
+        maybeSingle: () => builder,
+        order: () => builder,
+        limit: () => builder,
+        // Mock 'then' to make it simpler to await
+        then: (resolve: any) => resolve({ data: [], error: { message: 'Supabase not configured' } })
+    }
+    return builder
+}
+
 const mockClient = {
-    from: () => ({
-        select: () => Promise.resolve({ data: [], error: { message: 'Supabase not configured' } }),
-        insert: () => Promise.resolve({ data: null, error: { message: 'Supabase not configured' } }),
-    }),
+    from: () => createMockBuilder(),
     auth: {
         signInWithPassword: () => Promise.resolve({
             data: { user: null, session: null },
@@ -35,6 +61,7 @@ const mockClient = {
         getUser: () => Promise.resolve({ data: { user: null }, error: null }),
         getSession: () => Promise.resolve({ data: { session: null }, error: null }),
         onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => { } } } }),
+        signOut: () => Promise.resolve({ error: null }),
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } as any

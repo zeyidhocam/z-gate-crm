@@ -11,7 +11,7 @@ interface TrendChartProps {
 
 // Custom tooltip
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const CustomTooltip = ({ active, payload, label }: { active?: boolean, payload?: Array<{ value: number, payload: any }>, label?: string }) => {
+const CustomTooltip = ({ active, payload, label }: { active?: boolean, payload?: Array<{ value: number, payload: unknown }>, label?: string }) => {
     if (active && payload && payload.length) {
         return (
             <div className="bg-[#0c1929] border border-cyan-500/30 rounded-xl px-4 py-3 shadow-xl shadow-cyan-500/10">

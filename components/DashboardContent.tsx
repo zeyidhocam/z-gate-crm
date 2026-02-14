@@ -201,7 +201,7 @@ export default function DashboardContent() {
     const sortedDates = Object.keys(groupedReservations).sort((a, b) => a.localeCompare(b))
 
     return (
-        <div className="p-8 max-w-[1600px] mx-auto space-y-8">
+        <div className="p-4 md:p-8 max-w-[1600px] mx-auto space-y-6 md:space-y-8">
             {/* Header - Ocean Elite */}
             <div className="flex items-center gap-3">
                 <div className="p-3 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
@@ -219,7 +219,7 @@ export default function DashboardContent() {
             </div>
 
             {/* KPI Cards - Ocean Elite Colors */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 auto-rows-fr">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6 auto-rows-fr">
                 <Link href="/reservations">
                     <KPICard
                         title="Yaklaşan Rezervasyon"
