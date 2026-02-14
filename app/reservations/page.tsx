@@ -480,6 +480,6 @@ export default function ReservationsPage() {
                 client={reservationEditClient}
                 onSave={handleSaveReservationDate}
             />
-        </div>
-    )
+            )
 }
+// Force deployment trigger: Rezervasyon Tarihi Değiştirme Butonu Eklendi
