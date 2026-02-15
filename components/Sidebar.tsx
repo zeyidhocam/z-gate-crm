@@ -12,6 +12,7 @@ export function Sidebar({ className }: { className?: string }) {
     const pathname = usePathname()
     const { config } = useSettings()
     const [reminderCount, setReminderCount] = useState(0)
+    const [paymentDueCount, setPaymentDueCount] = useState(0)
     const [sendingReport, setSendingReport] = useState(false)
 
     const handleManualReport = async () => {
@@ -34,28 +35,49 @@ export function Sidebar({ className }: { className?: string }) {
         }
     }
 
-    // Fetch reminder count
+    // Fetch reminder + payment due counts
     useEffect(() => {
-        const fetchReminders = async () => {
-            const { data } = await supabase
+        const fetchCounts = async () => {
+            // Reminders
+            const { data: reminderData } = await supabase
                 .from('reminders')
                 .select('id, reminder_date')
                 .eq('is_completed', false)
 
-            if (data) {
+            if (reminderData) {
                 const now = new Date()
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const count = data.filter((r: any) => {
+                const count = reminderData.filter((r: any) => {
                     const date = new Date(r.reminder_date)
                     return date <= now || date.toDateString() === now.toDateString()
                 }).length
                 setReminderCount(count)
             }
+
+            // Payment schedules due
+            try {
+                const { data: paymentData } = await supabase
+                    .from('payment_schedules')
+                    .select('id, due_date')
+                    .eq('is_paid', false)
+
+                if (paymentData) {
+                    const now = new Date()
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const count = paymentData.filter((p: any) => {
+                        const date = new Date(p.due_date)
+                        return date <= now || date.toDateString() === now.toDateString()
+                    }).length
+                    setPaymentDueCount(count)
+                }
+            } catch {
+                // Table might not exist yet
+            }
         }
 
-        fetchReminders()
+        fetchCounts()
         // Refresh every minute
-        const interval = setInterval(fetchReminders, 60000)
+        const interval = setInterval(fetchCounts, 60000)
         return () => clearInterval(interval)
     }, [])
 
@@ -68,7 +90,7 @@ export function Sidebar({ className }: { className?: string }) {
         { label: 'Müşteriler', icon: Users, path: '/customers' },
         { label: 'Kayıtlar', icon: Users, path: '/clients' },
         { label: 'Finans', icon: DollarSign, path: '/finance' },
-        { label: 'Hatırlatmalar', icon: Bell, path: '/reminders', badge: reminderCount },
+        { label: 'Hatırlatmalar', icon: Bell, path: '/reminders', badge: reminderCount + paymentDueCount },
         { label: 'Kişisel Kasa Analysis', icon: Wallet, path: '/analysis' },
         { label: 'Ayarlar', icon: Settings, path: '/settings' },
     ]
