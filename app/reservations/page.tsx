@@ -237,14 +237,14 @@ export default function ReservationsPage() {
     }
 
     return (
-        <div className="p-8 max-w-[1600px] mx-auto text-slate-200">
-            <div className="mb-8 flex items-end justify-between border-b border-cyan-500/10 pb-6">
+        <div className="p-3 sm:p-6 lg:p-8 max-w-[1600px] mx-auto text-slate-200">
+            <div className="mb-4 sm:mb-8 flex items-end justify-between border-b border-cyan-500/10 pb-4 sm:pb-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-gradient-ocean">
-                        Rezervasyon Takvimi <span className="text-xs text-slate-500 font-normal ml-2 opacity-50">v1.3</span>
+                    <h1 className="text-xl sm:text-3xl font-bold text-gradient-ocean">
+                        Rezervasyon Takvimi
                     </h1>
-                    <p className="text-slate-400 mt-2">
-                        Tarihe göre planlanmış randevular (Liste Görünümü).
+                    <p className="text-xs sm:text-sm text-slate-400 mt-1 sm:mt-2">
+                        Tarihe göre planlanmış randevular
                     </p>
                 </div>
             </div>
@@ -480,7 +480,6 @@ export default function ReservationsPage() {
                 client={reservationEditClient}
                 onSave={handleSaveReservationDate}
             />
-        // Force deployment trigger: Rezervasyon Tarihi Değiştirme Butonu Eklendi
         </div>
     )
 }
