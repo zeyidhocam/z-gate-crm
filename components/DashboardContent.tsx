@@ -204,12 +204,12 @@ export default function DashboardContent() {
         <div className="p-4 md:p-8 max-w-[1600px] mx-auto space-y-6 md:space-y-8">
             {/* Header - Ocean Elite */}
             <div className="flex items-center gap-3">
-                <div className="p-3 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
-                    <CalendarCheck className="text-cyan-400" size={32} />
+                <div className="p-2 sm:p-3 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
+                    <CalendarCheck className="text-cyan-400" size={24} />
                 </div>
                 <div>
-                    <h1 className="text-3xl font-bold text-gradient-ocean">Gösterge Paneli</h1>
-                    <p className="text-slate-400">Genel durum ve yaklaşan randevular</p>
+                    <h1 className="text-xl sm:text-3xl font-bold text-gradient-ocean">Gösterge Paneli</h1>
+                    <p className="text-xs sm:text-sm text-slate-400">Genel durum ve yaklaşan randevular</p>
                 </div>
             </div>
 
@@ -331,7 +331,7 @@ export default function DashboardContent() {
                     </div>
                 ) : (
                     <div className="overflow-x-auto pb-6 custom-scrollbar">
-                        <div className="flex gap-4 min-w-max px-1">
+                        <div className="flex gap-3 sm:gap-4 min-w-max px-1">
                             {sortedDates.slice(0, 5).map(dateStr => {
                                 const items = groupedReservations[dateStr]
                                 const dateObj = parseISO(dateStr)
@@ -341,7 +341,7 @@ export default function DashboardContent() {
                                     <div
                                         key={dateStr}
                                         className={cn(
-                                            "w-[280px] shrink-0 rounded-2xl border flex flex-col overflow-hidden",
+                                            "w-[260px] sm:w-[280px] shrink-0 rounded-2xl border flex flex-col overflow-hidden",
                                             isToday
                                                 ? "bg-slate-900/80 border-cyan-500/50 shadow-[0_0_30px_-10px_rgba(34,211,238,0.2)]"
                                                 : "bg-slate-900/40 border-slate-800/50"

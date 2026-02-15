@@ -32,10 +32,11 @@ function FinanceCard({ title, value, icon: Icon, trend, trendValue, colorClass }
     colorClass: string
 }) {
     return (
-        <div className="p-6 rounded-2xl bg-gradient-to-br from-[#0c1929]/90 via-[#0a1628]/80 to-[#040d17]/90 border border-cyan-500/20 hover:border-cyan-500/30 transition-all">
-            <div className="flex items-start justify-between mb-4">
-                <div className={cn("p-3 rounded-xl", colorClass.replace('text-', 'bg-').replace('400', '500/10'))}>
-                    <Icon size={24} className={colorClass} />
+        <div className="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-[#0c1929]/90 via-[#0a1628]/80 to-[#040d17]/90 border border-cyan-500/20 hover:border-cyan-500/30 transition-all">
+            <div className="flex items-start justify-between mb-3 sm:mb-4">
+                <div className={cn("p-2 sm:p-3 rounded-xl", colorClass.replace('text-', 'bg-').replace('400', '500/10'))}>
+                    <Icon size={20} className={cn(colorClass, "sm:hidden")} />
+                    <Icon size={24} className={cn(colorClass, "hidden sm:block")} />
                 </div>
                 {trend && (
                     <div className={cn(
@@ -50,10 +51,10 @@ function FinanceCard({ title, value, icon: Icon, trend, trendValue, colorClass }
                     </div>
                 )}
             </div>
-            <div className="text-3xl font-black text-slate-100 mb-1">
+            <div className="text-xl sm:text-3xl font-black text-slate-100 mb-1">
                 {typeof value === 'number' ? value.toLocaleString('tr-TR') : value}
             </div>
-            <div className="text-xs text-slate-500 font-bold uppercase tracking-wide">
+            <div className="text-[10px] sm:text-xs text-slate-500 font-bold uppercase tracking-wide">
                 {title}
             </div>
         </div>
