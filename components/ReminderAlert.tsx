@@ -1,12 +1,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Bell, AlertTriangle, ChevronRight, CreditCard, Wallet, CalendarCheck, TrendingUp } from "lucide-react"
+import { Bell, AlertTriangle, ChevronRight, CreditCard, Wallet, CalendarCheck, TrendingUp, CheckCircle2, X, Loader2 } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { parseISO, isBefore, isToday, differenceInDays, format } from "date-fns"
 import { tr } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 
 interface Reminder {
     id: string
@@ -34,6 +37,8 @@ export function ReminderAlert() {
     const [paymentsDue, setPaymentsDue] = useState<PaymentDue[]>([])
     const [reservationsDue, setReservationsDue] = useState<ReservationDue[]>([])
     const [loading, setLoading] = useState(true)
+    const [confirmPayment, setConfirmPayment] = useState<PaymentDue | null>(null)
+    const [markingPaid, setMarkingPaid] = useState(false)
 
     useEffect(() => {
         fetchReminders()
@@ -118,6 +123,25 @@ export function ReminderAlert() {
             setReservationsDue(mapped)
         } catch {
             setReservationsDue([])
+        }
+    }
+
+    const handleMarkPaid = async (payment: PaymentDue) => {
+        setMarkingPaid(true)
+        try {
+            const { error } = await supabase
+                .from('payment_schedules')
+                .update({ is_paid: true, paid_at: new Date().toISOString() })
+                .eq('id', payment.id)
+
+            if (error) throw error
+            toast.success(`${payment.client_name} - ${Number(payment.amount).toLocaleString('tr-TR')} ₺ ödeme tamamlandı!`)
+            setConfirmPayment(null)
+            fetchPaymentsDue()
+        } catch {
+            toast.error("Ödeme durumu güncellenemedi.")
+        } finally {
+            setMarkingPaid(false)
         }
     }
 
@@ -238,14 +262,21 @@ export function ReminderAlert() {
                                             Gecikmiş Taksitler
                                         </div>
                                         {overduePayments.map(p => (
-                                            <div key={p.id} className="text-[11px] sm:text-xs text-red-400/80 flex items-center gap-1.5">
+                                            <div key={p.id} className="text-[11px] sm:text-xs text-red-400/80 flex items-center gap-1.5 group">
                                                 <Wallet size={9} className="shrink-0" />
                                                 <span className="font-semibold truncate">{p.client_name}</span>
                                                 <span className="text-red-400/50">•</span>
                                                 <span className="font-bold shrink-0">{Number(p.amount).toLocaleString('tr-TR')} ₺</span>
                                                 <span className="text-red-400/40 text-[9px] shrink-0">
-                                                    ({Math.abs(differenceInDays(parseISO(p.due_date), new Date()))} gün gecikti)
+                                                    ({Math.abs(differenceInDays(parseISO(p.due_date), new Date()))} gün)
                                                 </span>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); setConfirmPayment(p) }}
+                                                    className="ml-auto shrink-0 p-1 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 transition-all active:scale-95"
+                                                    title="Ödendi olarak işaretle"
+                                                >
+                                                    <CheckCircle2 size={12} className="text-emerald-400" />
+                                                </button>
                                             </div>
                                         ))}
                                     </div>
@@ -258,11 +289,18 @@ export function ReminderAlert() {
                                             Bugünkü Taksitler
                                         </div>
                                         {todayPayments.map(p => (
-                                            <div key={p.id} className="text-[11px] sm:text-xs text-amber-400/80 flex items-center gap-1.5">
+                                            <div key={p.id} className="text-[11px] sm:text-xs text-amber-400/80 flex items-center gap-1.5 group">
                                                 <CreditCard size={9} className="shrink-0" />
                                                 <span className="font-semibold truncate">{p.client_name}</span>
                                                 <span className="text-amber-400/50">•</span>
                                                 <span className="font-bold shrink-0">{Number(p.amount).toLocaleString('tr-TR')} ₺</span>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); setConfirmPayment(p) }}
+                                                    className="ml-auto shrink-0 p-1 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 transition-all active:scale-95"
+                                                    title="Ödendi olarak işaretle"
+                                                >
+                                                    <CheckCircle2 size={12} className="text-emerald-400" />
+                                                </button>
                                             </div>
                                         ))}
                                     </div>
@@ -311,6 +349,77 @@ export function ReminderAlert() {
                     </div>
                 </div>
             )}
+
+            {/* Payment Confirmation Dialog */}
+            <Dialog open={!!confirmPayment} onOpenChange={(open) => !open && setConfirmPayment(null)}>
+                <DialogContent className="bg-[#0a1628] border-slate-700/50 max-w-sm sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="text-slate-200 text-lg">
+                            Ödeme Onayı
+                        </DialogTitle>
+                        <DialogDescription className="text-slate-400 text-sm">
+                            Bu ödemeyi tamamlandı olarak işaretlemek istediğinize emin misiniz?
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {confirmPayment && (
+                        <div className="space-y-4">
+                            {/* Payment Details Card */}
+                            <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 space-y-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
+                                        <Wallet size={18} className="text-cyan-400" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="font-bold text-slate-200 truncate">
+                                            {confirmPayment.client_name}
+                                        </div>
+                                        <div className="text-xs text-slate-500">
+                                            Vade: {format(parseISO(confirmPayment.due_date), 'd MMMM yyyy', { locale: tr })}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between pt-2 border-t border-slate-700/30">
+                                    <span className="text-sm text-slate-400">Tutar</span>
+                                    <span className="text-xl font-black text-emerald-400">
+                                        {Number(confirmPayment.amount).toLocaleString('tr-TR')} ₺
+                                    </span>
+                                </div>
+                                {isBefore(parseISO(confirmPayment.due_date), new Date()) && !isToday(parseISO(confirmPayment.due_date)) && (
+                                    <div className="text-[11px] text-red-400/70 bg-red-500/10 rounded-lg px-3 py-1.5 text-center">
+                                        {Math.abs(differenceInDays(parseISO(confirmPayment.due_date), new Date()))} gün gecikmiş
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex gap-3">
+                                <Button
+                                    variant="outline"
+                                    className="flex-1 border-slate-700 text-slate-300 hover:bg-slate-800"
+                                    onClick={() => setConfirmPayment(null)}
+                                    disabled={markingPaid}
+                                >
+                                    <X size={16} className="mr-1.5" />
+                                    Ödenmedi
+                                </Button>
+                                <Button
+                                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                                    onClick={() => handleMarkPaid(confirmPayment)}
+                                    disabled={markingPaid}
+                                >
+                                    {markingPaid ? (
+                                        <Loader2 size={16} className="mr-1.5 animate-spin" />
+                                    ) : (
+                                        <CheckCircle2 size={16} className="mr-1.5" />
+                                    )}
+                                    Ödendi
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

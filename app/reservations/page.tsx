@@ -2,22 +2,23 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { supabase } from "@/lib/supabase"
-import { format, parseISO, isSameDay, isToday, isBefore } from "date-fns"
+import { format, parseISO, isSameDay, isToday, isBefore, differenceInDays } from "date-fns"
 import { tr } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 // Icons
 import {
     Calendar as CalendarIcon, Copy, Check, ChevronRight, MessageCircle, Edit, User, CheckCircle, XCircle, CalendarClock,
-    Wallet, CreditCard, AlertCircle, TrendingUp
+    Wallet, CreditCard, AlertCircle, TrendingUp, CheckCircle2, X, Loader2
 } from "lucide-react"
 // UI Components
 import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"
 import { ClientEditDialog, Client } from "@/components/ClientEditDialog"
 import { ReservationEditDialog } from "@/components/ReservationEditDialog"
 import { ReminderButton } from "@/components/ReminderButton"
 import { WhatsAppButton } from "@/components/WhatsAppButton"
+import { toast } from "sonner"
 
 
 // Types
@@ -59,6 +60,28 @@ export default function ReservationsPage() {
     const [reservationEditClient, setReservationEditClient] = useState<Lead | null>(null)
     const [processTypes, setProcessTypes] = useState<{ id: number, name: string }[]>([])
     const [paymentPeople, setPaymentPeople] = useState<PaymentPerson[]>([])
+    const [confirmPayment, setConfirmPayment] = useState<PaymentPerson | null>(null)
+    const [markingPaid, setMarkingPaid] = useState(false)
+
+    // Ödemeyi tamamlandı olarak işaretle
+    const handleMarkPaid = async (payment: PaymentPerson) => {
+        setMarkingPaid(true)
+        try {
+            const { error } = await supabase
+                .from('payment_schedules')
+                .update({ is_paid: true, paid_at: new Date().toISOString() })
+                .eq('id', payment.id)
+
+            if (error) throw error
+            toast.success(`${payment.name} - ${payment.amount.toLocaleString('tr-TR')} ₺ ödeme tamamlandı!`)
+            setConfirmPayment(null)
+            fetchPaymentSummary()
+        } catch {
+            toast.error("Ödeme durumu güncellenemedi.")
+        } finally {
+            setMarkingPaid(false)
+        }
+    }
 
     // Bugünkü ödeme planlarını çek (kişi isimleriyle)
     const fetchPaymentSummary = useCallback(async () => {
@@ -354,6 +377,13 @@ export default function ReservationsPage() {
                                                     <span className="font-semibold truncate">{p.name}</span>
                                                     <span className="text-red-400/50">•</span>
                                                     <span className="font-bold shrink-0">{p.amount.toLocaleString('tr-TR')} ₺</span>
+                                                    <button
+                                                        onClick={() => setConfirmPayment(p)}
+                                                        className="ml-auto shrink-0 p-1 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 transition-all active:scale-95"
+                                                        title="Ödendi olarak işaretle"
+                                                    >
+                                                        <CheckCircle2 size={12} className="text-emerald-400" />
+                                                    </button>
                                                 </div>
                                             ))}
                                         </div>
@@ -367,6 +397,13 @@ export default function ReservationsPage() {
                                                     <span className="font-semibold truncate">{p.name}</span>
                                                     <span className="text-amber-400/50">•</span>
                                                     <span className="font-bold shrink-0">{p.amount.toLocaleString('tr-TR')} ₺</span>
+                                                    <button
+                                                        onClick={() => setConfirmPayment(p)}
+                                                        className="ml-auto shrink-0 p-1 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 hover:border-emerald-500/40 transition-all active:scale-95"
+                                                        title="Ödendi olarak işaretle"
+                                                    >
+                                                        <CheckCircle2 size={12} className="text-emerald-400" />
+                                                    </button>
                                                 </div>
                                             ))}
                                         </div>
@@ -624,6 +661,75 @@ export default function ReservationsPage() {
                 client={reservationEditClient}
                 onSave={handleSaveReservationDate}
             />
+
+            {/* Payment Confirmation Dialog */}
+            <Dialog open={!!confirmPayment} onOpenChange={(open) => !open && setConfirmPayment(null)}>
+                <DialogContent className="bg-[#0a1628] border-slate-700/50 max-w-sm sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="text-slate-200 text-lg">
+                            Ödeme Onayı
+                        </DialogTitle>
+                        <DialogDescription className="text-slate-400 text-sm">
+                            Bu ödemeyi tamamlandı olarak işaretlemek istediğinize emin misiniz?
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {confirmPayment && (
+                        <div className="space-y-4">
+                            <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 space-y-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
+                                        <Wallet size={18} className="text-cyan-400" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="font-bold text-slate-200 truncate">
+                                            {confirmPayment.name}
+                                        </div>
+                                        <div className="text-xs text-slate-500">
+                                            Vade: {format(parseISO(confirmPayment.due_date), 'd MMMM yyyy', { locale: tr })}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between pt-2 border-t border-slate-700/30">
+                                    <span className="text-sm text-slate-400">Tutar</span>
+                                    <span className="text-xl font-black text-emerald-400">
+                                        {confirmPayment.amount.toLocaleString('tr-TR')} ₺
+                                    </span>
+                                </div>
+                                {confirmPayment.type === 'overdue' && (
+                                    <div className="text-[11px] text-red-400/70 bg-red-500/10 rounded-lg px-3 py-1.5 text-center">
+                                        {Math.abs(differenceInDays(parseISO(confirmPayment.due_date), new Date()))} gün gecikmiş
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex gap-3">
+                                <Button
+                                    variant="outline"
+                                    className="flex-1 border-slate-700 text-slate-300 hover:bg-slate-800"
+                                    onClick={() => setConfirmPayment(null)}
+                                    disabled={markingPaid}
+                                >
+                                    <X size={16} className="mr-1.5" />
+                                    Ödenmedi
+                                </Button>
+                                <Button
+                                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
+                                    onClick={() => handleMarkPaid(confirmPayment)}
+                                    disabled={markingPaid}
+                                >
+                                    {markingPaid ? (
+                                        <Loader2 size={16} className="mr-1.5 animate-spin" />
+                                    ) : (
+                                        <CheckCircle2 size={16} className="mr-1.5" />
+                                    )}
+                                    Ödendi
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
