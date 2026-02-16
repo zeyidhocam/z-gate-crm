@@ -40,13 +40,12 @@ interface GroupedReservations {
     leads: Lead[]
 }
 
-interface PaymentSummary {
-    scheduledTotal: number      // Müşteri taksit ödemeleri (bugün)
-    scheduledOverdue: number    // Gecikmiş taksit ödemeleri
-    reservationTotal: number    // Bugünkü rezervasyon ücretleri
-    scheduledCount: number
-    overdueCount: number
-    reservationCount: number
+interface PaymentPerson {
+    id: string
+    name: string
+    amount: number
+    due_date: string
+    type: 'overdue' | 'today' | 'reservation'
 }
 
 export default function ReservationsPage() {
@@ -59,44 +58,33 @@ export default function ReservationsPage() {
     const [editingClient, setEditingClient] = useState<Client | null>(null)
     const [reservationEditClient, setReservationEditClient] = useState<Lead | null>(null)
     const [processTypes, setProcessTypes] = useState<{ id: number, name: string }[]>([])
-    const [paymentSummary, setPaymentSummary] = useState<PaymentSummary>({
-        scheduledTotal: 0, scheduledOverdue: 0, reservationTotal: 0,
-        scheduledCount: 0, overdueCount: 0, reservationCount: 0
-    })
+    const [paymentPeople, setPaymentPeople] = useState<PaymentPerson[]>([])
 
-    // Bugünkü ödeme planlarını çek
+    // Bugünkü ödeme planlarını çek (kişi isimleriyle)
     const fetchPaymentSummary = useCallback(async () => {
         try {
             const { data } = await supabase
                 .from('payment_schedules')
-                .select('amount, due_date')
+                .select('id, amount, due_date, clients(full_name, name)')
                 .eq('is_paid', false)
 
             if (!data) return
 
-            let scheduledTotal = 0
-            let scheduledOverdue = 0
-            let scheduledCount = 0
-            let overdueCount = 0
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const people: PaymentPerson[] = (data as any[])
+                .filter(p => {
+                    const dueDate = parseISO(p.due_date)
+                    return isToday(dueDate) || isBefore(dueDate, new Date())
+                })
+                .map(p => ({
+                    id: p.id,
+                    name: p.clients?.full_name || p.clients?.name || 'Bilinmeyen',
+                    amount: Number(p.amount),
+                    due_date: p.due_date,
+                    type: isToday(parseISO(p.due_date)) ? 'today' as const : 'overdue' as const
+                }))
 
-            data.forEach((p: { amount: number; due_date: string }) => {
-                const dueDate = parseISO(p.due_date)
-                if (isToday(dueDate)) {
-                    scheduledTotal += Number(p.amount)
-                    scheduledCount++
-                } else if (isBefore(dueDate, new Date())) {
-                    scheduledOverdue += Number(p.amount)
-                    overdueCount++
-                }
-            })
-
-            setPaymentSummary(prev => ({
-                ...prev,
-                scheduledTotal,
-                scheduledOverdue,
-                scheduledCount,
-                overdueCount
-            }))
+            setPaymentPeople(people)
         } catch {
             // Sessiz hata
         }
@@ -222,18 +210,21 @@ export default function ReservationsPage() {
                     }
                 })
 
-                // Bugünkü rezervasyonların toplam ücretini hesapla
-                const todayReservations = leadsData.filter(c =>
-                    c.reservation_at && isToday(parseISO(c.reservation_at))
-                )
-                const reservationTotal = todayReservations.reduce((sum, c) =>
-                    sum + (Number(c.price_agreed) || Number(c.price) || 0), 0
-                )
-                setPaymentSummary(prev => ({
-                    ...prev,
-                    reservationTotal,
-                    reservationCount: todayReservations.length
-                }))
+                // Bugünkü rezervasyonları kişi bazında ekle
+                const todayReservationPeople: PaymentPerson[] = leadsData
+                    .filter(c => c.reservation_at && isToday(parseISO(c.reservation_at)))
+                    .map(c => ({
+                        id: c.id,
+                        name: c.full_name || c.name || 'Bilinmeyen',
+                        amount: Number(c.price_agreed) || Number(c.price) || 0,
+                        due_date: c.reservation_at,
+                        type: 'reservation' as const
+                    }))
+
+                setPaymentPeople(prev => {
+                    const withoutReservations = prev.filter(p => p.type !== 'reservation')
+                    return [...withoutReservations, ...todayReservationPeople]
+                })
 
                 setReservations(grouped)
                 setExpanded(initialExpanded)
@@ -317,12 +308,13 @@ export default function ReservationsPage() {
 
             {/* Bugünkü Ödeme Özeti Banner */}
             {(() => {
-                const { scheduledTotal, scheduledOverdue, reservationTotal, scheduledCount, overdueCount, reservationCount } = paymentSummary
-                const grandTotal = scheduledTotal + scheduledOverdue + reservationTotal
-                const hasOverdue = overdueCount > 0
-                const hasToday = scheduledCount > 0 || reservationCount > 0
+                const overdue = paymentPeople.filter(p => p.type === 'overdue')
+                const today = paymentPeople.filter(p => p.type === 'today')
+                const todayRes = paymentPeople.filter(p => p.type === 'reservation')
+                const grandTotal = paymentPeople.reduce((sum, p) => sum + p.amount, 0)
+                const hasOverdue = overdue.length > 0
 
-                if (grandTotal === 0) return null
+                if (paymentPeople.length === 0) return null
 
                 return (
                     <div className={cn(
@@ -331,9 +323,9 @@ export default function ReservationsPage() {
                             ? "bg-gradient-to-r from-red-500/10 to-amber-500/5 border-red-500/30"
                             : "bg-gradient-to-r from-amber-500/10 to-cyan-500/5 border-amber-500/30"
                     )}>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-start gap-3">
                             <div className={cn(
-                                "w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shrink-0",
+                                "w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shrink-0 mt-0.5",
                                 hasOverdue ? "bg-red-500/20" : "bg-amber-500/20"
                             )}>
                                 {hasOverdue ? (
@@ -344,28 +336,54 @@ export default function ReservationsPage() {
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className={cn(
-                                    "font-black text-lg sm:text-xl",
+                                    "font-black text-lg sm:text-xl mb-1",
                                     hasOverdue ? "text-red-400" : "text-amber-400"
                                 )}>
                                     {grandTotal.toLocaleString('tr-TR')} ₺
+                                    <span className="text-[10px] sm:text-xs font-medium text-slate-500 ml-2">
+                                        bugün beklenen
+                                    </span>
                                 </div>
-                                <div className="text-[10px] sm:text-xs text-slate-500 font-medium mt-0.5 space-y-0.5">
-                                    {hasOverdue && (
-                                        <div className="text-red-400/80">
-                                            <Wallet size={10} className="inline mr-1" />
-                                            Gecikmiş taksit: {scheduledOverdue.toLocaleString('tr-TR')} ₺ ({overdueCount} adet)
+                                <div className="space-y-1.5">
+                                    {overdue.length > 0 && (
+                                        <div>
+                                            <div className="text-[10px] font-bold text-red-400/60 uppercase tracking-wider mb-0.5">Gecikmiş Taksitler</div>
+                                            {overdue.map(p => (
+                                                <div key={p.id} className="text-[11px] sm:text-xs text-red-400/80 flex items-center gap-1.5">
+                                                    <Wallet size={9} className="shrink-0" />
+                                                    <span className="font-semibold truncate">{p.name}</span>
+                                                    <span className="text-red-400/50">•</span>
+                                                    <span className="font-bold shrink-0">{p.amount.toLocaleString('tr-TR')} ₺</span>
+                                                </div>
+                                            ))}
                                         </div>
                                     )}
-                                    {scheduledCount > 0 && (
-                                        <div className="text-amber-400/80">
-                                            <CreditCard size={10} className="inline mr-1" />
-                                            Bugünkü taksit: {scheduledTotal.toLocaleString('tr-TR')} ₺ ({scheduledCount} adet)
+                                    {today.length > 0 && (
+                                        <div>
+                                            <div className="text-[10px] font-bold text-amber-400/60 uppercase tracking-wider mb-0.5">Bugünkü Taksitler</div>
+                                            {today.map(p => (
+                                                <div key={p.id} className="text-[11px] sm:text-xs text-amber-400/80 flex items-center gap-1.5">
+                                                    <CreditCard size={9} className="shrink-0" />
+                                                    <span className="font-semibold truncate">{p.name}</span>
+                                                    <span className="text-amber-400/50">•</span>
+                                                    <span className="font-bold shrink-0">{p.amount.toLocaleString('tr-TR')} ₺</span>
+                                                </div>
+                                            ))}
                                         </div>
                                     )}
-                                    {reservationCount > 0 && (
-                                        <div className="text-cyan-400/80">
-                                            <CalendarIcon size={10} className="inline mr-1" />
-                                            Bugünkü rezervasyon: {reservationTotal.toLocaleString('tr-TR')} ₺ ({reservationCount} kişi)
+                                    {todayRes.length > 0 && (
+                                        <div>
+                                            <div className="text-[10px] font-bold text-cyan-400/60 uppercase tracking-wider mb-0.5">Bugünkü Rezervasyonlar</div>
+                                            {todayRes.map(p => (
+                                                <div key={p.id} className="text-[11px] sm:text-xs text-cyan-400/80 flex items-center gap-1.5">
+                                                    <CalendarIcon size={9} className="shrink-0" />
+                                                    <span className="font-semibold truncate">{p.name}</span>
+                                                    <span className="text-cyan-400/50">•</span>
+                                                    <span className="font-bold shrink-0">
+                                                        {p.amount > 0 ? `${p.amount.toLocaleString('tr-TR')} ₺` : 'Ücret belirtilmedi'}
+                                                    </span>
+                                                </div>
+                                            ))}
                                         </div>
                                     )}
                                 </div>
