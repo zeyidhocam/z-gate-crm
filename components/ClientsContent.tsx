@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { Search, ChevronRight, Edit, CalendarDays, Copy, Check, Sparkles, Clock, Archive, User, Info } from "lucide-react"
+import { Search, ChevronRight, Edit, CalendarDays, Copy, Check, Sparkles, Clock, Archive, User, Info, CreditCard } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { cn } from "@/lib/utils"
 // UI Components
@@ -16,6 +16,8 @@ import { format } from "date-fns"
 import { WhatsAppButton } from "@/components/WhatsAppButton"
 import { ReminderButton } from "@/components/ReminderButton"
 import { NewClientDialog } from "@/components/NewClientDialog"
+import { PaymentScheduleDialog } from "@/components/PaymentScheduleDialog"
+import { PaymentBadge } from "@/components/PaymentBadge"
 import { toast } from "sonner"
 
 // Category Configuration
@@ -303,8 +305,9 @@ export default function ClientsContent() {
                                         <div className="w-[240px] shrink-0">İsim & Telefon</div>
                                         <div className="w-[180px] shrink-0">İşlem & Fiyat</div>
                                         <div className="w-[140px] shrink-0">Durum</div>
+                                        <div className="w-[160px] shrink-0">Ödeme Takibi</div>
                                         <div className="flex-1 pl-4">Notlar (Detay)</div>
-                                        <div className="w-[200px] shrink-0 text-right">İşlemler</div>
+                                        <div className="w-[280px] shrink-0 text-right">İşlemler</div>
                                     </div>
 
                                     {categoryItems.length === 0 ? (
@@ -357,6 +360,9 @@ export default function ClientsContent() {
                                                         </span>
                                                     </div>
 
+                                                    {/* Ödeme Takip Badge (Mobil) */}
+                                                    <PaymentBadge clientId={client.id} compact />
+
                                                     {/* Not satırı */}
                                                     {(client.notes || client.ai_summary) && (
                                                         <Dialog>
@@ -398,6 +404,11 @@ export default function ClientsContent() {
 
                                                     {/* Alt: Aksiyon butonları */}
                                                     <div className="flex items-center gap-1.5 pt-1 border-t border-slate-800/30 flex-wrap">
+                                                        <PaymentScheduleDialog
+                                                            clientId={client.id}
+                                                            clientName={client.full_name || client.name || 'Müşteri'}
+                                                            totalPrice={client.price_agreed || client.price || null}
+                                                        />
                                                         <ReminderButton
                                                             clientId={client.id}
                                                             clientName={client.full_name || client.name || 'Müşteri'}
@@ -486,6 +497,11 @@ export default function ClientsContent() {
                                                         </Popover>
                                                     </div>
 
+                                                    {/* Payment Badge (Desktop) */}
+                                                    <div className="w-[160px] shrink-0">
+                                                        <PaymentBadge clientId={client.id} />
+                                                    </div>
+
                                                     {/* Notes / Details */}
                                                     <div className="flex-1 min-w-0 flex items-center gap-6 pl-2">
                                                         <Dialog>
@@ -529,7 +545,17 @@ export default function ClientsContent() {
                                                         </Dialog>
 
                                                         {/* Actions */}
-                                                        <div className="flex gap-2 shrink-0 ml-auto w-[240px] justify-end">
+                                                        <div className="flex gap-2 shrink-0 ml-auto w-[280px] justify-end">
+                                                            <PaymentScheduleDialog
+                                                                clientId={client.id}
+                                                                clientName={client.full_name || client.name || 'Müşteri'}
+                                                                totalPrice={client.price_agreed || client.price || null}
+                                                                trigger={
+                                                                    <Button variant="ghost" size="icon" className="h-10 w-10 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 hover:text-emerald-400 rounded-xl transition-all" title="Ödeme Takibi">
+                                                                        <CreditCard size={20} />
+                                                                    </Button>
+                                                                }
+                                                            />
                                                             <ReminderButton clientId={client.id} clientName={client.full_name || client.name || 'Müşteri'} iconSize={20} className="h-10 w-10 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 hover:text-amber-400 rounded-xl transition-all" clientDetails={{ phone: client.phone, process: client.process_types?.name || client.process_name, price: client.price_agreed || client.price }} />
                                                             <Popover>
                                                                 <PopoverTrigger asChild>

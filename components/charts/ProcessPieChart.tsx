@@ -1,6 +1,6 @@
 "use client"
 
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts'
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 
 interface ProcessData {
     name: string
@@ -68,62 +68,58 @@ export function ProcessPieChart({ data }: ProcessPieChartProps) {
     }
 
     return (
-        <div className="h-[280px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                    <defs>
-                        {/* Glow filters for each color */}
-                        {COLORS.map((color, index) => (
-                            <filter key={index} id={`glow-${index}`} x="-50%" y="-50%" width="200%" height="200%">
-                                <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-                                <feMerge>
-                                    <feMergeNode in="coloredBlur" />
-                                    <feMergeNode in="SourceGraphic" />
-                                </feMerge>
-                            </filter>
-                        ))}
-                        {/* Gradients for cells */}
-                        {data.map((entry, index) => (
-                            <linearGradient key={`gradient-${index}`} id={`pieGradient-${index}`} x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor={entry.color || COLORS[index % COLORS.length]} stopOpacity={1} />
-                                <stop offset="100%" stopColor={entry.color || COLORS[index % COLORS.length]} stopOpacity={0.6} />
-                            </linearGradient>
-                        ))}
-                    </defs>
-                    <Pie
-                        data={data}
-                        cx="50%"
-                        cy="45%"
-                        innerRadius={55}
-                        outerRadius={90}
-                        paddingAngle={3}
-                        dataKey="value"
-                        stroke="rgba(0,0,0,0.3)"
-                        strokeWidth={2}
-                        labelLine={false}
-                        label={renderCustomLabel}
-                        animationBegin={0}
-                        animationDuration={800}
-                    >
-                        {data.map((entry, index) => (
-                            <Cell
-                                key={`cell-${index}`}
-                                fill={`url(#pieGradient-${index})`}
-                                style={{ filter: `drop-shadow(0 0 8px ${entry.color || COLORS[index % COLORS.length]}40)` }}
-                            />
-                        ))}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend
-                        verticalAlign="bottom"
-                        height={50}
-                        wrapperStyle={{ paddingTop: '10px' }}
-                        formatter={(value) => (
-                            <span className="text-xs text-slate-400 font-medium">{value}</span>
-                        )}
-                    />
-                </PieChart>
-            </ResponsiveContainer>
+        <div className="w-full">
+            <div className="h-[220px]">
+                <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                        <defs>
+                            {/* Gradients for cells */}
+                            {data.map((entry, index) => (
+                                <linearGradient key={`gradient-${index}`} id={`pieGradient-${index}`} x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor={entry.color || COLORS[index % COLORS.length]} stopOpacity={1} />
+                                    <stop offset="100%" stopColor={entry.color || COLORS[index % COLORS.length]} stopOpacity={0.6} />
+                                </linearGradient>
+                            ))}
+                        </defs>
+                        <Pie
+                            data={data}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={45}
+                            outerRadius={80}
+                            paddingAngle={3}
+                            dataKey="value"
+                            stroke="rgba(0,0,0,0.3)"
+                            strokeWidth={2}
+                            labelLine={false}
+                            label={renderCustomLabel}
+                            animationBegin={0}
+                            animationDuration={800}
+                        >
+                            {data.map((entry, index) => (
+                                <Cell
+                                    key={`cell-${index}`}
+                                    fill={`url(#pieGradient-${index})`}
+                                    style={{ filter: `drop-shadow(0 0 8px ${entry.color || COLORS[index % COLORS.length]}40)` }}
+                                />
+                            ))}
+                        </Pie>
+                        <Tooltip content={<CustomTooltip />} />
+                    </PieChart>
+                </ResponsiveContainer>
+            </div>
+            {/* Legend - ayrı div ile taşma önlenir */}
+            <div className="flex flex-wrap gap-x-3 gap-y-1 justify-center mt-2">
+                {data.map((entry, index) => (
+                    <div key={entry.name} className="flex items-center gap-1.5">
+                        <div
+                            className="w-2.5 h-2.5 rounded-full shrink-0"
+                            style={{ backgroundColor: entry.color || COLORS[index % COLORS.length] }}
+                        />
+                        <span className="text-[10px] text-slate-400 font-medium truncate max-w-[100px]">{entry.name}</span>
+                    </div>
+                ))}
+            </div>
         </div>
     )
 }

@@ -1,13 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { supabase } from "@/lib/supabase"
-import { format, parseISO, isSameDay } from "date-fns"
+import { format, parseISO, isSameDay, isToday, isBefore } from "date-fns"
 import { tr } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 // Icons
 import {
-    Calendar as CalendarIcon, Copy, Check, ChevronRight, MessageCircle, Edit, User, CheckCircle, XCircle, CalendarClock
+    Calendar as CalendarIcon, Copy, Check, ChevronRight, MessageCircle, Edit, User, CheckCircle, XCircle, CalendarClock,
+    Wallet, CreditCard, AlertCircle, TrendingUp
 } from "lucide-react"
 // UI Components
 import { Button } from "@/components/ui/button"
@@ -39,6 +40,15 @@ interface GroupedReservations {
     leads: Lead[]
 }
 
+interface PaymentSummary {
+    scheduledTotal: number      // Müşteri taksit ödemeleri (bugün)
+    scheduledOverdue: number    // Gecikmiş taksit ödemeleri
+    reservationTotal: number    // Bugünkü rezervasyon ücretleri
+    scheduledCount: number
+    overdueCount: number
+    reservationCount: number
+}
+
 export default function ReservationsPage() {
     const [reservations, setReservations] = useState<GroupedReservations[]>([])
     const [loading, setLoading] = useState(true)
@@ -49,6 +59,48 @@ export default function ReservationsPage() {
     const [editingClient, setEditingClient] = useState<Client | null>(null)
     const [reservationEditClient, setReservationEditClient] = useState<Lead | null>(null)
     const [processTypes, setProcessTypes] = useState<{ id: number, name: string }[]>([])
+    const [paymentSummary, setPaymentSummary] = useState<PaymentSummary>({
+        scheduledTotal: 0, scheduledOverdue: 0, reservationTotal: 0,
+        scheduledCount: 0, overdueCount: 0, reservationCount: 0
+    })
+
+    // Bugünkü ödeme planlarını çek
+    const fetchPaymentSummary = useCallback(async () => {
+        try {
+            const { data } = await supabase
+                .from('payment_schedules')
+                .select('amount, due_date')
+                .eq('is_paid', false)
+
+            if (!data) return
+
+            let scheduledTotal = 0
+            let scheduledOverdue = 0
+            let scheduledCount = 0
+            let overdueCount = 0
+
+            data.forEach((p: { amount: number; due_date: string }) => {
+                const dueDate = parseISO(p.due_date)
+                if (isToday(dueDate)) {
+                    scheduledTotal += Number(p.amount)
+                    scheduledCount++
+                } else if (isBefore(dueDate, new Date())) {
+                    scheduledOverdue += Number(p.amount)
+                    overdueCount++
+                }
+            })
+
+            setPaymentSummary(prev => ({
+                ...prev,
+                scheduledTotal,
+                scheduledOverdue,
+                scheduledCount,
+                overdueCount
+            }))
+        } catch {
+            // Sessiz hata
+        }
+    }, [])
 
     // localStorage'dan expanded state yükle
     useEffect(() => {
@@ -67,7 +119,8 @@ export default function ReservationsPage() {
     useEffect(() => {
         fetchReservations()
         fetchProcessTypes()
-    }, [])
+        fetchPaymentSummary()
+    }, [fetchPaymentSummary])
 
     const fetchProcessTypes = async () => {
         const { data } = await supabase.from('process_types').select('*')
@@ -169,6 +222,19 @@ export default function ReservationsPage() {
                     }
                 })
 
+                // Bugünkü rezervasyonların toplam ücretini hesapla
+                const todayReservations = leadsData.filter(c =>
+                    c.reservation_at && isToday(parseISO(c.reservation_at))
+                )
+                const reservationTotal = todayReservations.reduce((sum, c) =>
+                    sum + (Number(c.price_agreed) || Number(c.price) || 0), 0
+                )
+                setPaymentSummary(prev => ({
+                    ...prev,
+                    reservationTotal,
+                    reservationCount: todayReservations.length
+                }))
+
                 setReservations(grouped)
                 setExpanded(initialExpanded)
             }
@@ -237,17 +303,77 @@ export default function ReservationsPage() {
     }
 
     return (
-        <div className="p-8 max-w-[1600px] mx-auto text-slate-200">
-            <div className="mb-8 flex items-end justify-between border-b border-cyan-500/10 pb-6">
+        <div className="p-3 sm:p-6 lg:p-8 max-w-[1600px] mx-auto text-slate-200">
+            <div className="mb-4 sm:mb-8 flex items-end justify-between border-b border-cyan-500/10 pb-4 sm:pb-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-gradient-ocean">
-                        Rezervasyon Takvimi <span className="text-xs text-slate-500 font-normal ml-2 opacity-50">v1.3</span>
+                    <h1 className="text-xl sm:text-3xl font-bold text-gradient-ocean">
+                        Rezervasyon Takvimi
                     </h1>
-                    <p className="text-slate-400 mt-2">
-                        Tarihe göre planlanmış randevular (Liste Görünümü).
+                    <p className="text-xs sm:text-sm text-slate-400 mt-1 sm:mt-2">
+                        Tarihe göre planlanmış randevular
                     </p>
                 </div>
             </div>
+
+            {/* Bugünkü Ödeme Özeti Banner */}
+            {(() => {
+                const { scheduledTotal, scheduledOverdue, reservationTotal, scheduledCount, overdueCount, reservationCount } = paymentSummary
+                const grandTotal = scheduledTotal + scheduledOverdue + reservationTotal
+                const hasOverdue = overdueCount > 0
+                const hasToday = scheduledCount > 0 || reservationCount > 0
+
+                if (grandTotal === 0) return null
+
+                return (
+                    <div className={cn(
+                        "mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl border transition-all",
+                        hasOverdue
+                            ? "bg-gradient-to-r from-red-500/10 to-amber-500/5 border-red-500/30"
+                            : "bg-gradient-to-r from-amber-500/10 to-cyan-500/5 border-amber-500/30"
+                    )}>
+                        <div className="flex items-center gap-3">
+                            <div className={cn(
+                                "w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shrink-0",
+                                hasOverdue ? "bg-red-500/20" : "bg-amber-500/20"
+                            )}>
+                                {hasOverdue ? (
+                                    <AlertCircle className="text-red-400" size={22} />
+                                ) : (
+                                    <TrendingUp className="text-amber-400" size={22} />
+                                )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className={cn(
+                                    "font-black text-lg sm:text-xl",
+                                    hasOverdue ? "text-red-400" : "text-amber-400"
+                                )}>
+                                    {grandTotal.toLocaleString('tr-TR')} ₺
+                                </div>
+                                <div className="text-[10px] sm:text-xs text-slate-500 font-medium mt-0.5 space-y-0.5">
+                                    {hasOverdue && (
+                                        <div className="text-red-400/80">
+                                            <Wallet size={10} className="inline mr-1" />
+                                            Gecikmiş taksit: {scheduledOverdue.toLocaleString('tr-TR')} ₺ ({overdueCount} adet)
+                                        </div>
+                                    )}
+                                    {scheduledCount > 0 && (
+                                        <div className="text-amber-400/80">
+                                            <CreditCard size={10} className="inline mr-1" />
+                                            Bugünkü taksit: {scheduledTotal.toLocaleString('tr-TR')} ₺ ({scheduledCount} adet)
+                                        </div>
+                                    )}
+                                    {reservationCount > 0 && (
+                                        <div className="text-cyan-400/80">
+                                            <CalendarIcon size={10} className="inline mr-1" />
+                                            Bugünkü rezervasyon: {reservationTotal.toLocaleString('tr-TR')} ₺ ({reservationCount} kişi)
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )
+            })()}
 
             <div className="space-y-4 md:space-y-6">
                 {reservations.length === 0 ? (
@@ -480,7 +606,6 @@ export default function ReservationsPage() {
                 client={reservationEditClient}
                 onSave={handleSaveReservationDate}
             />
-        // Force deployment trigger: Rezervasyon Tarihi Değiştirme Butonu Eklendi
         </div>
     )
 }
