@@ -10,6 +10,7 @@ import { GeneralSettings } from "@/components/settings/GeneralSettings"
 import { ServiceSettings } from "@/components/settings/ServiceSettings"
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings"
 import { NotificationSettings } from "@/components/settings/NotificationSettings"
+import { TagSettings } from "@/components/settings/TagSettings"
 
 
 export default function SettingsPage() {
@@ -68,6 +69,13 @@ export default function SettingsPage() {
                                     Kimlik ve Sistem
                                 </TabsTrigger>
                                 <TabsTrigger
+                                    value="tags"
+                                    className="justify-start gap-3 px-4 py-3.5 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:font-bold rounded-xl transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+                                >
+                                    <List size={18} />
+                                    Etiketler
+                                </TabsTrigger>
+                                <TabsTrigger
                                     value="notifications"
                                     className="justify-start gap-3 px-4 py-3.5 data-[state=active]:bg-primary/10 data-[state=active]:text-primary data-[state=active]:font-bold rounded-xl transition-all text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
                                 >
@@ -89,6 +97,7 @@ export default function SettingsPage() {
                     {activeTab === 'appearance' && <AppearanceSettings />}
                     {activeTab === 'identity' && <GeneralSettings />}
                     {activeTab === 'notifications' && <NotificationSettings />}
+                    {activeTab === 'tags' && <TagSettings />}
                 </div>
             </div>
         </div>

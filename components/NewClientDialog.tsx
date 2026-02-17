@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from "react"
-import { CheckCircle, AlertCircle, Plus, User, Phone, Tag, DollarSign, FileText, Code } from "lucide-react"
+import { useState, useEffect } from "react"
+import { CheckCircle, AlertCircle, Plus, User, Phone, Tag, DollarSign, FileText, Code, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -42,6 +42,14 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
         notes: "",
         status: "Yeni"
     })
+
+    // Tags
+    const [tags, setTags] = useState<string[]>([])
+    const [availableTags, setAvailableTags] = useState<string[]>([])
+
+    // Duplicate detection
+    const [duplicateMatches, setDuplicateMatches] = useState<Array<Record<string, any>>>([])
+    const [forceSave, setForceSave] = useState(false)
 
     // JSON Input
     const [jsonInput, setJsonInput] = useState("")
@@ -98,6 +106,21 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
         }
     }
 
+    useEffect(() => {
+        // Fetch available tags from system_settings.customer_tags if exists
+        supabase.from('system_settings').select('customer_tags').single().then(({ data }) => {
+            if (data && (data as any).customer_tags) {
+                setAvailableTags((data as any).customer_tags || [])
+            } else {
+                const local = localStorage.getItem('customer_tags')
+                if (local) setAvailableTags(JSON.parse(local))
+            }
+        }).catch(() => {
+            const local = localStorage.getItem('customer_tags')
+            if (local) setAvailableTags(JSON.parse(local))
+        })
+    }, [])
+
     const handleSubmit = async () => {
         setLoading(true)
         setError(null)
@@ -132,9 +155,32 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
                 price_agreed: formData.price ? parseInt(String(formData.price)) : 0,
                 notes: formData.notes || null,
                 status: finalStatus,
+                tags: tags.length ? tags : null,
                 created_at: new Date().toISOString(),
                 is_confirmed: false,
                 stage: 0
+            }
+
+            // Duplicate check (by phone or similar full_name) unless forceSave is true
+            if (!forceSave) {
+                const matches: Record<string, any>[] = []
+                if (formData.phone && formData.phone.trim()) {
+                    const { data: byPhone } = await supabase.from('clients').select('id, full_name, phone').eq('phone', formData.phone).limit(5)
+                    if (byPhone && byPhone.length) matches.push(...byPhone)
+                }
+                if (formData.full_name && formData.full_name.trim().length > 3) {
+                    const { data: byName } = await supabase.from('clients').select('id, full_name, phone').ilike('full_name', `%${formData.full_name}%`).limit(5)
+                    if (byName && byName.length) matches.push(...byName)
+                }
+
+                // Unique
+                const unique = Array.from(new Map(matches.map(m => [m.id, m])).values())
+                if (unique.length > 0) {
+                    setDuplicateMatches(unique)
+                    setError("Benzer kayıt(lar) bulundu. Lütfen kontrol edin veya 'Yine de Kaydet' ile devam edin.")
+                    setLoading(false)
+                    return
+                }
             }
 
             // Insert
@@ -165,6 +211,10 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
                 if (onSuccess) onSuccess()
             }, 1000)
 
+            // reset duplicate/force state
+            setForceSave(false)
+            setDuplicateMatches([])
+
         } catch (err: unknown) {
             // Hata kaydi gizlendi
             const errorMsg = err instanceof Error ? err.message : "Bir hata oluştu"
@@ -173,6 +223,14 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
             setLoading(false)
         }
     }
+
+    const handleAddTag = (tag: string) => {
+        const t = tag.trim()
+        if (!t) return
+        if (!tags.includes(t)) setTags(prev => [...prev, t])
+    }
+
+    const handleRemoveTag = (tag: string) => setTags(prev => prev.filter(t => t !== tag))
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -277,6 +335,48 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
                                     />
                                 </div>
                             </div>
+
+                            {/* Tags input */}
+                            <div className="space-y-2">
+                                <Label className="text-xs font-semibold text-slate-500 uppercase">Etiketler</Label>
+                                <div className="flex items-center gap-2">
+                                    <Input
+                                        placeholder="Yeni etiket ekle..."
+                                        className="bg-slate-900/50 border-slate-800"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault()
+                                                const val = (e.target as HTMLInputElement).value
+                                                handleAddTag(val)
+                                                ;(e.target as HTMLInputElement).value = ''
+                                            }
+                                        }}
+                                    />
+                                    <Button size="sm" onClick={() => {
+                                        const input = document.querySelector<HTMLInputElement>('input[placeholder="Yeni etiket ekle..."]')
+                                        if (input) { handleAddTag(input.value); input.value = '' }
+                                    }}>Ekle</Button>
+                                </div>
+
+                                <div className="flex flex-wrap gap-2 mt-2">
+                                    {tags.map(t => (
+                                        <button key={t} onClick={() => handleRemoveTag(t)} className="px-2 py-1 rounded-md bg-slate-800 text-slate-200 text-sm flex items-center gap-2">
+                                            <span>{t}</span>
+                                            <X size={12} />
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {availableTags.length > 0 && (
+                                    <div className="mt-2 text-xs text-slate-400">
+                                        Öneriler: <span className="flex gap-2 mt-2 flex-wrap">
+                                            {availableTags.map(t => (
+                                                <button key={t} onClick={() => handleAddTag(t)} className="px-2 py-1 rounded-md bg-slate-900/40 hover:bg-slate-800 text-slate-300 text-xs">{t}</button>
+                                            ))}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         {/* JSON Tab Content Overlay */}
@@ -309,10 +409,25 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
                     </div>
 
                     <div className="p-6 pt-2 shrink-0 bg-slate-900/30 border-t border-slate-800 flex justify-between items-center">
-                        <div className="text-sm">
-                            {error && <span className="text-red-400 flex items-center gap-2"><AlertCircle size={14} /> {error}</span>}
-                            {success && <span className="text-green-400 flex items-center gap-2"><CheckCircle size={14} /> {success}</span>}
-                        </div>
+                            <div className="text-sm">
+                                {error && <span className="text-red-400 flex items-center gap-2"><AlertCircle size={14} /> {error}</span>}
+                                {success && <span className="text-green-400 flex items-center gap-2"><CheckCircle size={14} /> {success}</span>}
+
+                                {duplicateMatches.length > 0 && (
+                                    <div className="mt-2 p-2 rounded-md bg-yellow-900/10 border border-yellow-700/10 text-yellow-300">
+                                        <div className="font-bold mb-1">Benzer kayıt bulundu:</div>
+                                        <ul className="text-xs list-disc list-inside mb-2">
+                                            {duplicateMatches.map(m => (
+                                                <li key={m.id}>{m.full_name} {m.phone ? `- ${m.phone}` : ''}</li>
+                                            ))}
+                                        </ul>
+                                        <div className="flex gap-2">
+                                            <Button size="sm" variant="outline" onClick={() => { setForceSave(true); handleSubmit() }}>Yine de Kaydet</Button>
+                                            <Button size="sm" variant="ghost" onClick={() => { setDuplicateMatches([]); setForceSave(false); setError(null) }}>İptal</Button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         <div className="flex gap-2">
                             <Button variant="ghost" onClick={() => setIsOpen(false)} className="hover:bg-slate-800 text-slate-400">İptal</Button>
                             <Button
