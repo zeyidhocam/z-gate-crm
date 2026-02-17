@@ -108,7 +108,7 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
 
     useEffect(() => {
         // Fetch available tags from system_settings.customer_tags if exists
-        supabase.from('system_settings').select('customer_tags').single().then(({ data }) => {
+        supabase.from('system_settings').select('customer_tags').single().then(({ data }: { data: any | null }) => {
             if (data && (data as any).customer_tags) {
                 setAvailableTags((data as any).customer_tags || [])
             } else {
