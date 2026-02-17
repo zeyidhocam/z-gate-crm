@@ -474,6 +474,7 @@ export default function ReservationsPage() {
                                                             variant="outline"
                                                             size="sm"
                                                             onClick={() => confirmCustomer(lead)}
+                                                            onTouchEnd={() => confirmCustomer(lead)}
                                                             className="flex-1 gap-1.5 text-xs font-bold border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:text-emerald-300 h-9"
                                                         >
                                                             <CheckCircle size={14} />
@@ -483,6 +484,7 @@ export default function ReservationsPage() {
                                                             variant="outline"
                                                             size="sm"
                                                             onClick={() => rejectCustomer(lead.id)}
+                                                            onTouchEnd={() => rejectCustomer(lead.id)}
                                                             className="flex-1 gap-1.5 text-xs font-bold border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:border-red-500/50 hover:text-red-300 h-9"
                                                         >
                                                             <XCircle size={14} />
