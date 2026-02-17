@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react"
 import { Search, ChevronRight, Edit, CalendarDays, Copy, Check, Sparkles, Clock, Archive, User, Info, CreditCard } from "lucide-react"
 import { supabase } from "@/lib/supabase"
+import RecentActivity from "@/components/RecentActivity"
 import { cn } from "@/lib/utils"
 // UI Components
 import { Button } from "@/components/ui/button"
@@ -379,7 +380,10 @@ export default function ClientsContent() {
                                                                 </DialogHeader>
                                                                 <div className="mt-3 p-3 bg-slate-900/50 rounded-lg border border-slate-800 space-y-3">
                                                                     <div>
-                                                                        <div className="text-xs text-slate-500 font-bold mb-1">NOTLAR / DETAY</div>
+                                                                {/* Recent Activity */}
+                                                                <RecentActivity clientId={client.id} limit={8} />
+                                                                
+                                                                <DialogFooter className="gap-2 mt-3">
                                                                         <div className="text-slate-300 text-sm leading-relaxed max-h-[40vh] overflow-y-auto">
                                                                             {client.notes || client.ai_summary || "Not veya detay bulunamadı."}
                                                                         </div>
@@ -527,6 +531,9 @@ export default function ClientsContent() {
                                                                         </div>
                                                                     </div>
                                                                 </div>
+                                                                {/* Recent Activity */}
+                                                                <RecentActivity clientId={client.id} limit={8} />
+
                                                                 <DialogFooter className="sm:justify-between gap-2 mt-4">
                                                                     <Button variant="outline" size="sm" onClick={() => handleCopy(client.notes || "")} className="gap-2 border-slate-700 hover:bg-slate-800 hover:text-white">
                                                                         {copiedText === client.notes ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}

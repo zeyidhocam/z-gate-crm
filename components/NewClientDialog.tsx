@@ -183,13 +183,27 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
                 }
             }
 
-            // Insert
-            const { error: dbError } = await supabase
-                .from('clients')
-                .insert([clientData])
+            // Insert via server API
+            const res = await fetch('/api/clients', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...clientData, forceSave })
+            })
 
-            if (dbError) throw dbError
+            if (res.status === 409) {
+                const json = await res.json().catch(() => ({}))
+                if (json && json.existing) setDuplicateMatches([json.existing])
+                setError("Benzer kayıt(lar) bulundu. Lütfen kontrol edin veya 'Yine de Kaydet' ile devam edin.")
+                setLoading(false)
+                return
+            }
 
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({ error: 'Sunucu hatası' }))
+                throw new Error(err.error || 'Kayıt yapılamadı')
+            }
+
+            const result = await res.json()
             setSuccess("Kaydedildi!")
 
             // Reset

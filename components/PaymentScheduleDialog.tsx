@@ -95,7 +95,7 @@ export function PaymentScheduleDialog({
                 return
             }
 
-            const { error } = await supabase
+            const { data: inserted, error } = await supabase
                 .from('payment_schedules')
                 .insert({
                     client_id: clientId,
@@ -103,9 +103,18 @@ export function PaymentScheduleDialog({
                     due_date: newDate.toISOString(),
                     note: newNote.trim() || null,
                     is_paid: false
-                })
+                }).select().single()
 
             if (error) throw error
+
+            // Audit log
+            try {
+                const userRes = await supabase.auth.getUser()
+                const userId = userRes?.data?.user?.id || null
+                await supabase.from('audit_logs').insert([{ table_name: 'payment_schedules', record_id: inserted.id, user_id: userId, action: 'insert', changes: { new: inserted } }])
+            } catch {
+                // ignore audit errors
+            }
 
             toast.success("Ödeme planı eklendi!")
 
@@ -146,12 +155,23 @@ export function PaymentScheduleDialog({
 
     const handleMarkPaid = async (scheduleId: string) => {
         try {
-            const { error } = await supabase
+            const { data: updated, error } = await supabase
                 .from('payment_schedules')
                 .update({ is_paid: true, paid_at: new Date().toISOString() })
                 .eq('id', scheduleId)
+                .select()
+                .single()
 
             if (error) throw error
+
+            // Audit log
+            try {
+                const userRes = await supabase.auth.getUser()
+                const userId = userRes?.data?.user?.id || null
+                await supabase.from('audit_logs').insert([{ table_name: 'payment_schedules', record_id: updated.id, user_id: userId, action: 'update', changes: { new: updated } }])
+            } catch {
+                // ignore audit errors
+            }
             toast.success("Ödeme tamamlandı olarak işaretlendi!")
             fetchSchedules()
             onUpdate?.()
@@ -162,12 +182,23 @@ export function PaymentScheduleDialog({
 
     const handleDelete = async (scheduleId: string) => {
         try {
-            const { error } = await supabase
+            const { data: deleted, error } = await supabase
                 .from('payment_schedules')
                 .delete()
                 .eq('id', scheduleId)
+                .select()
+                .single()
 
             if (error) throw error
+
+            // Audit log
+            try {
+                const userRes = await supabase.auth.getUser()
+                const userId = userRes?.data?.user?.id || null
+                await supabase.from('audit_logs').insert([{ table_name: 'payment_schedules', record_id: deleted.id, user_id: userId, action: 'delete', changes: { old: deleted } }])
+            } catch {
+                // ignore audit errors
+            }
             toast.success("Ödeme planı silindi.")
             fetchSchedules()
             onUpdate?.()
