@@ -380,10 +380,10 @@ export default function ClientsContent() {
                                                                 </DialogHeader>
                                                                 <div className="mt-3 p-3 bg-slate-900/50 rounded-lg border border-slate-800 space-y-3">
                                                                     <div>
-                                                                {/* Recent Activity */}
-                                                                <RecentActivity clientId={client.id} limit={8} />
-                                                                
-                                                                <DialogFooter className="gap-2 mt-3">
+                                                                        {/* Recent Activity */}
+                                                                        <RecentActivity clientId={client.id} limit={8} />
+                                                                    </div>
+                                                                    <div className="gap-2 mt-3">
                                                                         <div className="text-slate-300 text-sm leading-relaxed max-h-[40vh] overflow-y-auto">
                                                                             {client.notes || client.ai_summary || "Not veya detay bulunamadı."}
                                                                         </div>

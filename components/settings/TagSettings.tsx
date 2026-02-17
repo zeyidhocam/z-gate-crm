@@ -12,7 +12,7 @@ export function TagSettings() {
     const [status, setStatus] = useState<string | null>(null)
 
     useEffect(() => {
-        supabase.from('system_settings').select('customer_tags').single().then(({ data, error }) => {
+        supabase.from('system_settings').select('customer_tags').single().then(({ data, error }: { data: any, error: any }) => {
             if (!error && data && (data as any).customer_tags) {
                 setTags((data as any).customer_tags || [])
             } else {
