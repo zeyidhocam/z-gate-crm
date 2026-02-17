@@ -24,7 +24,7 @@ export default function RecentActivity({ clientId, limit = 10 }: RecentActivityP
       .eq('record_id', clientId)
       .order('created_at', { ascending: false })
       .limit(limit)
-      .then(({ data }) => {
+      .then(({ data }: { data: any[] }) => {
         setActivities(data || [])
       })
       .finally(() => setLoading(false))
