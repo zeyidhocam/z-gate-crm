@@ -17,7 +17,6 @@ import { WhatsAppButton } from "@/components/WhatsAppButton"
 import { ReminderButton } from "@/components/ReminderButton"
 import { NewClientDialog } from "@/components/NewClientDialog"
 import { PaymentScheduleDialog } from "@/components/PaymentScheduleDialog"
-import { PaymentBadge } from "@/components/PaymentBadge"
 import { toast } from "sonner"
 
 // Category Configuration
@@ -53,6 +52,7 @@ interface Client {
     price_agreed: number | null
     payment_status: string | null
     reservation_at: string | null
+    tags?: string[] | null
 
     // Relations
     process_type_id: number | null
@@ -305,7 +305,6 @@ export default function ClientsContent() {
                                         <div className="w-[240px] shrink-0">İsim & Telefon</div>
                                         <div className="w-[180px] shrink-0">İşlem & Fiyat</div>
                                         <div className="w-[140px] shrink-0">Durum</div>
-                                        <div className="w-[160px] shrink-0">Ödeme Takibi</div>
                                         <div className="flex-1 pl-4">Notlar (Detay)</div>
                                         <div className="w-[280px] shrink-0 text-right">İşlemler</div>
                                     </div>
@@ -360,8 +359,7 @@ export default function ClientsContent() {
                                                         </span>
                                                     </div>
 
-                                                    {/* Ödeme Takip Badge (Mobil) */}
-                                                    <PaymentBadge clientId={client.id} compact />
+                                                    {/* Ödeme Takibi sütunu kaldırıldı (mobil) */}
 
                                                     {/* Not satırı */}
                                                     {(client.notes || client.ai_summary) && (
@@ -497,10 +495,7 @@ export default function ClientsContent() {
                                                         </Popover>
                                                     </div>
 
-                                                    {/* Payment Badge (Desktop) */}
-                                                    <div className="w-[160px] shrink-0">
-                                                        <PaymentBadge clientId={client.id} />
-                                                    </div>
+                                                    {/* Ödeme Takibi sütunu kaldırıldı (masaüstü) */}
 
                                                     {/* Notes / Details */}
                                                     <div className="flex-1 min-w-0 flex items-center gap-6 pl-2">
