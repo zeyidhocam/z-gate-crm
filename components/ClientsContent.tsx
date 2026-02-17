@@ -425,7 +425,15 @@ export default function ClientsContent() {
                                                                 </Button>
                                                             </PopoverTrigger>
                                                             <PopoverContent className="w-auto p-0 bg-slate-950 border-slate-800" align="start">
-                                                                <Calendar mode="single" selected={reservationDate} onSelect={(date) => { setReservationDate(date); if (date) handleReservation(client.id, date) }} locale={tr} disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))} initialFocus className="p-3" />
+                                                                <Calendar 
+                                                                    mode="single" 
+                                                                    selected={reservationDate} 
+                                                                    onSelect={(date) => { setReservationDate(date); if (date) handleReservation(client.id, date) }} 
+                                                                    locale={tr} 
+                                                                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))} 
+                                                                    initialFocus 
+                                                                    className="p-3" 
+                                                                />
                                                             </PopoverContent>
                                                         </Popover>
                                                         <WhatsAppButton phone={client.phone} clientName={client.full_name || client.name || undefined} size="default" className="h-9 w-9 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 rounded-lg" processName={client.process_types?.name || client.process_name} reservationDate={client.reservation_at} />
