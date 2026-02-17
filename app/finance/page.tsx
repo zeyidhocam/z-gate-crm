@@ -283,7 +283,7 @@ export default function FinancePage() {
                         <BarChart3 size={20} className="text-cyan-400" />
                         <h3 className="font-bold text-slate-200 text-lg">Son 30 Gün Gelir</h3>
                     </div>
-                    <div className="h-[280px]">
+                    <div className="h-[280px] w-full min-h-[280px]">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={chartData}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />

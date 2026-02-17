@@ -7,7 +7,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSam
 import { tr } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 
 interface Reservation {
     id: string
@@ -206,6 +206,9 @@ export default function CalendarPage() {
                         <DialogTitle className="text-cyan-300 font-bold">
                             {selectedDate && format(selectedDate, 'd MMMM yyyy, EEEE', { locale: tr })}
                         </DialogTitle>
+                        <DialogDescription className="text-slate-400 text-xs">
+                            Seçilen tarihteki rezervasyonların listesi.
+                        </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-3 mt-4">
                         {selectedDateReservations.map(res => (

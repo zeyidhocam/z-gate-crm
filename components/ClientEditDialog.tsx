@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Edit } from "lucide-react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -65,6 +65,9 @@ export function ClientEditDialog({ client, open, onOpenChange, onSave, processTy
                         <Edit size={20} className="text-cyan-400" />
                         Müşteri Düzenle
                     </DialogTitle>
+                    <DialogDescription className="text-slate-400 text-sm">
+                        Müşteri bilgilerini aşağıdan düzenleyebilirsiniz.
+                    </DialogDescription>
                 </DialogHeader>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 py-4">

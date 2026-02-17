@@ -13,7 +13,7 @@ import {
 // UI Components
 import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose, DialogDescription } from "@/components/ui/dialog"
 import { ClientEditDialog, Client } from "@/components/ClientEditDialog"
 import { ReservationEditDialog } from "@/components/ReservationEditDialog"
 import { ReminderButton } from "@/components/ReminderButton"
@@ -508,6 +508,9 @@ export default function ReservationsPage() {
                                                                         <User size={18} className="text-slate-400" />
                                                                         {lead.name} - Detaylar
                                                                     </DialogTitle>
+                                                                    <DialogDescription className="text-slate-400 text-xs">
+                                                                        Müşteri ile ilgili yapay zeka özeti ve detaylar.
+                                                                    </DialogDescription>
                                                                 </DialogHeader>
                                                                 <div className="mt-4 p-4 bg-slate-900/50 rounded-lg border border-slate-800 space-y-3">
                                                                     <div>

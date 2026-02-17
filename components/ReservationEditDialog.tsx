@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { CalendarClock, CalendarDays, Clock } from "lucide-react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -65,6 +65,9 @@ export function ReservationEditDialog({ client, open, onOpenChange, onSave }: Re
             <CalendarClock size={22} className="text-cyan-400" />
             Tarih Değiştir
           </DialogTitle>
+          <DialogDescription className="text-slate-400 text-sm">
+            Rezervasyon tarihini ve saatini buradan güncelleyebilirsiniz.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">

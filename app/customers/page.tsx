@@ -24,6 +24,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogFooter,
+    DialogDescription,
 } from "@/components/ui/dialog"
 import { PaymentTracker } from "@/components/PaymentTracker"
 
@@ -101,43 +102,43 @@ export default function CustomersPage() {
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const map: Record<string, PaymentInfo> = {}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ;(data || []).forEach((p: any) => {
-                const clientId = p.client_id as string
-                if (!map[clientId]) {
-                    map[clientId] = {
-                        overdueCount: 0,
-                        todayCount: 0,
-                        upcomingCount: 0,
-                        nextAmount: 0,
-                        nextDate: null,
-                        isOverdue: false,
-                        isToday: false,
-                        totalRemaining: 0
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                ; (data || []).forEach((p: any) => {
+                    const clientId = p.client_id as string
+                    if (!map[clientId]) {
+                        map[clientId] = {
+                            overdueCount: 0,
+                            todayCount: 0,
+                            upcomingCount: 0,
+                            nextAmount: 0,
+                            nextDate: null,
+                            isOverdue: false,
+                            isToday: false,
+                            totalRemaining: 0
+                        }
                     }
-                }
 
-                const dueDate = parseISO(p.due_date)
-                const overdue = isPast(dueDate) && !isDateToday(dueDate)
-                const today = isDateToday(dueDate)
+                    const dueDate = parseISO(p.due_date)
+                    const overdue = isPast(dueDate) && !isDateToday(dueDate)
+                    const today = isDateToday(dueDate)
 
-                map[clientId].totalRemaining += p.amount
-                if (overdue) {
-                    map[clientId].overdueCount++
-                    map[clientId].isOverdue = true
-                } else if (today) {
-                    map[clientId].todayCount++
-                    map[clientId].isToday = true
-                } else {
-                    map[clientId].upcomingCount++
-                }
+                    map[clientId].totalRemaining += p.amount
+                    if (overdue) {
+                        map[clientId].overdueCount++
+                        map[clientId].isOverdue = true
+                    } else if (today) {
+                        map[clientId].todayCount++
+                        map[clientId].isToday = true
+                    } else {
+                        map[clientId].upcomingCount++
+                    }
 
-                // İlk (en yakın) ödeme
-                if (!map[clientId].nextDate) {
-                    map[clientId].nextAmount = p.amount
-                    map[clientId].nextDate = p.due_date
-                }
-            })
+                    // İlk (en yakın) ödeme
+                    if (!map[clientId].nextDate) {
+                        map[clientId].nextAmount = p.amount
+                        map[clientId].nextDate = p.due_date
+                    }
+                })
 
             setPaymentMap(map)
         } catch {
@@ -645,6 +646,9 @@ export default function CustomersPage() {
                             <Edit size={20} className="text-cyan-400" />
                             Fiyat Düzenle
                         </DialogTitle>
+                        <DialogDescription className="text-slate-400 text-xs">
+                            Müşteri için anlaşılan fiyatı güncelleyin.
+                        </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 mt-4">
                         <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
@@ -686,6 +690,9 @@ export default function CustomersPage() {
                             <Archive size={20} className="text-amber-400" />
                             Arşive Taşı
                         </DialogTitle>
+                        <DialogDescription className="text-slate-400 text-xs">
+                            Bu işlem müşteriyi aktif listeden kaldırır.
+                        </DialogDescription>
                     </DialogHeader>
                     <div className="py-4">
                         <p className="text-slate-300 text-sm">

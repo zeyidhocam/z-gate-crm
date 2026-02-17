@@ -148,8 +148,24 @@ export async function POST(request: Request) {
                 await sendMessage(token, chatId, "⚠️ <b>JSON Hatası:</b> Gönderdiğin formatı anlayamadım.\n\nLütfen tırnak işaretlerine ve parantezlere dikkat et.")
             } else {
                 console.error('[Webhook] Database/Other error:', e)
-                const errorMsg = e instanceof Error ? e.message : "Bilinmeyen hata"
-                await sendMessage(token, chatId, `❌ <b>Veritabanı Hatası:</b>\n\n<code>${errorMsg}</code>`)
+                
+                // Enhanced Error Handling
+                let errorMsg = "Bilinmeyen hata"
+                let errorDetails = ""
+                
+                // Check if it's a Supabase/Postgrest error (it usually has 'code', 'details', 'hint')
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const dbError = e as any
+                
+                if (dbError?.code) {
+                    errorMsg = `DB Error (${dbError.code}): ${dbError.message}`
+                    if (dbError.details) errorDetails += `\n📝 <b>Detay:</b> ${dbError.details}`
+                    if (dbError.hint) errorDetails += `\n💡 <b>İpucu:</b> ${dbError.hint}`
+                } else if (e instanceof Error) {
+                    errorMsg = e.message
+                }
+                
+                await sendMessage(token, chatId, `❌ <b>Veritabanı Hatası:</b>\n\n<b>Hata:</b> ${errorMsg}${errorDetails}`)
             }
         }
 
