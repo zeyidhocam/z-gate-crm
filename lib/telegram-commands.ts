@@ -14,6 +14,13 @@ import {
   sanitizeInput,
   ERRORS,
 } from './telegram-utils'
+import {
+  collectPayment,
+  createSchedulesForClient,
+  listOutstandingClientPayments,
+  summarizeClientPayments,
+  syncClientPaymentStatus,
+} from './server/payment-ledger'
 
 export type CommandHandler = (
   text: string,
@@ -178,45 +185,30 @@ export async function handleBekleyen(
   supabase: SupabaseClient
 ): Promise<string> {
   try {
-    const { data: pending, error } = await supabase
-      .from('clients')
-      .select('id, full_name, name, phone, price_agreed, payment_status, reservation_at, process_name')
-      .in('payment_status', ['Ödenmedi', 'Kapora'])
-      .order('reservation_at', { ascending: true })
-      .limit(20)
-
-    if (error) throw error
-
+    const pending = await listOutstandingClientPayments(supabase)
     if (!pending || pending.length === 0) {
-      return `💰 <b>ÖDEME BEKLEYENLER</b>\n━━━━━━━━━━━━━━━━━━━━\n\nÖdeme bekleyen müşteri yok. ✅`
+      return `💰 <b>ÖDEME BEKLEYENLER</b>\n━━━━━━━━━━━━━━━━━━━━\n\nAçık ödeme bulunmuyor. ✅`
     }
 
     let message = `💰 <b>ÖDEME BEKLEYENLER</b>\n━━━━━━━━━━━━━━━━━━━━\n\n`
-
-    pending.forEach((client, index) => {
-      const clientName = client.full_name || client.name || 'İsimsiz'
+    pending.slice(0, 20).forEach((client, index) => {
       const phone = formatPhone(client.phone)
-      const price = client.price_agreed || 0
-      const paymentStatus = client.payment_status || 'Ödenmedi'
-      const processName = client.process_name || 'Belirtilmemiş'
+      const processName = client.processName || 'Belirtilmemis'
+      const nextDue = client.nextDueDate ? formatDate(client.nextDueDate) : '-'
+      const overdueInfo = client.overdueCount > 0 ? ` (${client.overdueCount} gecikmis)` : ''
 
-      message += `${index + 1}️⃣ <b>${clientName}</b>\n`
+      message += `${index + 1}️⃣ <b>${client.clientName}</b>\n`
+      message += `   🆔 <code>${client.clientId}</code>\n`
       message += `   📞 ${phone}\n`
       message += `   🔮 ${processName}\n`
-      message += `   💵 Ücret: ${formatCurrency(price)}\n`
-      message += `   🔖 Durum: ${paymentStatus}\n`
-
-      if (client.reservation_at) {
-        message += `   📅 Randevu: ${formatDate(client.reservation_at)}\n`
-      }
-
-      message += '\n'
+      message += `   💸 Kalan: ${formatCurrency(client.remaining)}\n`
+      message += `   📅 Sonraki Vade: ${nextDue}${overdueInfo}\n\n`
     })
 
-    const totalPending = pending.reduce((sum, c) => sum + (c.price_agreed || 0), 0)
+    const totalPending = pending.reduce((sum, c) => sum + c.remaining, 0)
     message += `━━━━━━━━━━━━━━━━━━━━\n`
-    message += `📊 <b>Toplam:</b> ${pending.length} müşteri\n`
-    message += `💸 <b>Beklenen Tutar:</b> ${formatCurrency(totalPending)}`
+    message += `📊 <b>Toplam:</b> ${pending.length} musteri\n`
+    message += `💸 <b>Bekleyen Tutar:</b> ${formatCurrency(totalPending)}`
 
     return message
 
@@ -389,8 +381,116 @@ export async function handleDurumGuncelle(
   }
 }
 
+function parseClientId(parts: string[]): string {
+  return parts[1]?.trim() || ''
+}
+
+function normalizeMethod(value?: string): 'cash' | 'card' | 'transfer' | 'other' {
+  const method = (value || '').toLowerCase()
+  if (method === 'card' || method === 'kart') return 'card'
+  if (method === 'transfer' || method === 'havale' || method === 'eft') return 'transfer'
+  if (method === 'other' || method === 'diger') return 'other'
+  return 'cash'
+}
+
 /**
- * /odeme_guncelle [id] [durum] - Ödeme durumunu güncelle
+ * /odeme_al [id] [tutar] [yontem?] - Tahsilat gir
+ */
+export async function handleOdemeAl(
+  text: string,
+  chatId: string,
+  supabase: SupabaseClient
+): Promise<string> {
+  try {
+    const parts = text.trim().split(/\s+/)
+    if (parts.length < 3) {
+      return `⚠️ <b>Kullanım:</b> /odeme_al [id] [tutar] [yontem?]\n\n<b>Ornek:</b>\n/odeme_al 8a3d... 3000 nakit`
+    }
+
+    const clientId = parseClientId(parts)
+    const amount = Number(parts[2].replace(',', '.'))
+    const method = normalizeMethod(parts[3])
+
+    if (!clientId) return `❌ Geçersiz müşteri ID.`
+    if (!Number.isFinite(amount) || amount <= 0) return `❌ Geçersiz tahsilat tutarı.`
+
+    const { data: client, error: clientError } = await supabase
+      .from('clients')
+      .select('id, full_name, name')
+      .eq('id', clientId)
+      .single()
+
+    if (clientError || !client) {
+      return `❌ ID ${clientId} ile müşteri bulunamadı.`
+    }
+
+    const result = await collectPayment(supabase, {
+      clientId,
+      amount,
+      method,
+      source: 'telegram',
+      note: 'Telegram /odeme_al',
+    })
+
+    const clientName = client.full_name || client.name || 'İsimsiz'
+    return `✅ <b>Tahsilat Kaydedildi</b>\n\n👤 <b>Müşteri:</b> ${clientName}\n💸 <b>Tahsilat:</b> ${formatCurrency(amount)}\n📉 <b>Kalan:</b> ${formatCurrency(result.paymentSummary.remaining)}\n🔖 <b>Durum:</b> ${result.paymentSummary.status}`
+  } catch (error) {
+    console.error('[/odeme_al error]', error)
+    return ERRORS.GENERIC_ERROR
+  }
+}
+
+/**
+ * /odeme_plan [id] [tutar] [yyyy-mm-dd] - Yeni taksit ekle
+ */
+export async function handleOdemePlan(
+  text: string,
+  chatId: string,
+  supabase: SupabaseClient
+): Promise<string> {
+  try {
+    const parts = text.trim().split(/\s+/)
+    if (parts.length < 4) {
+      return `⚠️ <b>Kullanım:</b> /odeme_plan [id] [tutar] [yyyy-mm-dd]\n\n<b>Ornek:</b>\n/odeme_plan 8a3d... 7000 2026-03-15`
+    }
+
+    const clientId = parseClientId(parts)
+    const amount = Number(parts[2].replace(',', '.'))
+    const dateInput = parts[3]
+    const dueDate = new Date(`${dateInput}T12:00:00+03:00`)
+
+    if (!clientId) return `❌ Geçersiz müşteri ID.`
+    if (!Number.isFinite(amount) || amount <= 0) return `❌ Geçersiz tutar.`
+    if (Number.isNaN(dueDate.getTime())) return `❌ Geçersiz tarih. Format: yyyy-mm-dd`
+
+    const { data: client, error: clientError } = await supabase
+      .from('clients')
+      .select('id, full_name, name')
+      .eq('id', clientId)
+      .single()
+    if (clientError || !client) return `❌ ID ${clientId} ile müşteri bulunamadı.`
+
+    await createSchedulesForClient(supabase, {
+      clientId,
+      source: 'telegram',
+      items: [{
+        amount,
+        dueDate: dueDate.toISOString(),
+        note: 'Telegram /odeme_plan',
+      }],
+    })
+    const summary = await syncClientPaymentStatus(supabase, clientId)
+    const clientName = client.full_name || client.name || 'İsimsiz'
+
+    return `✅ <b>Ödeme Planı Eklendi</b>\n\n👤 <b>Müşteri:</b> ${clientName}\n💵 <b>Taksit:</b> ${formatCurrency(amount)}\n📅 <b>Vade:</b> ${formatDate(dueDate.toISOString())}\n📉 <b>Kalan:</b> ${formatCurrency(summary.remaining)}`
+  } catch (error) {
+    console.error('[/odeme_plan error]', error)
+    return ERRORS.GENERIC_ERROR
+  }
+}
+
+/**
+ * /odeme_guncelle [id] [durum] - Geriye donuk alias
  */
 export async function handleOdemeGuncelle(
   text: string,
@@ -398,57 +498,66 @@ export async function handleOdemeGuncelle(
   supabase: SupabaseClient
 ): Promise<string> {
   try {
-    const parts = text.split(' ')
-
+    const parts = text.trim().split(/\s+/)
     if (parts.length < 3) {
-      return `⚠️ <b>Kullanım:</b> /odeme_guncelle [id] [durum]
-
-<b>Ödeme Durumları:</b>
-• Ödendi
-• Ödenmedi
-• Kapora
-
-<b>Örnek:</b>
-/odeme_guncelle 123 Ödendi`
+      return `⚠️ <b>Kullanım:</b> /odeme_guncelle [id] [durum]\n\n<b>Durumlar:</b> Ödendi | Ödenmedi | Kapora`
     }
 
-    const clientId = parseInt(parts[1])
-    const paymentStatus = parts.slice(2).join(' ')
+    const clientId = parseClientId(parts)
+    const requestedStatus = parts.slice(2).join(' ').toLowerCase()
 
-    if (isNaN(clientId)) {
-      return `❌ Geçersiz ID. Sayı olmalı.\n\nÖrnek: /odeme_guncelle 123 Ödendi`
-    }
+    if (!clientId) return `❌ Geçersiz müşteri ID.`
 
-    // Müşteri var mı kontrol et
-    const { data: client, error: fetchError } = await supabase
+    const { data: client, error: clientError } = await supabase
       .from('clients')
-      .select('id, full_name, name, payment_status, price_agreed')
+      .select('id, full_name, name, price_agreed')
       .eq('id', clientId)
       .single()
+    if (clientError || !client) return `❌ ID ${clientId} ile müşteri bulunamadı.`
 
-    if (fetchError || !client) {
-      return `❌ ID ${clientId} ile müşteri bulunamadı.\n\n💡 /ara komutu ile müşteri ID'sini öğrenebilirsin.`
+    let summary = await summarizeClientPayments(supabase, clientId)
+
+    if (requestedStatus.includes('ödendi') || requestedStatus.includes('odendi')) {
+      if (summary.remaining > 0) {
+        await collectPayment(supabase, {
+          clientId,
+          amount: summary.remaining,
+          method: 'cash',
+          source: 'telegram',
+          note: 'Alias /odeme_guncelle -> Ödendi',
+        })
+      }
+      summary = await syncClientPaymentStatus(supabase, clientId)
+      return `✅ Alias işlendi. Kalan tutar kapatıldı.\n\n📉 Kalan: ${formatCurrency(summary.remaining)}\n🔖 Durum: ${summary.status}`
     }
 
-    // Ödeme durumunu güncelle
-    const { error: updateError } = await supabase
-      .from('clients')
-      .update({ payment_status: paymentStatus })
-      .eq('id', clientId)
+    if (requestedStatus.includes('ödenmedi') || requestedStatus.includes('odenmedi')) {
+      if (summary.totalDue <= 0 && (client.price_agreed || 0) > 0) {
+        const due = new Date()
+        due.setDate(due.getDate() + 7)
+        await createSchedulesForClient(supabase, {
+          clientId,
+          source: 'telegram',
+          items: [{
+            amount: Number(client.price_agreed || 0),
+            dueDate: due.toISOString(),
+            note: 'Alias /odeme_guncelle -> Ödenmedi',
+          }],
+        })
+      }
+      summary = await syncClientPaymentStatus(supabase, clientId)
+      return `✅ Alias işlendi. Açık ödeme planı korunuyor.\n\n📉 Kalan: ${formatCurrency(summary.remaining)}\n🔖 Durum: ${summary.status}`
+    }
 
-    if (updateError) throw updateError
+    if (requestedStatus.includes('kapora')) {
+      summary = await syncClientPaymentStatus(supabase, clientId)
+      if (summary.totalPaid <= 0) {
+        return `⚠️ Kapora durumu için önce tahsilat girin: /odeme_al ${clientId} [tutar]`
+      }
+      return `✅ Alias işlendi.\n\n💵 Tahsil edilen: ${formatCurrency(summary.totalPaid)}\n📉 Kalan: ${formatCurrency(summary.remaining)}\n🔖 Durum: ${summary.status}`
+    }
 
-    const clientName = client.full_name || client.name || 'İsimsiz'
-    const price = formatCurrency(client.price_agreed)
-
-    return `✅ <b>Ödeme Durumu Güncellendi!</b>
-
-👤 <b>Müşteri:</b> ${clientName}
-🆔 ID: <code>${clientId}</code>
-💰 <b>Tutar:</b> ${price}
-📌 <b>Eski Durum:</b> ${client.payment_status || '-'}
-🔄 <b>Yeni Durum:</b> ${paymentStatus}`
-
+    return `⚠️ Desteklenmeyen durum. Ödendi | Ödenmedi | Kapora kullanın.`
   } catch (error) {
     console.error('[/odeme_guncelle error]', error)
     return ERRORS.GENERIC_ERROR
@@ -649,7 +758,9 @@ export async function handleHelp(): Promise<string> {
 
 <b>✏️ MÜŞTERİ YÖNETİMİ</b>
 /durum_guncelle [id] [durum] - Durum değiştir
-/odeme_guncelle [id] [durum] - Ödeme güncelle
+/odeme_al [id] [tutar] [yontem?] - Tahsilat ekle
+/odeme_plan [id] [tutar] [yyyy-mm-dd] - Taksit ekle
+/odeme_guncelle [id] [durum] - Alias (eski komut)
 /not_ekle [id] [not] - Not ekle
 /randevu_olustur [id] [tarih] - Randevu oluştur
 
@@ -680,6 +791,10 @@ export const commands: Record<string, CommandHandler> = {
 
   // Faz 2: Müşteri Yönetimi
   '/durum_guncelle': handleDurumGuncelle,
+  '/odeme_al': handleOdemeAl,
+  '/ödeme_al': handleOdemeAl,
+  '/odeme_plan': handleOdemePlan,
+  '/ödeme_plan': handleOdemePlan,
   '/odeme_guncelle': handleOdemeGuncelle,
   '/ödeme_guncelle': handleOdemeGuncelle, // Türkçe ö ile
   '/not_ekle': handleNotEkle,

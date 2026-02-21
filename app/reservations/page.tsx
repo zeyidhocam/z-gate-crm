@@ -18,6 +18,7 @@ import { ClientEditDialog, Client } from "@/components/ClientEditDialog"
 import { ReservationEditDialog } from "@/components/ReservationEditDialog"
 import { ReminderButton } from "@/components/ReminderButton"
 import { WhatsAppButton } from "@/components/WhatsAppButton"
+import { ConfirmCustomerPaymentDialog } from "@/components/ConfirmCustomerPaymentDialog"
 
 
 // Types
@@ -58,6 +59,7 @@ export default function ReservationsPage() {
     const [copiedText, setCopiedText] = useState<string | null>(null)
     const [editingClient, setEditingClient] = useState<Client | null>(null)
     const [reservationEditClient, setReservationEditClient] = useState<Lead | null>(null)
+    const [confirmingLead, setConfirmingLead] = useState<Lead | null>(null)
     const [processTypes, setProcessTypes] = useState<{ id: number, name: string }[]>([])
     const [paymentSummary, setPaymentSummary] = useState<PaymentSummary>({
         scheduledTotal: 0, scheduledOverdue: 0, reservationTotal: 0,
@@ -69,8 +71,7 @@ export default function ReservationsPage() {
         try {
             const { data } = await supabase
                 .from('payment_schedules')
-                .select('amount, due_date')
-                .eq('is_paid', false)
+                .select('amount, amount_due, amount_paid, due_date, is_paid')
 
             if (!data) return
 
@@ -79,13 +80,18 @@ export default function ReservationsPage() {
             let scheduledCount = 0
             let overdueCount = 0
 
-            data.forEach((p: { amount: number; due_date: string }) => {
+            data.forEach((p: { amount: number; amount_due: number | null; amount_paid: number | null; due_date: string; is_paid: boolean }) => {
+                const amountDue = Number(p.amount_due || p.amount || 0)
+                const amountPaid = Number(p.amount_paid || 0) > 0 ? Number(p.amount_paid) : (p.is_paid ? amountDue : 0)
+                const remaining = Math.max(0, amountDue - amountPaid)
+                if (remaining <= 0) return
+
                 const dueDate = parseISO(p.due_date)
                 if (isToday(dueDate)) {
-                    scheduledTotal += Number(p.amount)
+                    scheduledTotal += remaining
                     scheduledCount++
                 } else if (isBefore(dueDate, new Date())) {
-                    scheduledOverdue += Number(p.amount)
+                    scheduledOverdue += remaining
                     overdueCount++
                 }
             })
@@ -258,26 +264,6 @@ export default function ReservationsPage() {
 
 
 
-
-    // Müşteriyi onayla ve Müşteriler sayfasına aktar
-    const confirmCustomer = async (lead: Lead) => {
-        try {
-            const { error } = await supabase
-                .from('clients')
-                .update({
-                    is_confirmed: true,
-                    confirmed_at: new Date().toISOString(),
-                    stage: 1,
-                    status: 'Aktif'
-                })
-                .eq('id', lead.id)
-
-            if (error) throw error
-            fetchReservations()
-        } catch {
-            // Hata kaydi gizlendi
-        }
-    }
 
     // Müşteriyi reddet ve arşive taşı
     const rejectCustomer = async (id: string) => {
@@ -472,8 +458,7 @@ export default function ReservationsPage() {
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
-                                                            onClick={() => confirmCustomer(lead)}
-                                                            onTouchEnd={() => confirmCustomer(lead)}
+                                                            onClick={() => setConfirmingLead(lead)}
                                                             className="flex-1 gap-1.5 text-xs font-bold border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-500/50 hover:text-emerald-300 h-9"
                                                         >
                                                             <CheckCircle size={14} />
@@ -609,6 +594,19 @@ export default function ReservationsPage() {
                 onOpenChange={(open) => !open && setReservationEditClient(null)}
                 client={reservationEditClient}
                 onSave={handleSaveReservationDate}
+            />
+
+            <ConfirmCustomerPaymentDialog
+                open={!!confirmingLead}
+                onOpenChange={(open) => {
+                    if (!open) setConfirmingLead(null)
+                }}
+                lead={confirmingLead ? { id: confirmingLead.id, name: confirmingLead.name, price: confirmingLead.price } : null}
+                onSuccess={() => {
+                    setConfirmingLead(null)
+                    fetchReservations()
+                    fetchPaymentSummary()
+                }}
             />
         </div>
     )

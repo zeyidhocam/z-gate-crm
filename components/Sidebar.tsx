@@ -58,13 +58,19 @@ export function Sidebar({ className }: { className?: string }) {
             try {
                 const { data: paymentData } = await supabase
                     .from('payment_schedules')
-                    .select('id, due_date')
-                    .eq('is_paid', false)
+                    .select('id, due_date, amount, amount_due, amount_paid, is_paid')
 
                 if (paymentData) {
                     const now = new Date()
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const count = paymentData.filter((p: any) => {
+                        const amountDue = Number(p.amount_due || p.amount || 0)
+                        const amountPaid = Number(p.amount_paid || 0) > 0
+                            ? Number(p.amount_paid)
+                            : (p.is_paid ? amountDue : 0)
+                        const remaining = Math.max(0, amountDue - amountPaid)
+                        if (remaining <= 0) return false
+
                         const date = new Date(p.due_date)
                         return date <= now || date.toDateString() === now.toDateString()
                     }).length

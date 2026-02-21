@@ -57,8 +57,7 @@ export function ReminderAlert() {
         try {
             const { data, error } = await supabase
                 .from('payment_schedules')
-                .select('id, amount, due_date, clients(full_name, name)')
-                .eq('is_paid', false)
+                .select('id, amount, amount_due, amount_paid, is_paid, due_date, clients(full_name, name)')
                 .order('due_date', { ascending: true })
                 .limit(10)
 
@@ -67,13 +66,22 @@ export function ReminderAlert() {
                 return
             }
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const mapped = (data || []).map((item: any) => ({
-                id: item.id,
-                amount: item.amount,
-                due_date: item.due_date,
-                client_name: item.clients?.full_name || item.clients?.name || 'Bilinmeyen'
-            }))
+            const mapped = (data || [])
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                .map((item: any) => {
+                    const amountDue = Number(item.amount_due || item.amount || 0)
+                    const amountPaid = Number(item.amount_paid || 0) > 0
+                        ? Number(item.amount_paid)
+                        : (item.is_paid ? amountDue : 0)
+                    const remaining = Math.max(0, amountDue - amountPaid)
+                    return {
+                        id: item.id,
+                        amount: remaining,
+                        due_date: item.due_date,
+                        client_name: item.clients?.full_name || item.clients?.name || 'Bilinmeyen'
+                    }
+                })
+                .filter((item: PaymentDue) => item.amount > 0)
 
             setPaymentsDue(mapped)
         } catch {

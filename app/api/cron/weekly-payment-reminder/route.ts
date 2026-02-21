@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/server/supabase-admin'
+import { listOutstandingClientPayments } from '@/lib/server/payment-ledger'
 
 export const dynamic = 'force-dynamic'
 
@@ -7,134 +8,80 @@ export async function GET() {
   try {
     const supabase = createServerSupabaseClient()
 
-    // 1. Get Telegram Settings
     const { data: settings, error: settingsError } = await supabase
       .from('system_settings')
       .select('telegram_bot_token, telegram_chat_id')
       .single()
 
     if (settingsError || !settings?.telegram_bot_token || !settings?.telegram_chat_id) {
-      return NextResponse.json({ ok: false, error: 'Telegram ayarları bulunamadı.' }, { status: 400 })
+      return NextResponse.json({ ok: false, error: 'Telegram ayarlari bulunamadi.' }, { status: 400 })
     }
 
     const { telegram_bot_token: token, telegram_chat_id: chatId } = settings
+    const outstanding = await listOutstandingClientPayments(supabase)
 
-    // 2. Get All Unpaid Clients
-    const { data: unpaidClients } = await supabase
-      .from('clients')
-      .select('id, full_name, name, phone, price_agreed, reservation_at, process_type, created_at')
-      .eq('payment_status', 'Ödenmedi')
-      .order('price_agreed', { ascending: false })
+    if (!outstanding.length) {
+      const message = `✅ <b>HAFTALIK ODEME TAKIBI</b>\n\nAcilan bir odeme kaydi bulunmuyor.\n\n<i>${new Date().toLocaleDateString('tr-TR', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        timeZone: 'Europe/Istanbul'
+      })}</i>`
 
-    if (!unpaidClients || unpaidClients.length === 0) {
-      // Send "all clear" message
-      const message = `✅ <b>HAFTALIK ÖDEME TAKİBİ</b>
-
-🎉 <b>Harika haber!</b>
-
-Tüm ödemeler tamam! Ödenmemiş müşteri yok.
-
-━━━━━━━━━━━━━━━━━━━━
-<i>📅 ${new Date().toLocaleDateString('tr-TR', {
-  weekday: 'long',
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-  timeZone: 'Europe/Istanbul'
-})}</i>`
-
-      const telegramUrl = `https://api.telegram.org/bot${token}/sendMessage`
-      await fetch(telegramUrl, {
+      await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: message,
-          parse_mode: 'HTML'
-        })
+        body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: 'HTML' }),
       })
 
       return NextResponse.json({ ok: true, unpaidCount: 0 })
     }
 
-    // 3. Calculate Statistics
-    const totalDebt = unpaidClients.reduce((sum, client) => sum + (client.price_agreed || 0), 0)
-    const oldestUnpaid = unpaidClients
-      .filter(c => c.created_at)
-      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())[0]
+    const totalDebt = outstanding.reduce((sum, client) => sum + client.remaining, 0)
+    const top = outstanding.slice(0, 10)
 
-    // 4. Format Message
-    const dateStr = new Date().toLocaleDateString('tr-TR', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      timeZone: 'Europe/Istanbul'
+    let message = `⚠️ <b>HAFTALIK ODEME TAKIBI</b>\n\n`
+    message += `📊 <b>Acik Musteri:</b> ${outstanding.length}\n`
+    message += `💸 <b>Toplam Kalan:</b> ${totalDebt.toLocaleString('tr-TR')} TL\n\n`
+    message += `<b>EN YUKSEK BAKIYELER</b>\n━━━━━━━━━━━━━━━━━━━━`
+
+    top.forEach((client, index) => {
+      const nextDue = client.nextDueDate
+        ? new Date(client.nextDueDate).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' })
+        : '-'
+
+      message += `\n\n<b>${index + 1}.</b> ${client.clientName}\n`
+      message += `💸 Kalan: <b>${client.remaining.toLocaleString('tr-TR')} TL</b>\n`
+      message += `📅 Sonraki Vade: ${nextDue}\n`
+      message += `🆔 <code>${client.clientId}</code>`
     })
 
-    let message = `⚠️ <b>HAFTALIK ÖDEME TAKİBİ</b>
-📅 <b>${dateStr}</b>
-
-<b>💸 ÖDEME BEKLEYENLERİ</b>
-━━━━━━━━━━━━━━━━━━━━
-
-📊 <b>Toplam Borçlu:</b> ${unpaidClients.length} kişi
-💰 <b>Toplam Tutar:</b> ${totalDebt.toLocaleString('tr-TR')} ₺
-⏳ <b>En Eski Borç:</b> ${oldestUnpaid ? new Date(oldestUnpaid.created_at).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' }) : '-'}
-
-<b>🔝 EN YÜKSEK BORÇLAR (İlk 10)</b>
-━━━━━━━━━━━━━━━━━━━━`
-
-    unpaidClients.slice(0, 10).forEach((client, index) => {
-      const clientName = client.full_name || client.name || 'İsimsiz'
-      const price = (client.price_agreed || 0).toLocaleString('tr-TR')
-      const phone = client.phone || '-'
-
-      message += `\n\n<b>${index + 1}.</b> ${clientName}
-💰 Borç: <b>${price} ₺</b>
-📱 Tel: <code>${phone}</code>
-🔮 İşlem: ${client.process_type || '-'}
-🆔 ID: <code>${client.id}</code>`
-    })
-
-    if (unpaidClients.length > 10) {
-      const remainingDebt = unpaidClients
-        .slice(10)
-        .reduce((sum, client) => sum + (client.price_agreed || 0), 0)
-
-      message += `\n\n<i>...ve ${unpaidClients.length - 10} kişi daha (${remainingDebt.toLocaleString('tr-TR')} ₺)</i>`
+    if (outstanding.length > top.length) {
+      const restTotal = outstanding.slice(top.length).reduce((sum, client) => sum + client.remaining, 0)
+      message += `\n\n<i>...ve ${outstanding.length - top.length} kisi daha (${restTotal.toLocaleString('tr-TR')} TL)</i>`
     }
 
-    message += `\n\n━━━━━━━━━━━━━━━━━━━━
-<i>💡 Detay için: /bekleyen
-💳 Ödeme güncellemek için: /odeme_guncelle [id] Ödendi</i>`
+    message += `\n\n━━━━━━━━━━━━━━━━━━━━\n<i>Detay: /bekleyen</i>`
 
-    // 5. Send to Telegram
-    const telegramUrl = `https://api.telegram.org/bot${token}/sendMessage`
-    const response = await fetch(telegramUrl, {
+    const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: message,
-        parse_mode: 'HTML'
-      })
+      body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: 'HTML' }),
     })
 
     const telegramRes = await response.json()
-
     if (!telegramRes.ok) {
       return NextResponse.json({ ok: false, error: telegramRes.description }, { status: 400 })
     }
 
     return NextResponse.json({
       ok: true,
-      unpaidCount: unpaidClients.length,
-      totalDebt
+      unpaidCount: outstanding.length,
+      totalDebt,
     })
-
   } catch (error) {
     console.error('[weekly-payment-reminder error]', error)
-    return NextResponse.json({ ok: false, error: 'Sunucu hatası' }, { status: 500 })
+    return NextResponse.json({ ok: false, error: 'Sunucu hatasi' }, { status: 500 })
   }
 }

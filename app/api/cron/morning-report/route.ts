@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/server/supabase-admin'
+import { listOutstandingClientPayments } from '@/lib/server/payment-ledger'
 
 export const dynamic = 'force-dynamic'
 
@@ -7,49 +8,34 @@ export async function GET() {
   try {
     const supabase = createServerSupabaseClient()
 
-    // 1. Get Telegram Settings
     const { data: settings, error: settingsError } = await supabase
       .from('system_settings')
       .select('telegram_bot_token, telegram_chat_id')
       .single()
 
     if (settingsError || !settings?.telegram_bot_token || !settings?.telegram_chat_id) {
-      return NextResponse.json({ ok: false, error: 'Telegram ayarları bulunamadı.' }, { status: 400 })
+      return NextResponse.json({ ok: false, error: 'Telegram ayarlari bulunamadi.' }, { status: 400 })
     }
 
     const { telegram_bot_token: token, telegram_chat_id: chatId } = settings
 
-    // 2. Calculate Today's Range (Turkey Time)
     const now = new Date()
     const trtDateStr = now.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' })
     const startOfTrtDay = new Date(`${trtDateStr}T00:00:00.000+03:00`)
     const endOfTrtDay = new Date(`${trtDateStr}T23:59:59.999+03:00`)
 
-    const todayStart = startOfTrtDay.toISOString()
-    const todayEnd = endOfTrtDay.toISOString()
-
-    // 3. Get Today's Appointments
     const { data: appointments } = await supabase
       .from('clients')
-      .select('id, full_name, name, phone, reservation_at, process_type, price_agreed')
-      .gte('reservation_at', todayStart)
-      .lte('reservation_at', todayEnd)
+      .select('id, full_name, name, phone, reservation_at, process_name, price_agreed')
+      .gte('reservation_at', startOfTrtDay.toISOString())
+      .lte('reservation_at', endOfTrtDay.toISOString())
       .order('reservation_at', { ascending: true })
       .limit(10)
 
-    const appointmentsCount = appointments?.length || 0
+    const outstanding = await listOutstandingClientPayments(supabase)
+    const pendingCount = outstanding.length
+    const totalDebt = outstanding.reduce((sum, client) => sum + client.remaining, 0)
 
-    // 4. Get Pending Payments (All time)
-    const { data: pendingPayments } = await supabase
-      .from('clients')
-      .select('id, full_name, name, phone, price_agreed, payment_status')
-      .eq('payment_status', 'Ödenmedi')
-      .limit(5)
-
-    const pendingCount = pendingPayments?.length || 0
-    const totalDebt = pendingPayments?.reduce((sum, client) => sum + (client.price_agreed || 0), 0) || 0
-
-    // 5. Format Message
     const dateStr = startOfTrtDay.toLocaleDateString('tr-TR', {
       weekday: 'long',
       day: 'numeric',
@@ -58,58 +44,50 @@ export async function GET() {
       timeZone: 'Europe/Istanbul'
     })
 
-    let message = `<b>☀️ GÜNAYDINN! Z-GATE CRM SABAH RAPORU</b>
-📅 <b>${dateStr}</b>
+    let message = `<b>☀️ GUNAYDIN - Z-GATE CRM SABAH RAPORU</b>\n📅 <b>${dateStr}</b>\n\n`
+    message += `<b>BUGUNKU RANDEVULAR (${appointments?.length || 0})</b>\n━━━━━━━━━━━━━━━━━━━━`
 
-<b>📅 BUGÜNKÜ RANDEVULAR (${appointmentsCount})</b>
-━━━━━━━━━━━━━━━━━━━━`
+    if (appointments && appointments.length > 0) {
+      appointments.forEach((client, index) => {
+        const clientName = client.full_name || client.name || 'Isimsiz'
+        const time = client.reservation_at
+          ? new Date(client.reservation_at).toLocaleTimeString('tr-TR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZone: 'Europe/Istanbul'
+          })
+          : '--:--'
 
-    if (appointmentsCount > 0) {
-      appointments?.forEach((client, index) => {
-        const clientName = client.full_name || client.name || 'İsimsiz'
-        const time = new Date(client.reservation_at).toLocaleTimeString('tr-TR', {
-          hour: '2-digit',
-          minute: '2-digit',
-          timeZone: 'Europe/Istanbul'
-        })
-        const price = (client.price_agreed || 0).toLocaleString('tr-TR')
-
-        message += `\n\n<b>${index + 1}.</b> <b>${clientName}</b>
-🕐 Saat: <b>${time}</b>
-📱 Tel: <code>${client.phone || '-'}</code>
-🔮 İşlem: ${client.process_type || '-'}
-💰 Fiyat: ${price} ₺`
+        message += `\n\n<b>${index + 1}.</b> <b>${clientName}</b>\n`
+        message += `🕐 Saat: <b>${time}</b>\n`
+        message += `📱 Tel: <code>${client.phone || '-'}</code>\n`
+        message += `🔮 Islem: ${client.process_name || '-'}\n`
+        message += `💰 Fiyat: ${(client.price_agreed || 0).toLocaleString('tr-TR')} TL`
       })
     } else {
-      message += `\n\n✅ <i>Bugün randevu yok, rahat bir gün!</i>`
+      message += `\n\n✅ <i>Bugun randevu yok.</i>`
     }
 
-    message += `\n\n<b>💸 ÖDEME BEKLEYENLERİ (${pendingCount})</b>
-━━━━━━━━━━━━━━━━━━━━`
-
+    message += `\n\n<b>ODEME MERKEZI (${pendingCount})</b>\n━━━━━━━━━━━━━━━━━━━━`
     if (pendingCount > 0) {
-      message += `\n💰 <b>Toplam Borç:</b> ${totalDebt.toLocaleString('tr-TR')} ₺\n`
-
-      pendingPayments?.slice(0, 3).forEach((client, index) => {
-        const clientName = client.full_name || client.name || 'İsimsiz'
-        const price = (client.price_agreed || 0).toLocaleString('tr-TR')
-
-        message += `\n<b>${index + 1}.</b> ${clientName} - ${price} ₺`
+      message += `\n💸 <b>Toplam Kalan:</b> ${totalDebt.toLocaleString('tr-TR')} TL\n`
+      outstanding.slice(0, 3).forEach((client, index) => {
+        const due = client.nextDueDate
+          ? new Date(client.nextDueDate).toLocaleDateString('tr-TR', { timeZone: 'Europe/Istanbul' })
+          : '-'
+        message += `\n<b>${index + 1}.</b> ${client.clientName} - ${client.remaining.toLocaleString('tr-TR')} TL (vade: ${due})`
       })
 
       if (pendingCount > 3) {
-        message += `\n\n<i>...ve ${pendingCount - 3} kişi daha</i>`
+        message += `\n\n<i>...ve ${pendingCount - 3} kisi daha</i>`
       }
     } else {
-      message += `\n\n✅ <i>Tüm ödemeler tamam!</i>`
+      message += `\n\n✅ <i>Acik odeme bulunmuyor.</i>`
     }
 
-    message += `\n\n━━━━━━━━━━━━━━━━━━━━
-<i>💡 Detay için /bugun veya /bekleyen komutlarını kullanabilirsiniz.</i>`
+    message += `\n\n━━━━━━━━━━━━━━━━━━━━\n<i>Detay: /bugun veya /bekleyen</i>`
 
-    // 6. Send to Telegram
-    const telegramUrl = `https://api.telegram.org/bot${token}/sendMessage`
-    const response = await fetch(telegramUrl, {
+    const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -120,15 +98,18 @@ export async function GET() {
     })
 
     const telegramRes = await response.json()
-
     if (!telegramRes.ok) {
       return NextResponse.json({ ok: false, error: telegramRes.description }, { status: 400 })
     }
 
-    return NextResponse.json({ ok: true, appointmentsCount, pendingCount, totalDebt })
-
+    return NextResponse.json({
+      ok: true,
+      appointmentsCount: appointments?.length || 0,
+      pendingCount,
+      totalDebt,
+    })
   } catch (error) {
     console.error('[morning-report error]', error)
-    return NextResponse.json({ ok: false, error: 'Sunucu hatası' }, { status: 500 })
+    return NextResponse.json({ ok: false, error: 'Sunucu hatasi' }, { status: 500 })
   }
 }

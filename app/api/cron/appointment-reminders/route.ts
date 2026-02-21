@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/server/supabase-admin'
+import { summarizeClientPayments } from '@/lib/server/payment-ledger'
 
 export const dynamic = 'force-dynamic'
 
@@ -7,67 +8,60 @@ export async function GET() {
   try {
     const supabase = createServerSupabaseClient()
 
-    // 1. Get Telegram Settings
     const { data: settings, error: settingsError } = await supabase
       .from('system_settings')
       .select('telegram_bot_token, telegram_chat_id')
       .single()
 
     if (settingsError || !settings?.telegram_bot_token || !settings?.telegram_chat_id) {
-      return NextResponse.json({ ok: false, error: 'Telegram ayarları bulunamadı.' }, { status: 400 })
+      return NextResponse.json({ ok: false, error: 'Telegram ayarlari bulunamadi.' }, { status: 400 })
     }
 
     const { telegram_bot_token: token, telegram_chat_id: chatId } = settings
 
-    // 2. Calculate Time Range (1 hour from now, ±5 minutes buffer)
     const now = new Date()
-    const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000) // +1 hour
-    const bufferStart = new Date(oneHourLater.getTime() - 5 * 60 * 1000) // -5 min
-    const bufferEnd = new Date(oneHourLater.getTime() + 5 * 60 * 1000) // +5 min
+    const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000)
+    const bufferStart = new Date(oneHourLater.getTime() - 5 * 60 * 1000)
+    const bufferEnd = new Date(oneHourLater.getTime() + 5 * 60 * 1000)
 
-    const startISO = bufferStart.toISOString()
-    const endISO = bufferEnd.toISOString()
-
-    // 3. Get Appointments in 1 Hour
     const { data: upcomingAppointments } = await supabase
       .from('clients')
-      .select('id, full_name, name, phone, reservation_at, process_type, price_agreed, payment_status')
-      .gte('reservation_at', startISO)
-      .lte('reservation_at', endISO)
+      .select('id, full_name, name, phone, reservation_at, process_name, price_agreed')
+      .gte('reservation_at', bufferStart.toISOString())
+      .lte('reservation_at', bufferEnd.toISOString())
       .order('reservation_at', { ascending: true })
 
     if (!upcomingAppointments || upcomingAppointments.length === 0) {
-      return NextResponse.json({ ok: true, message: 'Yaklaşan randevu yok', count: 0 })
+      return NextResponse.json({ ok: true, message: 'Yaklasan randevu yok', count: 0 })
     }
 
-    // 4. Send Reminders
     const telegramUrl = `https://api.telegram.org/bot${token}/sendMessage`
     let sentCount = 0
 
     for (const client of upcomingAppointments) {
-      const clientName = client.full_name || client.name || 'İsimsiz'
-      const appointmentTime = new Date(client.reservation_at).toLocaleString('tr-TR', {
-        hour: '2-digit',
-        minute: '2-digit',
-        day: 'numeric',
-        month: 'long',
-        timeZone: 'Europe/Istanbul'
-      })
+      const clientName = client.full_name || client.name || 'Isimsiz'
+      const appointmentTime = client.reservation_at
+        ? new Date(client.reservation_at).toLocaleString('tr-TR', {
+          hour: '2-digit',
+          minute: '2-digit',
+          day: 'numeric',
+          month: 'long',
+          timeZone: 'Europe/Istanbul'
+        })
+        : '-'
       const price = (client.price_agreed || 0).toLocaleString('tr-TR')
+      const payment = await summarizeClientPayments(supabase, client.id)
 
-      const message = `⏰ <b>RANDEVU HATIRLATICI!</b>
-
-👤 <b>Müşteri:</b> ${clientName}
-📱 <b>Telefon:</b> <code>${client.phone || '-'}</code>
-🕐 <b>Randevu:</b> ${appointmentTime}
-🔮 <b>İşlem:</b> ${client.process_type || '-'}
-💰 <b>Fiyat:</b> ${price} ₺
-💳 <b>Ödeme:</b> ${client.payment_status || 'Belirtilmedi'}
-
-🔔 <b>Randevuya 1 saat kaldı!</b>
-
-━━━━━━━━━━━━━━━━━━━━
-<i>ID: <code>${client.id}</code></i>`
+      const message = `⏰ <b>RANDEVU HATIRLATICI</b>\n\n` +
+        `👤 <b>Musteri:</b> ${clientName}\n` +
+        `📱 <b>Telefon:</b> <code>${client.phone || '-'}</code>\n` +
+        `🕐 <b>Randevu:</b> ${appointmentTime}\n` +
+        `🔮 <b>Islem:</b> ${client.process_name || '-'}\n` +
+        `💰 <b>Fiyat:</b> ${price} TL\n` +
+        `💳 <b>Kalan:</b> ${payment.remaining.toLocaleString('tr-TR')} TL\n` +
+        `🔖 <b>Odeme Durumu:</b> ${payment.status}\n\n` +
+        `<b>Randevuya 1 saat kaldi.</b>\n\n` +
+        `<i>ID: <code>${client.id}</code></i>`
 
       try {
         const response = await fetch(telegramUrl, {
@@ -81,16 +75,13 @@ export async function GET() {
         })
 
         const telegramRes = await response.json()
-
         if (telegramRes.ok) {
           sentCount++
         }
 
-        // Rate limit protection (max 30 messages/second for Telegram)
         await new Promise(resolve => setTimeout(resolve, 100))
-
       } catch (error) {
-        console.error(`[reminder error for client ${client.id}]`, error)
+        console.error(`[appointment-reminder error for client ${client.id}]`, error)
       }
     }
 
@@ -99,9 +90,8 @@ export async function GET() {
       totalAppointments: upcomingAppointments.length,
       sentCount
     })
-
   } catch (error) {
     console.error('[appointment-reminders error]', error)
-    return NextResponse.json({ ok: false, error: 'Sunucu hatası' }, { status: 500 })
+    return NextResponse.json({ ok: false, error: 'Sunucu hatasi' }, { status: 500 })
   }
 }

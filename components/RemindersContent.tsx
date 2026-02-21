@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useEffect, useMemo } from "react"
 import { Bell, Clock, AlertTriangle, UserX, Calendar, TrendingDown, Filter, Plus, CheckCircle, Trash2, CreditCard, Wallet, CheckCircle2 } from "lucide-react"
@@ -15,6 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"
 import { toast } from "sonner"
 import { useSearchParams } from "next/navigation"
+import { getAmountPaid, getAmountDue, getRemaining } from "@/components/PaymentScheduleDialog"
 
 interface Client {
     id: string
@@ -41,7 +42,10 @@ interface Reminder {
 interface PaymentScheduleWithClient {
     id: string
     client_id: string
-    amount: number
+    amount: number | null
+    amount_due: number | null
+    amount_paid: number | null
+    status: 'pending' | 'partially_paid' | 'paid' | string
     due_date: string
     is_paid: boolean
     paid_at: string | null
@@ -54,11 +58,11 @@ type FilterType = 'all' | '7days' | '14days' | '30days' | '60days'
 type TabType = 'manual' | 'payments' | 'auto'
 
 const FILTER_OPTIONS: { value: FilterType; label: string; days: number }[] = [
-    { value: 'all', label: 'Tümü', days: 0 },
-    { value: '7days', label: '7+ Gün', days: 7 },
-    { value: '14days', label: '14+ Gün', days: 14 },
-    { value: '30days', label: '30+ Gün', days: 30 },
-    { value: '60days', label: '60+ Gün', days: 60 },
+    { value: 'all', label: 'TÃ¼mÃ¼', days: 0 },
+    { value: '7days', label: '7+ GÃ¼n', days: 7 },
+    { value: '14days', label: '14+ GÃ¼n', days: 14 },
+    { value: '30days', label: '30+ GÃ¼n', days: 30 },
+    { value: '60days', label: '60+ GÃ¼n', days: 60 },
 ]
 
 export default function RemindersContent() {
@@ -68,7 +72,7 @@ export default function RemindersContent() {
     const [paymentSchedules, setPaymentSchedules] = useState<PaymentScheduleWithClient[]>([])
     const [loading, setLoading] = useState(true)
 
-    // localStorage ile kalıcı state
+    // localStorage ile kalÄ±cÄ± state
     const [filter, setFilter] = useState<FilterType>('14days')
     const [activeTab, setActiveTab] = useState<TabType>('manual')
 
@@ -78,7 +82,7 @@ export default function RemindersContent() {
     const [newDate, setNewDate] = useState<Date | undefined>(addDays(new Date(), 1))
     const [dialogOpen, setDialogOpen] = useState(false)
 
-    // URL parametresinden tab yükle
+    // URL parametresinden tab yÃ¼kle
     useEffect(() => {
         const tabParam = searchParams.get('tab')
         if (tabParam === 'payments') {
@@ -91,7 +95,7 @@ export default function RemindersContent() {
         if (savedFilter) setFilter(savedFilter as FilterType)
     }, [searchParams])
 
-    // State değiştiğinde localStorage'a kaydet
+    // State deÄŸiÅŸtiÄŸinde localStorage'a kaydet
     useEffect(() => {
         localStorage.setItem('remindersActiveTab', activeTab)
     }, [activeTab])
@@ -208,18 +212,53 @@ export default function RemindersContent() {
         }
     }
 
-    const markPaymentPaid = async (id: string) => {
+    const collectPayment = async (id: string) => {
         try {
-            const { error } = await supabase
-                .from('payment_schedules')
-                .update({ is_paid: true, paid_at: new Date().toISOString() })
-                .eq('id', id)
+            const schedule = paymentSchedules.find(p => p.id === id)
+            if (!schedule) return
 
-            if (error) throw error
-            toast.success("Ödeme tamamlandı olarak işaretlendi!")
+            const remaining = getRemaining(schedule)
+            if (remaining <= 0) {
+                toast.info("Bu taksit zaten kapali.")
+                return
+            }
+
+            const entered = window.prompt(
+                `Tahsilat tutari (kalan: ${remaining.toLocaleString('tr-TR')} TL)`,
+                remaining.toString()
+            )
+            if (!entered) return
+
+            const amount = Number(entered.replace(',', '.'))
+            if (!Number.isFinite(amount) || amount <= 0) {
+                toast.error("Gecerli bir tahsilat tutari girin.")
+                return
+            }
+            if (amount > remaining + 0.01) {
+                toast.error("Tahsilat tutari kalan borcu asamaz.")
+                return
+            }
+
+            const response = await fetch('/api/payments/collect', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    clientId: schedule.client_id,
+                    scheduleId: schedule.id,
+                    amount,
+                    method: 'cash'
+                })
+            })
+
+            const apiResult = await response.json().catch(() => ({}))
+            if (!response.ok || !apiResult?.ok) {
+                throw new Error(apiResult?.error || 'Tahsilat kaydedilemedi')
+            }
+
+            toast.success("Tahsilat kaydedildi.")
             fetchPaymentSchedules()
         } catch {
-            toast.error("Güncellenemedi.")
+            toast.error("Guncellenemedi.")
         }
     }
 
@@ -231,14 +270,14 @@ export default function RemindersContent() {
                 .eq('id', id)
 
             if (error) throw error
-            toast.success("Ödeme planı silindi.")
+            toast.success("Ã–deme planÄ± silindi.")
             fetchPaymentSchedules()
         } catch {
             toast.error("Silinemedi.")
         }
     }
 
-    // Uzun süredir gelmeyen müşteriler (otomatik)
+    // Uzun sÃ¼redir gelmeyen mÃ¼ÅŸteriler (otomatik)
     const inactiveClients = useMemo(() => {
         const now = new Date()
         const filterDays = FILTER_OPTIONS.find(f => f.value === filter)?.days || 0
@@ -255,25 +294,25 @@ export default function RemindersContent() {
             .sort((a, b) => b.daysSince - a.daysSince)
     }, [clients, filter])
 
-    // Manuel hatırlatmalar - aktif (tamamlanmamış)
+    // Manuel hatÄ±rlatmalar - aktif (tamamlanmamÄ±ÅŸ)
     const activeReminders = reminders.filter(r => !r.is_completed)
     const completedReminders = reminders.filter(r => r.is_completed)
 
-    // Bugün ve geçmiş hatırlatmalar
+    // BugÃ¼n ve geÃ§miÅŸ hatÄ±rlatmalar
     const todayReminders = activeReminders.filter(r => isToday(parseISO(r.reminder_date)))
     const overdueReminders = activeReminders.filter(r => isBefore(parseISO(r.reminder_date), new Date()) && !isToday(parseISO(r.reminder_date)))
     const upcomingReminders = activeReminders.filter(r => !isBefore(parseISO(r.reminder_date), new Date()) && !isToday(parseISO(r.reminder_date)))
 
-    // Ödeme kategorileri
-    const unpaidPayments = paymentSchedules.filter(p => !p.is_paid)
-    const paidPayments = paymentSchedules.filter(p => p.is_paid)
+    // Ã–deme kategorileri
+    const unpaidPayments = paymentSchedules.filter(p => getRemaining(p) > 0)
+    const paidPayments = paymentSchedules.filter(p => getRemaining(p) <= 0)
     const overduePayments = unpaidPayments.filter(p => isBefore(parseISO(p.due_date), new Date()) && !isToday(parseISO(p.due_date)))
     const todayPayments = unpaidPayments.filter(p => isToday(parseISO(p.due_date)))
     const upcomingPayments = unpaidPayments.filter(p => !isBefore(parseISO(p.due_date), new Date()) && !isToday(parseISO(p.due_date)))
-    const totalOverdueAmount = overduePayments.reduce((sum, p) => sum + p.amount, 0)
-    const totalUpcomingAmount = unpaidPayments.reduce((sum, p) => sum + p.amount, 0)
+    const totalOverdueAmount = overduePayments.reduce((sum, p) => sum + getRemaining(p), 0)
+    const totalUpcomingAmount = unpaidPayments.reduce((sum, p) => sum + getRemaining(p), 0)
 
-    // İstatistikler
+    // Ä°statistikler
     const stats = useMemo(() => {
         const now = new Date()
         let over7 = 0, over14 = 0, over30 = 0
@@ -308,8 +347,8 @@ export default function RemindersContent() {
                         <Bell className="text-amber-400" size={24} />
                     </div>
                     <div>
-                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gradient-ocean">Hatırlatmalar</h1>
-                        <p className="text-xs sm:text-sm text-slate-400">Manuel, otomatik ve ödeme hatırlatmaları</p>
+                        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gradient-ocean">HatÄ±rlatmalar</h1>
+                        <p className="text-xs sm:text-sm text-slate-400">Manuel, otomatik ve Ã¶deme hatÄ±rlatmalarÄ±</p>
                     </div>
                 </div>
 
@@ -318,28 +357,28 @@ export default function RemindersContent() {
                     <DialogTrigger asChild>
                         <Button className="gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold text-sm self-start sm:self-auto">
                             <Plus size={16} />
-                            Hatırlatma Ekle
+                            HatÄ±rlatma Ekle
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="bg-[#0c1929] border-cyan-500/20">
                         <DialogHeader>
                             <DialogTitle className="text-slate-100 flex items-center gap-2">
                                 <Bell size={20} className="text-amber-400" />
-                                Yeni Hatırlatma
+                                Yeni HatÄ±rlatma
                             </DialogTitle>
                         </DialogHeader>
                         <div className="space-y-4 mt-4">
                             <div>
-                                <label className="text-xs font-bold text-slate-400 mb-1 block">Başlık *</label>
+                                <label className="text-xs font-bold text-slate-400 mb-1 block">BaÅŸlÄ±k *</label>
                                 <Input
                                     value={newTitle}
                                     onChange={(e) => setNewTitle(e.target.value)}
-                                    placeholder="Hatırlatma başlığı..."
+                                    placeholder="HatÄ±rlatma baÅŸlÄ±ÄŸÄ±..."
                                     className="bg-slate-900/50 border-slate-700 text-slate-200"
                                 />
                             </div>
                             <div>
-                                <label className="text-xs font-bold text-slate-400 mb-1 block">Açıklama</label>
+                                <label className="text-xs font-bold text-slate-400 mb-1 block">AÃ§Ä±klama</label>
                                 <Textarea
                                     value={newDescription}
                                     onChange={(e) => setNewDescription(e.target.value)}
@@ -354,7 +393,7 @@ export default function RemindersContent() {
                                     <PopoverTrigger asChild>
                                         <Button variant="outline" className="w-full justify-start gap-2 bg-slate-900/50 border-slate-700 text-slate-200">
                                             <Calendar size={16} />
-                                            {newDate ? format(newDate, 'dd MMMM yyyy', { locale: tr }) : 'Tarih seç'}
+                                            {newDate ? format(newDate, 'dd MMMM yyyy', { locale: tr }) : 'Tarih seÃ§'}
                                         </Button>
                                     </PopoverTrigger>
                                     <PopoverContent className="w-auto p-0 bg-[#0c1929] border-cyan-500/20">
@@ -371,7 +410,7 @@ export default function RemindersContent() {
                         </div>
                         <DialogFooter className="mt-6">
                             <DialogClose asChild>
-                                <Button variant="ghost" className="text-slate-400">İptal</Button>
+                                <Button variant="ghost" className="text-slate-400">Ä°ptal</Button>
                             </DialogClose>
                             <Button onClick={addReminder} disabled={!newTitle.trim() || !newDate} className="bg-cyan-500 hover:bg-cyan-600 text-white">
                                 Ekle
@@ -388,7 +427,7 @@ export default function RemindersContent() {
                         <Bell className="text-amber-400 shrink-0" size={24} />
                         <div>
                             <div className="text-2xl font-black text-amber-400">{activeReminders.length}</div>
-                            <div className="text-xs text-slate-500 font-bold">Aktif Hatırlatma</div>
+                            <div className="text-xs text-slate-500 font-bold">Aktif HatÄ±rlatma</div>
                         </div>
                     </div>
                 </div>
@@ -397,7 +436,7 @@ export default function RemindersContent() {
                         <AlertTriangle className="text-red-400 shrink-0" size={24} />
                         <div>
                             <div className="text-2xl font-black text-red-400">{overdueReminders.length}</div>
-                            <div className="text-xs text-slate-500 font-bold">Gecikmiş</div>
+                            <div className="text-xs text-slate-500 font-bold">GecikmiÅŸ</div>
                         </div>
                     </div>
                 </div>
@@ -406,7 +445,7 @@ export default function RemindersContent() {
                         <Clock className="text-cyan-400 shrink-0" size={24} />
                         <div>
                             <div className="text-2xl font-black text-cyan-400">{todayReminders.length}</div>
-                            <div className="text-xs text-slate-500 font-bold">Bugün</div>
+                            <div className="text-xs text-slate-500 font-bold">BugÃ¼n</div>
                         </div>
                     </div>
                 </div>
@@ -415,7 +454,7 @@ export default function RemindersContent() {
                         <Wallet className="text-emerald-400 shrink-0" size={24} />
                         <div>
                             <div className="text-2xl font-black text-emerald-400">{unpaidPayments.length}</div>
-                            <div className="text-xs text-slate-500 font-bold">Bekleyen Ödeme</div>
+                            <div className="text-xs text-slate-500 font-bold">Bekleyen Ã–deme</div>
                         </div>
                     </div>
                 </div>
@@ -424,7 +463,7 @@ export default function RemindersContent() {
                         <UserX className="text-violet-400 shrink-0" size={24} />
                         <div>
                             <div className="text-2xl font-black text-violet-400">{stats.over30}</div>
-                            <div className="text-xs text-slate-500 font-bold">30+ Gün İnaktif</div>
+                            <div className="text-xs text-slate-500 font-bold">30+ GÃ¼n Ä°naktif</div>
                         </div>
                     </div>
                 </div>
@@ -452,7 +491,7 @@ export default function RemindersContent() {
                     )}
                 >
                     <CreditCard size={14} className="mr-1.5 sm:mr-2" />
-                    Ödemeler ({unpaidPayments.length})
+                    Ã–demeler ({unpaidPayments.length})
                     {overduePayments.length > 0 && (
                         <span className="ml-1.5 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
                             {overduePayments.length}
@@ -468,19 +507,19 @@ export default function RemindersContent() {
                     )}
                 >
                     <TrendingDown size={14} className="mr-1.5 sm:mr-2" />
-                    İnaktif ({inactiveClients.length})
+                    Ä°naktif ({inactiveClients.length})
                 </Button>
             </div>
 
             {/* Content */}
             {activeTab === 'manual' ? (
                 <div className="space-y-6">
-                    {/* Gecikmiş */}
+                    {/* GecikmiÅŸ */}
                     {overdueReminders.length > 0 && (
                         <div>
                             <h3 className="text-sm font-bold text-red-400 mb-3 flex items-center gap-2">
                                 <AlertTriangle size={16} />
-                                Gecikmiş ({overdueReminders.length})
+                                GecikmiÅŸ ({overdueReminders.length})
                             </h3>
                             <div className="space-y-2">
                                 {overdueReminders.map(reminder => (
@@ -490,12 +529,12 @@ export default function RemindersContent() {
                         </div>
                     )}
 
-                    {/* Bugün */}
+                    {/* BugÃ¼n */}
                     {todayReminders.length > 0 && (
                         <div>
                             <h3 className="text-sm font-bold text-cyan-400 mb-3 flex items-center gap-2">
                                 <Clock size={16} />
-                                Bugün ({todayReminders.length})
+                                BugÃ¼n ({todayReminders.length})
                             </h3>
                             <div className="space-y-2">
                                 {todayReminders.map(reminder => (
@@ -505,12 +544,12 @@ export default function RemindersContent() {
                         </div>
                     )}
 
-                    {/* Yaklaşan */}
+                    {/* YaklaÅŸan */}
                     {upcomingReminders.length > 0 && (
                         <div>
                             <h3 className="text-sm font-bold text-slate-400 mb-3 flex items-center gap-2">
                                 <Calendar size={16} />
-                                Yaklaşan ({upcomingReminders.length})
+                                YaklaÅŸan ({upcomingReminders.length})
                             </h3>
                             <div className="space-y-2">
                                 {upcomingReminders.map(reminder => (
@@ -538,8 +577,8 @@ export default function RemindersContent() {
                     {activeReminders.length === 0 && completedReminders.length === 0 && (
                         <div className="text-center py-12 text-slate-500">
                             <Bell size={48} className="mx-auto mb-4 opacity-30" />
-                            <p>Henüz hatırlatma yok</p>
-                            <p className="text-sm">Yukarıdaki butona tıklayarak ekleyebilirsiniz</p>
+                            <p>HenÃ¼z hatÄ±rlatma yok</p>
+                            <p className="text-sm">YukarÄ±daki butona tÄ±klayarak ekleyebilirsiniz</p>
                         </div>
                     )}
                 </div>
@@ -563,7 +602,7 @@ export default function RemindersContent() {
                                 <div>
                                     <div className="text-xs text-slate-500 font-bold uppercase">Toplam Bekleyen</div>
                                     <div className="text-lg font-black text-white">
-                                        {totalUpcomingAmount.toLocaleString('tr-TR')} ₺
+                                        {totalUpcomingAmount.toLocaleString('tr-TR')} â‚º
                                     </div>
                                 </div>
                             </div>
@@ -571,7 +610,7 @@ export default function RemindersContent() {
                                 <div className="flex items-center gap-2 px-3 py-2 bg-red-500/10 rounded-lg border border-red-500/20">
                                     <AlertTriangle size={14} className="text-red-400" />
                                     <span className="text-xs font-bold text-red-400">
-                                        {overduePayments.length} gecikmiş ({totalOverdueAmount.toLocaleString('tr-TR')} ₺)
+                                        {overduePayments.length} gecikmiÅŸ ({totalOverdueAmount.toLocaleString('tr-TR')} â‚º)
                                     </span>
                                 </div>
                             )}
@@ -579,19 +618,19 @@ export default function RemindersContent() {
                                 <div className="flex items-center gap-2 px-3 py-2 bg-amber-500/10 rounded-lg border border-amber-500/20">
                                     <Clock size={14} className="text-amber-400" />
                                     <span className="text-xs font-bold text-amber-400">
-                                        {todayPayments.length} ödeme bugün
+                                        {todayPayments.length} Ã¶deme bugÃ¼n
                                     </span>
                                 </div>
                             )}
                         </div>
                     )}
 
-                    {/* Gecikmiş Ödemeler */}
+                    {/* GecikmiÅŸ Ã–demeler */}
                     {overduePayments.length > 0 && (
                         <div>
                             <h3 className="text-sm font-bold text-red-400 mb-3 flex items-center gap-2">
                                 <AlertTriangle size={16} />
-                                Gecikmiş Ödemeler ({overduePayments.length})
+                                GecikmiÅŸ Ã–demeler ({overduePayments.length})
                             </h3>
                             <div className="space-y-2">
                                 {overduePayments.map(payment => (
@@ -599,7 +638,7 @@ export default function RemindersContent() {
                                         key={payment.id}
                                         payment={payment}
                                         variant="overdue"
-                                        onMarkPaid={markPaymentPaid}
+                                        onCollect={collectPayment}
                                         onDelete={deletePayment}
                                     />
                                 ))}
@@ -607,12 +646,12 @@ export default function RemindersContent() {
                         </div>
                     )}
 
-                    {/* Bugünkü Ödemeler */}
+                    {/* BugÃ¼nkÃ¼ Ã–demeler */}
                     {todayPayments.length > 0 && (
                         <div>
                             <h3 className="text-sm font-bold text-amber-400 mb-3 flex items-center gap-2">
                                 <Clock size={16} />
-                                Bugün ({todayPayments.length})
+                                BugÃ¼n ({todayPayments.length})
                             </h3>
                             <div className="space-y-2">
                                 {todayPayments.map(payment => (
@@ -620,7 +659,7 @@ export default function RemindersContent() {
                                         key={payment.id}
                                         payment={payment}
                                         variant="today"
-                                        onMarkPaid={markPaymentPaid}
+                                        onCollect={collectPayment}
                                         onDelete={deletePayment}
                                     />
                                 ))}
@@ -628,12 +667,12 @@ export default function RemindersContent() {
                         </div>
                     )}
 
-                    {/* Yaklaşan Ödemeler */}
+                    {/* YaklaÅŸan Ã–demeler */}
                     {upcomingPayments.length > 0 && (
                         <div>
                             <h3 className="text-sm font-bold text-cyan-400 mb-3 flex items-center gap-2">
                                 <Calendar size={16} />
-                                Yaklaşan ({upcomingPayments.length})
+                                YaklaÅŸan ({upcomingPayments.length})
                             </h3>
                             <div className="space-y-2">
                                 {upcomingPayments.map(payment => (
@@ -641,7 +680,7 @@ export default function RemindersContent() {
                                         key={payment.id}
                                         payment={payment}
                                         variant="upcoming"
-                                        onMarkPaid={markPaymentPaid}
+                                        onCollect={collectPayment}
                                         onDelete={deletePayment}
                                     />
                                 ))}
@@ -649,7 +688,7 @@ export default function RemindersContent() {
                         </div>
                     )}
 
-                    {/* Tamamlanan Ödemeler */}
+                    {/* Tamamlanan Ã–demeler */}
                     {paidPayments.length > 0 && (
                         <div>
                             <h3 className="text-sm font-bold text-emerald-400 mb-3 flex items-center gap-2">
@@ -662,7 +701,7 @@ export default function RemindersContent() {
                                         key={payment.id}
                                         payment={payment}
                                         variant="paid"
-                                        onMarkPaid={markPaymentPaid}
+                                        onCollect={collectPayment}
                                         onDelete={deletePayment}
                                     />
                                 ))}
@@ -673,8 +712,8 @@ export default function RemindersContent() {
                     {paymentSchedules.length === 0 && (
                         <div className="text-center py-12 text-slate-500">
                             <CreditCard size={48} className="mx-auto mb-4 opacity-30" />
-                            <p>Henüz ödeme planı yok</p>
-                            <p className="text-sm">Müşteri kartlarındaki ödeme takip butonundan taksit ekleyebilirsiniz</p>
+                            <p>HenÃ¼z Ã¶deme planÄ± yok</p>
+                            <p className="text-sm">MÃ¼ÅŸteri kartlarÄ±ndaki Ã¶deme takip butonundan taksit ekleyebilirsiniz</p>
                         </div>
                     )}
                 </div>
@@ -715,11 +754,11 @@ export default function RemindersContent() {
                                     <span className="text-lg font-black">{client.daysSince}</span>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="font-bold text-slate-200">{client.full_name || client.name || 'İsimsiz'}</div>
+                                    <div className="font-bold text-slate-200">{client.full_name || client.name || 'Ä°simsiz'}</div>
                                     <div className="text-xs text-slate-500">{client.phone || '-'}</div>
                                 </div>
                                 <div className="text-right shrink-0">
-                                    <div className="text-xs text-slate-500">Son işlem</div>
+                                    <div className="text-xs text-slate-500">Son iÅŸlem</div>
                                     <div className="text-sm text-slate-400">{format(client.lastDate, 'dd MMM yyyy', { locale: tr })}</div>
                                 </div>
                                 <WhatsAppButton
@@ -736,7 +775,7 @@ export default function RemindersContent() {
                         {inactiveClients.length === 0 && (
                             <div className="text-center py-12 text-slate-500">
                                 <CheckCircle size={48} className="mx-auto mb-4 text-emerald-500 opacity-50" />
-                                <p>Tüm müşteriler aktif!</p>
+                                <p>TÃ¼m mÃ¼ÅŸteriler aktif!</p>
                             </div>
                         )}
                     </div>
@@ -813,18 +852,23 @@ function ReminderCard({
 function PaymentCard({
     payment,
     variant,
-    onMarkPaid,
+    onCollect,
     onDelete
 }: {
     payment: PaymentScheduleWithClient
     variant: 'overdue' | 'today' | 'upcoming' | 'paid'
-    onMarkPaid: (id: string) => void
+    onCollect: (id: string) => void
     onDelete: (id: string) => void
 }) {
     const clientName = payment.clients?.full_name || payment.clients?.name || 'Bilinmeyen'
     const clientPhone = payment.clients?.phone || '-'
     const dueDate = parseISO(payment.due_date)
     const daysUntil = differenceInDays(dueDate, new Date())
+    const amountDue = getAmountDue(payment)
+    const amountPaid = getAmountPaid(payment)
+    const remaining = getRemaining(payment)
+    const isFullyPaid = remaining <= 0
+    const isPartial = !isFullyPaid && amountPaid > 0
 
     const colors = {
         overdue: { bg: "bg-red-500/5", border: "border-red-500/30", text: "text-red-400" },
@@ -861,16 +905,24 @@ function PaymentCard({
                 <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-bold text-slate-200 text-sm">{clientName}</span>
                     <span className={cn("text-sm font-black", c.text)}>
-                        {payment.amount.toLocaleString('tr-TR')} ₺
+                        {remaining > 0 ? remaining.toLocaleString('tr-TR') : amountDue.toLocaleString('tr-TR')} â‚º
                     </span>
-                    {variant === 'paid' && (
+                    {isFullyPaid && (
                         <span className="text-[9px] font-bold bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded">
-                            ÖDENDİ
+                            Ã–DENDÄ°
+                        </span>
+                    )}
+                    {isPartial && (
+                        <span className="text-[9px] font-bold bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded">
+                            KÄ°SMÄ°
                         </span>
                     )}
                 </div>
                 <div className="text-xs text-slate-500 flex items-center gap-2">
                     <span>{clientPhone}</span>
+                    {!isFullyPaid && (
+                        <span>Tahsil edilen: {amountPaid.toLocaleString('tr-TR')} â‚º</span>
+                    )}
                     {payment.note && (
                         <>
                             <span className="text-slate-700">|</span>
@@ -887,25 +939,25 @@ function PaymentCard({
                 </div>
                 <div className="text-[10px] text-slate-500">
                     {variant === 'overdue'
-                        ? `${Math.abs(daysUntil)} gün gecikti`
+                        ? `${Math.abs(daysUntil)} gÃ¼n gecikti`
                         : variant === 'today'
-                            ? 'Bugün'
+                            ? 'BugÃ¼n'
                             : variant === 'paid'
                                 ? payment.paid_at ? format(parseISO(payment.paid_at), 'd MMM', { locale: tr }) : ''
-                                : `${daysUntil} gün sonra`
+                                : `${daysUntil} gÃ¼n sonra`
                     }
                 </div>
             </div>
 
             {/* Actions */}
             <div className="flex items-center gap-1 shrink-0">
-                {!payment.is_paid && (
+                {remaining > 0 && (
                     <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => onMarkPaid(payment.id)}
+                        onClick={() => onCollect(payment.id)}
                         className="h-9 w-9 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded-lg"
-                        title="Ödendi İşaretle"
+                        title="Tahsilat Al"
                     >
                         <CheckCircle2 size={18} />
                     </Button>
@@ -929,3 +981,4 @@ function PaymentCard({
         </div>
     )
 }
+
