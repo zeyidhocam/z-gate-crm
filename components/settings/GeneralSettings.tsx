@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useSettings, UIConfig } from "@/components/providers/settings-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,36 +10,21 @@ import { Separator } from "@/components/ui/separator"
 
 export function GeneralSettings() {
     const { config, updateConfig, isLoading } = useSettings()
-    const [formData, setFormData] = useState({
-        appName: config.appName,
-        logoUrl: config.logoUrl || '',
-    })
+    const [appNameDraft, setAppNameDraft] = useState<string | null>(null)
+    const [logoUrlDraft, setLogoUrlDraft] = useState<string | null>(null)
     const [saved, setSaved] = useState(false)
 
-    // Config yüklendiğinde formu güncelle - Sadece config değiştiğinde (loading bittiyse)
-    useEffect(() => {
-        if (!isLoading) {
-            setFormData(prev => {
-                const newLogo = config.logoUrl || ''
-                if (prev.appName !== config.appName || prev.logoUrl !== newLogo) {
-                    return {
-                        ...prev,
-                        appName: config.appName,
-                        logoUrl: newLogo,
-                    }
-                }
-                return prev
-            })
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isLoading, config.appName, config.logoUrl])
+    const appName = appNameDraft ?? config.appName
+    const logoUrl = logoUrlDraft ?? (config.logoUrl || '')
 
     const handleSave = async () => {
         await updateConfig({
-            appName: formData.appName,
-            logoUrl: formData.logoUrl,
+            appName,
+            logoUrl,
         } as Partial<UIConfig>)
 
+        setAppNameDraft(null)
+        setLogoUrlDraft(null)
         setSaved(true)
         setTimeout(() => setSaved(false), 2000)
     }
@@ -58,8 +43,8 @@ export function GeneralSettings() {
                         <Globe size={16} className="text-primary" /> Site Başlığı
                     </Label>
                     <Input
-                        value={formData.appName}
-                        onChange={(e) => setFormData({ ...formData, appName: e.target.value })}
+                        value={appName}
+                        onChange={(e) => setAppNameDraft(e.target.value)}
                         className="bg-slate-950/50 border-slate-700 h-11 focus:border-primary"
                         placeholder="Örn: Z-Gate CRM"
                     />
@@ -73,16 +58,16 @@ export function GeneralSettings() {
                     <div className="flex gap-4 items-start">
                         <div className="flex-1">
                             <Input
-                                value={formData.logoUrl}
-                                onChange={(e) => setFormData({ ...formData, logoUrl: e.target.value })}
+                                value={logoUrl}
+                                onChange={(e) => setLogoUrlDraft(e.target.value)}
                                 className="bg-slate-950/50 border-slate-700 h-11 focus:border-primary"
                                 placeholder="https://..."
                             />
                         </div>
-                        {formData.logoUrl && (
+                        {logoUrl && (
                             <div className="w-11 h-11 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center overflow-hidden shrink-0">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img src={formData.logoUrl} alt="Logo Preview" className="w-full h-full object-cover" />
+                                <img src={logoUrl} alt="Logo Preview" className="w-full h-full object-cover" />
                             </div>
                         )}
                     </div>

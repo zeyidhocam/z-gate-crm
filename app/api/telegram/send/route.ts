@@ -1,35 +1,38 @@
-
 import { NextResponse } from 'next/server'
+import { createServerSupabaseClient } from '@/lib/server/supabase-admin'
+import { getTelegramCredentials, sendTelegramMessage } from '@/lib/server/telegram'
+
+interface SendTelegramBody {
+    message?: string
+}
 
 export async function POST(request: Request) {
     try {
-        const { message, token, chatId } = await request.json()
+        const body = (await request.json()) as SendTelegramBody
+        const message = typeof body.message === 'string' ? body.message.trim() : ''
 
-        if (!message || !token || !chatId) {
+        if (!message) {
             return NextResponse.json(
-                { ok: false, error: 'Mesaj, token veya chat ID eksik.' },
+                { ok: false, error: 'Mesaj eksik.' },
                 { status: 400 }
             )
         }
 
-        const telegramUrl = `https://api.telegram.org/bot${token}/sendMessage`
-        const response = await fetch(telegramUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                chat_id: chatId,
-                text: message,
-                parse_mode: 'HTML'
-            })
-        })
+        const supabase = createServerSupabaseClient()
+        const credentials = await getTelegramCredentials(supabase)
 
-        const data = await response.json()
-
-        if (!data.ok) {
+        if (!credentials) {
             return NextResponse.json(
-                { ok: false, error: data.description || 'Telegram hatası' },
+                { ok: false, error: 'Telegram ayarları bulunamadı.' },
+                { status: 400 }
+            )
+        }
+
+        const result = await sendTelegramMessage(credentials.token, credentials.chatId, message)
+
+        if (!result.ok) {
+            return NextResponse.json(
+                { ok: false, error: result.error || 'Telegram hatası' },
                 { status: 400 }
             )
         }

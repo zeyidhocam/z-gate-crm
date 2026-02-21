@@ -100,7 +100,6 @@ export default function CustomersPage() {
 
             if (error) return
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const map: Record<string, PaymentInfo> = {}
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 ; (data || []).forEach((p: any) => {
@@ -257,7 +256,7 @@ export default function CustomersPage() {
 
     // Filtreleme ve sıralama
     const filteredCustomers = useMemo(() => {
-        let result = customers.filter(customer => {
+        const result = customers.filter(customer => {
             const matchesSearch = search === "" ||
                 (customer.full_name?.toLowerCase().includes(search.toLowerCase())) ||
                 (customer.name?.toLowerCase().includes(search.toLowerCase())) ||

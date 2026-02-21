@@ -22,6 +22,16 @@ interface NewClientDialogProps {
     onSuccess?: () => void
 }
 
+interface DuplicateMatch {
+    id: string
+    full_name: string | null
+    phone: string | null
+}
+
+interface SystemSettingsTagsRow {
+    customer_tags: string[] | null
+}
+
 export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
     const [isOpen, setIsOpen] = useState(false)
     const [activeTab, setActiveTab] = useState("manual")
@@ -48,7 +58,7 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
     const [availableTags, setAvailableTags] = useState<string[]>([])
 
     // Duplicate detection
-    const [duplicateMatches, setDuplicateMatches] = useState<Array<Record<string, any>>>([])
+    const [duplicateMatches, setDuplicateMatches] = useState<DuplicateMatch[]>([])
     const [forceSave, setForceSave] = useState(false)
 
     // JSON Input
@@ -107,18 +117,44 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
     }
 
     useEffect(() => {
-        // Fetch available tags from system_settings.customer_tags if exists
-        supabase.from('system_settings').select('customer_tags').single().then(({ data }: { data: any }) => {
-            if (data && (data as any).customer_tags) {
-                setAvailableTags((data as any).customer_tags || [])
-            } else {
-                const local = localStorage.getItem('customer_tags')
-                if (local) setAvailableTags(JSON.parse(local))
-            }
-        }).catch(() => {
+        let cancelled = false
+
+        const parseLocalTags = () => {
             const local = localStorage.getItem('customer_tags')
-            if (local) setAvailableTags(JSON.parse(local))
+            if (!local) return
+            try {
+                const parsed = JSON.parse(local) as unknown
+                if (Array.isArray(parsed) && parsed.every(tag => typeof tag === 'string')) {
+                    setAvailableTags(parsed)
+                }
+            } catch {
+                // local parse hatasi gizlendi
+            }
+        }
+
+        const loadTags = async () => {
+            const { data } = await supabase
+                .from('system_settings')
+                .select('customer_tags')
+                .single()
+
+            if (cancelled) return
+
+            const typedData = data as SystemSettingsTagsRow | null
+            if (typedData?.customer_tags && Array.isArray(typedData.customer_tags)) {
+                setAvailableTags(typedData.customer_tags)
+            } else {
+                parseLocalTags()
+            }
+        }
+
+        loadTags().catch(() => {
+            if (!cancelled) parseLocalTags()
         })
+
+        return () => {
+            cancelled = true
+        }
     }, [])
 
     const handleSubmit = async () => {
@@ -163,14 +199,14 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
 
             // Duplicate check (by phone or similar full_name) unless forceSave is true
             if (!forceSave) {
-                const matches: Record<string, any>[] = []
+                const matches: DuplicateMatch[] = []
                 if (formData.phone && formData.phone.trim()) {
                     const { data: byPhone } = await supabase.from('clients').select('id, full_name, phone').eq('phone', formData.phone).limit(5)
-                    if (byPhone && byPhone.length) matches.push(...byPhone)
+                    if (byPhone && byPhone.length) matches.push(...(byPhone as DuplicateMatch[]))
                 }
                 if (formData.full_name && formData.full_name.trim().length > 3) {
                     const { data: byName } = await supabase.from('clients').select('id, full_name, phone').ilike('full_name', `%${formData.full_name}%`).limit(5)
-                    if (byName && byName.length) matches.push(...byName)
+                    if (byName && byName.length) matches.push(...(byName as DuplicateMatch[]))
                 }
 
                 // Unique
@@ -192,7 +228,8 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
 
             if (res.status === 409) {
                 const json = await res.json().catch(() => ({}))
-                if (json && json.existing) setDuplicateMatches([json.existing])
+                const existing = (json as { existing?: DuplicateMatch }).existing
+                if (existing) setDuplicateMatches([existing])
                 setError("Benzer kayıt(lar) bulundu. Lütfen kontrol edin veya 'Yine de Kaydet' ile devam edin.")
                 setLoading(false)
                 return
@@ -203,7 +240,7 @@ export function NewClientDialog({ onSuccess }: NewClientDialogProps) {
                 throw new Error(err.error || 'Kayıt yapılamadı')
             }
 
-            const result = await res.json()
+            await res.json()
             setSuccess("Kaydedildi!")
 
             // Reset

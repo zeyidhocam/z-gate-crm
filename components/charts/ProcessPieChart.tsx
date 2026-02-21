@@ -45,7 +45,6 @@ const renderCustomLabel = ({ cx = 0, cy = 0, midAngle = 0, innerRadius = 0, oute
 }
 
 // Custom tooltip
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CustomTooltip = ({ active, payload }: { active?: boolean, payload?: Array<{ name: string, value: number, payload: ProcessData }> }) => {
     if (active && payload && payload.length) {
         return (

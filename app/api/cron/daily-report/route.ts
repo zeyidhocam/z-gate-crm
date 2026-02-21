@@ -1,20 +1,12 @@
 
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServerSupabaseClient } from '@/lib/server/supabase-admin'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
     try {
-        // Initialize Supabase Admin Client (needed for crons/background tasks potentially, but client key works if RLS allows public read or we have service role)
-        // Since we are running this as an API route, we can use the project credentials.
-        // For security, cron jobs should use SERVICE_ROLE_KEY if RLS is strict, but for this user setup, let's try with standard environment variables.
-        // If the user has RLS enabled on 'system_settings', standard anon key might fail to read if not authenticated.
-        // HOWEVER, previous code suggests they are using a client-side supabase helper.
-        // We will create a fresh client here.
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        const supabase = createClient(supabaseUrl, supabaseKey)
+        const supabase = createServerSupabaseClient()
 
         // 1. Get Telegram Settings
         const { data: settings, error: settingsError } = await supabase

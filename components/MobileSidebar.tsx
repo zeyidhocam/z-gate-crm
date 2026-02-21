@@ -3,21 +3,21 @@
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Menu } from "lucide-react"
 import { Sidebar } from "@/components/Sidebar"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 
 export function MobileSidebar() {
-    const [open, setOpen] = useState(false)
+    const [openPath, setOpenPath] = useState<string | null>(null)
     const pathname = usePathname()
+    const open = openPath === pathname
 
-    // Sayfa değişince menüyü kapat
-    useEffect(() => {
-        setOpen(false)
-    }, [pathname])
+    const handleOpenChange = (nextOpen: boolean) => {
+        setOpenPath(nextOpen ? pathname : null)
+    }
 
     return (
-        <Sheet open={open} onOpenChange={setOpen}>
+        <Sheet open={open} onOpenChange={handleOpenChange}>
             <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="md:hidden text-cyan-400 hover:bg-cyan-500/10 hover:text-cyan-300">
                     <Menu size={24} />

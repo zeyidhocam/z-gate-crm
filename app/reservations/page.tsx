@@ -7,7 +7,7 @@ import { tr } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 // Icons
 import {
-    Calendar as CalendarIcon, Copy, Check, ChevronRight, MessageCircle, Edit, User, CheckCircle, XCircle, CalendarClock,
+    Calendar as CalendarIcon, Copy, Check, ChevronRight, Edit, User, CheckCircle, XCircle, CalendarClock,
     Wallet, CreditCard, AlertCircle, TrendingUp
 } from "lucide-react"
 // UI Components
@@ -320,7 +320,6 @@ export default function ReservationsPage() {
                 const { scheduledTotal, scheduledOverdue, reservationTotal, scheduledCount, overdueCount, reservationCount } = paymentSummary
                 const grandTotal = scheduledTotal + scheduledOverdue + reservationTotal
                 const hasOverdue = overdueCount > 0
-                const hasToday = scheduledCount > 0 || reservationCount > 0
 
                 if (grandTotal === 0) return null
 

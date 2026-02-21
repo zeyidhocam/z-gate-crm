@@ -602,7 +602,7 @@ export async function handleRandevuOlustur(
         return `⚠️ Geçmiş bir tarih giremezsin!\n\nGirilen: ${formatDateTime(reservationDate.toISOString())}\nŞimdi: ${formatDateTime(new Date().toISOString())}`
       }
 
-    } catch (e) {
+    } catch {
       return `❌ Tarih parse edilemedi.\n\n<b>Örnek:</b> /randevu_olustur 123 2024-02-20 15:30`
     }
 
@@ -637,11 +637,7 @@ ${client.reservation_at ? `📌 <b>Eski Randevu:</b> ${formatDateTime(client.res
 /**
  * /yardim - Komut listesi ve yardım
  */
-export async function handleHelp(
-  text: string,
-  chatId: string,
-  supabase: SupabaseClient
-): Promise<string> {
+export async function handleHelp(): Promise<string> {
   return `🤖 <b>Z-GATE CRM BOT KOMUTLARI</b>
 ━━━━━━━━━━━━━━━━━━━━━━━
 

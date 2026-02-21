@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
-import { formatDistanceToNow, format } from "date-fns"
+import { format } from "date-fns"
 import { tr } from "date-fns/locale"
 import { Clock } from "lucide-react"
 
@@ -11,23 +11,38 @@ interface RecentActivityProps {
   limit?: number
 }
 
+interface AuditActivity {
+  id: string
+  action: string | null
+  created_at: string
+  changes: unknown
+}
+
 export default function RecentActivity({ clientId, limit = 10 }: RecentActivityProps) {
-  const [activities, setActivities] = useState<any[]>([])
-  const [loading, setLoading] = useState(false)
+  const [activities, setActivities] = useState<AuditActivity[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!clientId) return
-    setLoading(true)
-    supabase
-      .from('audit_logs')
-      .select('*')
-      .eq('record_id', clientId)
-      .order('created_at', { ascending: false })
-      .limit(limit)
-      .then(({ data }: { data: any[] }) => {
-        setActivities(data || [])
-      })
-      .finally(() => setLoading(false))
+
+    let active = true
+    void (async () => {
+      const { data } = await supabase
+        .from('audit_logs')
+        .select('*')
+        .eq('record_id', clientId)
+        .order('created_at', { ascending: false })
+        .limit(limit)
+
+      if (!active) return
+
+      setActivities((data as AuditActivity[] | null) || [])
+      setLoading(false)
+    })()
+
+    return () => {
+      active = false
+    }
   }, [clientId, limit])
 
   if (!clientId) return null

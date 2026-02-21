@@ -57,23 +57,19 @@ export function GlobalReminderManager() {
                     ), { duration: 6000 })
 
                     // --- TELEGRAM INTEGRATION ---
-                    const savedToken = localStorage.getItem('telegram_bot_token')
-                    const savedChatId = localStorage.getItem('telegram_chat_id')
                     const lastSentStr = localStorage.getItem('last_telegram_sent_at')
 
                     // Check if we should send (throttle: once every 4 hours)
                     let shouldSend = false
                     const now = new Date()
-                    if (savedToken && savedChatId) {
-                        if (!lastSentStr) {
+                    if (!lastSentStr) {
+                        shouldSend = true
+                    } else {
+                        const lastSent = new Date(lastSentStr)
+                        const diffMs = now.getTime() - lastSent.getTime()
+                        const diffHours = diffMs / (1000 * 60 * 60)
+                        if (diffHours >= 4) {
                             shouldSend = true
-                        } else {
-                            const lastSent = new Date(lastSentStr)
-                            const diffMs = now.getTime() - lastSent.getTime()
-                            const diffHours = diffMs / (1000 * 60 * 60)
-                            if (diffHours >= 4) {
-                                shouldSend = true
-                            }
                         }
                     }
 
@@ -116,11 +112,7 @@ export function GlobalReminderManager() {
                             await fetch('/api/telegram/send', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    token: savedToken,
-                                    chatId: savedChatId,
-                                    message: message
-                                })
+                                body: JSON.stringify({ message })
                             })
 
                             localStorage.setItem('last_telegram_sent_at', now.toISOString())

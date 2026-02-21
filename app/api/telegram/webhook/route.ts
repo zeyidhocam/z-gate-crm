@@ -1,7 +1,7 @@
 
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { matchCommand, commands } from '@/lib/telegram-commands'
+import { createServerSupabaseClient } from '@/lib/server/supabase-admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,9 +48,7 @@ export async function POST(request: Request) {
         console.log('[Webhook] Message received:', { chatId, text })
 
         // Setup Supabase
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        const supabase = createClient(supabaseUrl, supabaseKey)
+        const supabase = createServerSupabaseClient()
 
         // Verify Bot Token from DB (to ensure we reply with correct bot)
         // Optimization: In a high-traffic webhook, you might want to cache this or use env vars directly.

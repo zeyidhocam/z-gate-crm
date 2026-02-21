@@ -50,7 +50,7 @@ export async function POST(req: Request) {
     // optional: write to audit_logs table if exists
     try {
       await supabase.from('audit_logs').insert([{ table_name: 'clients', record_id: data.id, action: 'insert', changes: { new: data } }])
-    } catch (e) {
+    } catch {
       // ignore audit errors
     }
 

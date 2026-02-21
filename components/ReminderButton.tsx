@@ -58,41 +58,32 @@ export function ReminderButton({ clientId, clientName, className, iconSize = 18,
             toast.success("Hatırlatma eklendi!")
 
             // --- INSTANT TELEGRAM NOTIFICATION ---
-            const savedToken = localStorage.getItem('telegram_bot_token')
-            const savedChatId = localStorage.getItem('telegram_chat_id')
+            try {
+                const priceInfo = clientDetails?.balance
+                    ? `💰 <b>Kalan Ödeme:</b> ${clientDetails.balance.toLocaleString('tr-TR')} ₺`
+                    : clientDetails?.price
+                        ? `💰 <b>İşlem Tutarı:</b> ${clientDetails.price.toLocaleString('tr-TR')} ₺`
+                        : ''
 
-            if (savedToken && savedChatId) {
-                try {
-                    const priceInfo = clientDetails?.balance
-                        ? `💰 <b>Kalan Ödeme:</b> ${clientDetails.balance.toLocaleString('tr-TR')} ₺`
-                        : clientDetails?.price
-                            ? `💰 <b>İşlem Tutarı:</b> ${clientDetails.price.toLocaleString('tr-TR')} ₺`
-                            : ''
+                const processInfo = clientDetails?.process ? `🔮 <b>İşlem:</b> ${clientDetails.process}` : ''
+                const phoneInfo = clientDetails?.phone ? `📞 <b>Tel:</b> ${clientDetails.phone}` : ''
 
-                    const processInfo = clientDetails?.process ? `🔮 <b>İşlem:</b> ${clientDetails.process}` : ''
-                    const phoneInfo = clientDetails?.phone ? `📞 <b>Tel:</b> ${clientDetails.phone}` : ''
+                const message = `🔔 <b>YENİ HATIRLATMA EKLENDİ</b>\n\n` +
+                    `👤 <b>Müşteri:</b> ${clientName}\n` +
+                    `${phoneInfo}\n` +
+                    `${processInfo}\n` +
+                    `${priceInfo}\n\n` +
+                    `📅 <b>Tarih:</b> ${format(date, 'dd MMMM yyyy', { locale: tr })}\n` +
+                    `📌 <b>Başlık:</b> ${title.trim()}\n` +
+                    (description.trim() ? `📝 <b>Not:</b> ${description.trim()}` : '')
 
-                    const message = `🔔 <b>YENİ HATIRLATMA EKLENDİ</b>\n\n` +
-                        `👤 <b>Müşteri:</b> ${clientName}\n` +
-                        `${phoneInfo}\n` +
-                        `${processInfo}\n` +
-                        `${priceInfo}\n\n` +
-                        `📅 <b>Tarih:</b> ${format(date, 'dd MMMM yyyy', { locale: tr })}\n` +
-                        `📌 <b>Başlık:</b> ${title.trim()}\n` +
-                        (description.trim() ? `📝 <b>Not:</b> ${description.trim()}` : '')
-
-                    await fetch('/api/telegram/send', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            token: savedToken,
-                            chatId: savedChatId,
-                            message: message
-                        })
-                    })
-                } catch {
-                    // Hata kaydi gizlendi
-                }
+                await fetch('/api/telegram/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                })
+            } catch {
+                // Hata kaydi gizlendi
             }
             // -------------------------------------
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { CalendarClock, CalendarDays, Clock } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -25,17 +25,20 @@ interface ReservationEditDialogProps {
 }
 
 export function ReservationEditDialog({ client, open, onOpenChange, onSave }: ReservationEditDialogProps) {
-  const [date, setDate] = useState<Date | undefined>(undefined)
-  const [time, setTime] = useState<string>("12:00") // Default time
+  const [dateOverride, setDateOverride] = useState<Date | undefined>(undefined)
+  const [timeOverride, setTimeOverride] = useState<string | undefined>(undefined)
 
-  // Sync state when dialog opens with a new client
-  useEffect(() => {
-    if (open && client?.reservation_at) {
-      const reservationDate = parseISO(client.reservation_at)
-      setDate(reservationDate)
-      setTime(format(reservationDate, 'HH:mm'))
+  const initialReservationDate = client?.reservation_at ? parseISO(client.reservation_at) : undefined
+  const date = dateOverride ?? initialReservationDate
+  const time = timeOverride ?? (initialReservationDate ? format(initialReservationDate, 'HH:mm') : "12:00")
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setDateOverride(undefined)
+      setTimeOverride(undefined)
     }
-  }, [open, client])
+    onOpenChange(nextOpen)
+  }
 
   const handleSave = () => {
     if (!date || !time) return
@@ -44,7 +47,7 @@ export function ReservationEditDialog({ client, open, onOpenChange, onSave }: Re
     const newDate = setMinutes(setHours(date, hours), minutes)
 
     onSave(newDate)
-    onOpenChange(false)
+    handleOpenChange(false)
   }
 
   // Generate time slots (30 min intervals)
@@ -58,7 +61,7 @@ export function ReservationEditDialog({ client, open, onOpenChange, onSave }: Re
   if (!client) return null
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="bg-[#0c1929] border-cyan-500/20 text-slate-200 max-w-sm">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-gradient-ocean flex items-center gap-2">
@@ -96,7 +99,7 @@ export function ReservationEditDialog({ client, open, onOpenChange, onSave }: Re
                 <Calendar
                   mode="single"
                   selected={date}
-                  onSelect={setDate}
+                  onSelect={setDateOverride}
                   initialFocus
                   locale={tr}
                   className="p-3 pointer-events-auto bg-[#0c1929] text-slate-200 rounded-md border border-slate-800"
@@ -117,7 +120,7 @@ export function ReservationEditDialog({ client, open, onOpenChange, onSave }: Re
             <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
               <Clock size={14} /> Saat
             </label>
-            <Select value={time} onValueChange={setTime}>
+            <Select value={time} onValueChange={setTimeOverride}>
               <SelectTrigger className="bg-[#0a1628] border-cyan-500/10 hover:border-cyan-500/30 w-full">
                 <SelectValue placeholder="Saat Seçin" />
               </SelectTrigger>

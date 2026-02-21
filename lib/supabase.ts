@@ -46,7 +46,8 @@ const createMockBuilder = () => {
         order: () => builder,
         limit: () => builder,
         // Mock 'then' to make it simpler to await
-        then: (resolve: any) => resolve({ data: [], error: { message: 'Supabase not configured' } })
+        then: (resolve: (value: { data: unknown[]; error: { message: string } }) => unknown) =>
+            resolve({ data: [], error: { message: 'Supabase not configured' } })
     }
     return builder
 }

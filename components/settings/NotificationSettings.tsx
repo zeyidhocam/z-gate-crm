@@ -79,8 +79,6 @@ export function NotificationSettings() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    token: telegramToken,
-                    chatId: telegramChatId,
                     message: "🔔 Test Bildirimi: Ocean Elite CRM sistemi Telegram entegrasyonu başarılı! 🚀"
                 })
             })

@@ -1,6 +1,6 @@
 "use client"
 
-import { MessageCircle, Send } from "lucide-react"
+import { Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
     Popover,
@@ -108,7 +108,7 @@ export function WhatsAppButton({
         const encodedMessage = encodeURIComponent(message)
         // whatsapp:// protokolü masaüstü uygulamasını tetikler
         const url = `whatsapp://send?phone=${formattedPhone}&text=${encodedMessage}`
-        window.location.href = url
+        window.open(url, "_self")
     }
 
     return (

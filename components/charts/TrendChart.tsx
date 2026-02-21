@@ -3,14 +3,16 @@
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 
 
+interface TrendDataPoint {
+    date: string
+    value: number
+}
 
 interface TrendChartProps {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    data: any[]
+    data: TrendDataPoint[]
 }
 
 // Custom tooltip
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CustomTooltip = ({ active, payload, label }: { active?: boolean, payload?: Array<{ value: number, payload: unknown }>, label?: string }) => {
     if (active && payload && payload.length) {
         return (

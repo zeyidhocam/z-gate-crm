@@ -6,23 +6,54 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { supabase } from "@/lib/supabase"
 
+interface SystemSettingsTagsRow {
+    customer_tags: string[] | null
+}
+
 export function TagSettings() {
     const [tags, setTags] = useState<string[]>([])
     const [newTag, setNewTag] = useState("")
     const [status, setStatus] = useState<string | null>(null)
 
     useEffect(() => {
-        supabase.from('system_settings').select('customer_tags').single().then(({ data, error }: { data: any, error: any }) => {
-            if (!error && data && (data as any).customer_tags) {
-                setTags((data as any).customer_tags || [])
-            } else {
-                const local = localStorage.getItem('customer_tags')
-                if (local) setTags(JSON.parse(local))
-            }
-        }).catch(() => {
+        let cancelled = false
+
+        const parseLocalTags = () => {
             const local = localStorage.getItem('customer_tags')
-            if (local) setTags(JSON.parse(local))
+            if (!local) return
+            try {
+                const parsed = JSON.parse(local) as unknown
+                if (Array.isArray(parsed) && parsed.every(tag => typeof tag === 'string')) {
+                    setTags(parsed)
+                }
+            } catch {
+                // local parse hatasi gizlendi
+            }
+        }
+
+        const loadTags = async () => {
+            const { data, error } = await supabase
+                .from('system_settings')
+                .select('customer_tags')
+                .single()
+
+            if (cancelled) return
+
+            const typedData = data as SystemSettingsTagsRow | null
+            if (!error && typedData?.customer_tags && Array.isArray(typedData.customer_tags)) {
+                setTags(typedData.customer_tags)
+            } else {
+                parseLocalTags()
+            }
+        }
+
+        loadTags().catch(() => {
+            if (!cancelled) parseLocalTags()
         })
+
+        return () => {
+            cancelled = true
+        }
     }, [])
 
     const handleAdd = () => {

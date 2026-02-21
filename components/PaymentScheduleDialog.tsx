@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import {
     Wallet, Plus, CheckCircle2, AlertCircle, Clock, Calendar as CalendarIcon,
-    Trash2, CreditCard, TrendingUp, Banknote
+    Trash2, CreditCard, Banknote
 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -119,24 +119,20 @@ export function PaymentScheduleDialog({
             toast.success("Ödeme planı eklendi!")
 
             // Send Telegram notification
-            const savedToken = localStorage.getItem('telegram_bot_token')
-            const savedChatId = localStorage.getItem('telegram_chat_id')
-            if (savedToken && savedChatId) {
-                try {
-                    const message = `💳 <b>YENİ ÖDEME PLANI</b>\n\n` +
-                        `👤 <b>Müşteri:</b> ${clientName}\n` +
-                        `💰 <b>Tutar:</b> ${amount.toLocaleString('tr-TR')} ₺\n` +
-                        `📅 <b>Vade:</b> ${format(newDate, 'dd MMMM yyyy', { locale: tr })}\n` +
-                        (newNote.trim() ? `📝 <b>Not:</b> ${newNote.trim()}` : '')
+            try {
+                const message = `💳 <b>YENİ ÖDEME PLANI</b>\n\n` +
+                    `👤 <b>Müşteri:</b> ${clientName}\n` +
+                    `💰 <b>Tutar:</b> ${amount.toLocaleString('tr-TR')} ₺\n` +
+                    `📅 <b>Vade:</b> ${format(newDate, 'dd MMMM yyyy', { locale: tr })}\n` +
+                    (newNote.trim() ? `📝 <b>Not:</b> ${newNote.trim()}` : '')
 
-                    await fetch('/api/telegram/send', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ token: savedToken, chatId: savedChatId, message })
-                    })
-                } catch {
-                    // Silent fail
-                }
+                await fetch('/api/telegram/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                })
+            } catch {
+                // Silent fail
             }
 
             // Reset form
@@ -209,7 +205,6 @@ export function PaymentScheduleDialog({
 
     // Calculations
     const totalPaid = schedules.filter(s => s.is_paid).reduce((sum, s) => sum + s.amount, 0)
-    const totalScheduled = schedules.reduce((sum, s) => sum + s.amount, 0)
     const totalRemaining = (totalPrice || 0) - totalPaid
     const progressPercent = totalPrice && totalPrice > 0
         ? Math.min(Math.round((totalPaid / totalPrice) * 100), 100)
