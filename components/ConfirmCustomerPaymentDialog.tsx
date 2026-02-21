@@ -1,7 +1,7 @@
-"use client"
+﻿"use client"
 
-import { useEffect, useState } from "react"
-import { addDays, format } from "date-fns"
+import { useEffect, useMemo, useState } from "react"
+import { addDays, addMonths, format } from "date-fns"
 import { tr } from "date-fns/locale"
 import { Wallet, CheckCircle2, CalendarClock } from "lucide-react"
 import { toast } from "sonner"
@@ -27,10 +27,44 @@ interface ConfirmCustomerPaymentDialogProps {
   onSuccess?: () => void
 }
 
+interface InstallmentItem {
+  amount: number
+  dueDate: string
+  note?: string
+}
+
 const MODE_LABEL: Record<PaymentMode, string> = {
-  full_paid: "Tam Ödendi",
+  full_paid: "Tam Odendi",
   deposit_plan: "Kapora + Plan",
-  pay_later: "Sonradan Ödeme",
+  pay_later: "Sonradan Odeme",
+}
+
+function splitAmountEvenly(totalAmount: number, count: number): number[] {
+  const safeCount = Math.max(1, count)
+  const totalCents = Math.round(totalAmount * 100)
+  const base = Math.floor(totalCents / safeCount)
+  const remainder = totalCents % safeCount
+
+  return Array.from({ length: safeCount }, (_, index) => {
+    const cents = base + (index < remainder ? 1 : 0)
+    return cents / 100
+  })
+}
+
+function buildInstallments(params: {
+  totalAmount: number
+  firstDueDate: Date
+  installmentCount: number
+  notePrefix: string
+}): InstallmentItem[] {
+  const { totalAmount, firstDueDate, installmentCount, notePrefix } = params
+  const amounts = splitAmountEvenly(totalAmount, installmentCount)
+
+  return amounts.map((amount, index) => ({
+    amount,
+    dueDate: addMonths(firstDueDate, index).toISOString(),
+    note: `${notePrefix} ${index + 1}/${installmentCount}`,
+  }))
 }
 
 export function ConfirmCustomerPaymentDialog({
@@ -42,7 +76,8 @@ export function ConfirmCustomerPaymentDialog({
   const [mode, setMode] = useState<PaymentMode | null>(null)
   const [totalAmount, setTotalAmount] = useState("")
   const [depositAmount, setDepositAmount] = useState("")
-  const [dueDate, setDueDate] = useState<Date | undefined>(addDays(new Date(), 7))
+  const [installmentCount, setInstallmentCount] = useState<1 | 2 | 3>(2)
+  const [firstDueDate, setFirstDueDate] = useState<Date | undefined>(addDays(new Date(), 7))
   const [note, setNote] = useState("")
   const [saving, setSaving] = useState(false)
 
@@ -51,20 +86,60 @@ export function ConfirmCustomerPaymentDialog({
     setMode(null)
     setTotalAmount(String(lead.price || ""))
     setDepositAmount("")
-    setDueDate(addDays(new Date(), 7))
+    setInstallmentCount(2)
+    setFirstDueDate(addDays(new Date(), 7))
     setNote("")
   }, [open, lead])
+
+  useEffect(() => {
+    if (mode === "deposit_plan" && installmentCount === 1) {
+      setInstallmentCount(2)
+    }
+    if (mode === "full_paid") {
+      setInstallmentCount(2)
+    }
+  }, [mode, installmentCount])
+
+  const totalValue = Number(totalAmount)
+  const depositValue = Number(depositAmount)
+  const previewInstallments = useMemo(() => {
+    if (!firstDueDate) return []
+
+    if (mode === "deposit_plan") {
+      if (!Number.isFinite(totalValue) || !Number.isFinite(depositValue)) return []
+      const remaining = totalValue - depositValue
+      if (remaining <= 0) return []
+      return buildInstallments({
+        totalAmount: remaining,
+        firstDueDate,
+        installmentCount: installmentCount < 2 ? 2 : installmentCount,
+        notePrefix: "Kalan taksit",
+      })
+    }
+
+    if (mode === "pay_later") {
+      if (!Number.isFinite(totalValue) || totalValue <= 0) return []
+      return buildInstallments({
+        totalAmount: totalValue,
+        firstDueDate,
+        installmentCount,
+        notePrefix: "Sonradan odeme",
+      })
+    }
+
+    return []
+  }, [mode, totalValue, depositValue, firstDueDate, installmentCount])
 
   const submit = async () => {
     if (!lead) return
     if (!mode) {
-      toast.error("Lütfen ödeme tipi seçin.")
+      toast.error("Lutfen odeme tipi secin.")
       return
     }
 
     const total = Number(totalAmount)
     if (!Number.isFinite(total) || total <= 0) {
-      toast.error("Toplam tutar pozitif olmalı.")
+      toast.error("Toplam tutar pozitif olmali.")
       return
     }
 
@@ -73,7 +148,7 @@ export function ConfirmCustomerPaymentDialog({
       paymentMode: PaymentMode
       totalAmount: number
       depositAmount?: number
-      installments?: Array<{ amount: number; dueDate: string; note?: string }>
+      installments?: InstallmentItem[]
       note?: string
     } = {
       clientId: lead.id,
@@ -82,30 +157,34 @@ export function ConfirmCustomerPaymentDialog({
       note: note.trim() || undefined,
     }
 
+    const dueDate = firstDueDate || addDays(new Date(), 7)
+
     if (mode === "deposit_plan") {
       const deposit = Number(depositAmount)
       if (!Number.isFinite(deposit) || deposit <= 0 || deposit >= total) {
-        toast.error("Kapora tutarı 0 ile toplam arasında olmalı.")
+        toast.error("Kapora tutari 0 ile toplam tutar arasinda olmali.")
         return
       }
+
+      const remaining = total - deposit
+      const count = installmentCount < 2 ? 2 : installmentCount
+
       body.depositAmount = deposit
-      body.installments = [
-        {
-          amount: total - deposit,
-          dueDate: (dueDate || addDays(new Date(), 7)).toISOString(),
-          note: "Kalan ödeme",
-        },
-      ]
+      body.installments = buildInstallments({
+        totalAmount: remaining,
+        firstDueDate: dueDate,
+        installmentCount: count,
+        notePrefix: "Kalan taksit",
+      })
     }
 
     if (mode === "pay_later") {
-      body.installments = [
-        {
-          amount: total,
-          dueDate: (dueDate || addDays(new Date(), 7)).toISOString(),
-          note: "Sonradan ödeme",
-        },
-      ]
+      body.installments = buildInstallments({
+        totalAmount: total,
+        firstDueDate: dueDate,
+        installmentCount,
+        notePrefix: "Sonradan odeme",
+      })
     }
 
     setSaving(true)
@@ -117,9 +196,10 @@ export function ConfirmCustomerPaymentDialog({
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok || !data.ok) {
-        throw new Error(data.error || "Onay sırasında hata oluştu")
+        throw new Error(data.error || "Onay sirasinda hata olustu")
       }
-      toast.success("Müşteri onaylandı ve ödeme planı kaydedildi.")
+
+      toast.success("Musteri onaylandi ve odeme plani kaydedildi.")
       onSuccess?.()
       onOpenChange(false)
     } catch (error: unknown) {
@@ -136,27 +216,27 @@ export function ConfirmCustomerPaymentDialog({
         <DialogHeader>
           <DialogTitle className="text-slate-100 flex items-center gap-2">
             <Wallet size={18} className="text-emerald-400" />
-            Onay ve Ödeme Planı
+            Onay ve Odeme Plani
           </DialogTitle>
           <DialogDescription className="text-slate-400 text-xs">
-            Müşteriyi onaylamadan önce ödeme modelini seçmeniz gerekiyor.
+            Musteriyi onaylamadan once odeme modelini secmeniz gerekiyor.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="rounded-lg border border-slate-700 bg-slate-900/40 p-3">
-            <div className="text-xs text-slate-500 font-bold">MÜŞTERİ</div>
+            <div className="text-xs text-slate-500 font-bold">MUSTERI</div>
             <div className="text-sm text-slate-200 font-bold">{lead?.name || "-"}</div>
           </div>
 
           <div>
-            <label className="text-xs font-bold text-slate-400 mb-1 block">Toplam Tutar (₺)</label>
+            <label className="text-xs font-bold text-slate-400 mb-1 block">Toplam Tutar (TL)</label>
             <Input
               type="number"
               value={totalAmount}
               onChange={(e) => setTotalAmount(e.target.value)}
               className="bg-slate-900/50 border-slate-700 text-slate-200"
-              placeholder="Örn: 10000"
+              placeholder="Orn: 10000"
             />
           </div>
 
@@ -180,26 +260,62 @@ export function ConfirmCustomerPaymentDialog({
           {mode === "deposit_plan" && (
             <div className="space-y-3 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
               <div>
-                <label className="text-xs font-bold text-slate-400 mb-1 block">Kapora Tutarı (₺)</label>
-                <Input
-                  type="number"
-                  value={depositAmount}
-                  onChange={(e) => setDepositAmount(e.target.value)}
-                  className="bg-slate-900/50 border-slate-700 text-slate-200"
-                  placeholder="Örn: 3000"
-                />
+                <label className="text-xs font-bold text-slate-400 mb-1 block">Kapora Tutari (TL)</label>
+                <div className="flex gap-2">
+                  <Input
+                    type="number"
+                    value={depositAmount}
+                    onChange={(e) => setDepositAmount(e.target.value)}
+                    className="bg-slate-900/50 border-slate-700 text-slate-200"
+                    placeholder="Orn: 5000"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      const total = Number(totalAmount)
+                      if (Number.isFinite(total) && total > 0) {
+                        setDepositAmount(String(Math.round(total / 2)))
+                      }
+                    }}
+                    className="border-slate-600 text-slate-300"
+                  >
+                    %50
+                  </Button>
+                </div>
               </div>
+
               <div>
-                <label className="text-xs font-bold text-slate-400 mb-1 block">Kalan Ödeme Vadesi</label>
+                <label className="text-xs font-bold text-slate-400 mb-1 block">Kalan Taksit Sayisi</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[2, 3].map((count) => (
+                    <button
+                      key={count}
+                      type="button"
+                      onClick={() => setInstallmentCount(count as 2 | 3)}
+                      className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${
+                        installmentCount === count
+                          ? "bg-cyan-500/20 border-cyan-500/40 text-cyan-300"
+                          : "bg-slate-900/40 border-slate-700 text-slate-400"
+                      }`}
+                    >
+                      {count} taksit
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-400 mb-1 block">Ilk Vade</label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full justify-start bg-slate-900/50 border-slate-700 text-slate-200">
                       <CalendarClock size={14} className="mr-2" />
-                      {dueDate ? format(dueDate, "dd MMMM yyyy", { locale: tr }) : "Tarih seç"}
+                      {firstDueDate ? format(firstDueDate, "dd MMMM yyyy", { locale: tr }) : "Tarih sec"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0 bg-[#0c1929] border-cyan-500/20">
-                    <Calendar mode="single" selected={dueDate} onSelect={setDueDate} locale={tr} />
+                    <Calendar mode="single" selected={firstDueDate} onSelect={setFirstDueDate} locale={tr} />
                   </PopoverContent>
                 </Popover>
               </div>
@@ -207,30 +323,66 @@ export function ConfirmCustomerPaymentDialog({
           )}
 
           {mode === "pay_later" && (
-            <div>
-              <label className="text-xs font-bold text-slate-400 mb-1 block">İlk Vade</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start bg-slate-900/50 border-slate-700 text-slate-200">
-                    <CalendarClock size={14} className="mr-2" />
-                    {dueDate ? format(dueDate, "dd MMMM yyyy", { locale: tr }) : "Tarih seç"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 bg-[#0c1929] border-cyan-500/20">
-                  <Calendar mode="single" selected={dueDate} onSelect={setDueDate} locale={tr} />
-                </PopoverContent>
-              </Popover>
+            <div className="space-y-3 rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-3">
+              <div>
+                <label className="text-xs font-bold text-slate-400 mb-1 block">Taksit Sayisi</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[1, 2, 3].map((count) => (
+                    <button
+                      key={count}
+                      type="button"
+                      onClick={() => setInstallmentCount(count as 1 | 2 | 3)}
+                      className={`px-3 py-2 rounded-lg text-xs font-bold border transition-all ${
+                        installmentCount === count
+                          ? "bg-cyan-500/20 border-cyan-500/40 text-cyan-300"
+                          : "bg-slate-900/40 border-slate-700 text-slate-400"
+                      }`}
+                    >
+                      {count} taksit
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-400 mb-1 block">Ilk Vade</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start bg-slate-900/50 border-slate-700 text-slate-200">
+                      <CalendarClock size={14} className="mr-2" />
+                      {firstDueDate ? format(firstDueDate, "dd MMMM yyyy", { locale: tr }) : "Tarih sec"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-[#0c1929] border-cyan-500/20">
+                    <Calendar mode="single" selected={firstDueDate} onSelect={setFirstDueDate} locale={tr} />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          )}
+
+          {previewInstallments.length > 0 && (
+            <div className="rounded-lg border border-slate-700 bg-slate-900/40 p-3">
+              <div className="text-xs text-slate-400 font-bold mb-2">PLAN ONIZLEME</div>
+              <div className="space-y-1">
+                {previewInstallments.map((item, index) => (
+                  <div key={`${item.dueDate}-${index}`} className="text-xs text-slate-300 flex justify-between gap-3">
+                    <span>{index + 1}. taksit</span>
+                    <span>{item.amount.toLocaleString("tr-TR")} TL - {format(new Date(item.dueDate), "dd MMM yyyy", { locale: tr })}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
           <div>
-            <label className="text-xs font-bold text-slate-400 mb-1 block">Not (isteğe bağlı)</label>
+            <label className="text-xs font-bold text-slate-400 mb-1 block">Not (istege bagli)</label>
             <Textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
               className="bg-slate-900/50 border-slate-700 text-slate-200 resize-none"
               rows={3}
-              placeholder="Ödeme anlaşma notu..."
+              placeholder="Odeme anlasma notu..."
             />
           </div>
         </div>
@@ -243,7 +395,7 @@ export function ConfirmCustomerPaymentDialog({
             disabled={saving}
             className="text-slate-400"
           >
-            Vazgeç
+            Vazgec
           </Button>
           <Button
             type="button"
