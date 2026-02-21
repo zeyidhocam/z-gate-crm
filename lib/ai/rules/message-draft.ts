@@ -35,7 +35,7 @@ function formatDate(value: string | null): string {
 
 function maskName(raw: string): string {
   const cleaned = raw.trim()
-  if (!cleaned) return 'Musteri'
+  if (!cleaned) return 'Müşteri'
   const parts = cleaned.split(/\s+/).filter(Boolean)
   const first = parts[0]
   if (parts.length === 1) return first
@@ -63,19 +63,19 @@ function maskPhone(phone: string | null): string {
 function resolveTone(tone: AiMessageTone): { ask: string; close: string } {
   if (tone === 'soft') {
     return {
-      ask: 'Uygun oldugunuzda odeme planini netlestirebilir miyiz?',
-      close: 'Tesekkur ederiz, iyi gunler dileriz.',
+      ask: 'Uygun olduğunuzda ödeme planını netleştirebilir miyiz?',
+      close: 'Teşekkür ederiz, iyi günler dileriz.',
     }
   }
   if (tone === 'firm') {
     return {
-      ask: 'Lutfen odemeyi bugun icinde tamamlayip bilgi veriniz.',
-      close: 'Gecikme yasamamasi icin geri donusunuzu bekliyoruz.',
+      ask: 'Lütfen ödemeyi bugün içinde tamamlayıp bilgi veriniz.',
+      close: 'Gecikme yaşanmaması için geri dönüşünüzü bekliyoruz.',
     }
   }
   return {
-    ask: 'Odeme icin uygun zamani paylasmanizi rica ederiz.',
-    close: 'Bilgilendirmeniz icin simdiden tesekkur ederiz.',
+    ask: 'Ödeme için uygun zamanı paylaşmanızı rica ederiz.',
+    close: 'Bilgilendirmeniz için şimdiden teşekkür ederiz.',
   }
 }
 
@@ -90,26 +90,36 @@ export function buildMessageDraft(input: MessageDraftInput): AiMessageDraft {
   const safeName = maskName(input.clientName)
   const safePhone = maskPhone(input.phone)
   const dueDate = formatDate(input.nextDueDate)
-  const dueAmount = formatMoney(input.nextDueAmount > 0 ? input.nextDueAmount : input.remaining)
-  const overdueAmount = formatMoney(input.overdueAmount > 0 ? input.overdueAmount : input.remaining)
+  const dueAmountValue = input.nextDueAmount > 0 ? input.nextDueAmount : input.remaining
+  const overdueAmountValue = input.overdueAmount > 0 ? input.overdueAmount : input.remaining
+  const dueAmount = dueAmountValue > 0 ? formatMoney(dueAmountValue) : null
+  const overdueAmount = overdueAmountValue > 0 ? formatMoney(overdueAmountValue) : null
   const paidAmount = formatMoney(input.totalPaid)
-  const remainingAmount = formatMoney(input.remaining)
+  const remainingAmount = input.remaining > 0 ? formatMoney(input.remaining) : null
 
   let body = ''
   const reasons: string[] = []
 
   if (input.scenario === 'overdue') {
-    body = `Merhaba ${safeName}, ${dueDate} vadeli ${overdueAmount} odemeniz gecikmede gorunuyor. ${tone.ask}`
-    reasons.push('Senaryo: gecikmis odeme')
+    body = overdueAmount
+      ? `Merhaba ${safeName}, ${dueDate} vadeli ${overdueAmount} ödemeniz gecikmede görünüyor. ${tone.ask}`
+      : `Merhaba ${safeName}, vadesi geçen ödemeniz gecikmede görünüyor. ${tone.ask}`
+    reasons.push('Senaryo: gecikmiş ödeme')
   } else if (input.scenario === 'today_due') {
-    body = `Merhaba ${safeName}, bugun vadesi gelen ${dueAmount} odemenizi hatirlatmak isteriz. ${tone.ask}`
-    reasons.push('Senaryo: bugun vadesi gelen odeme')
+    body = dueAmount
+      ? `Merhaba ${safeName}, bugün vadesi gelen ${dueAmount} ödemenizi hatırlatmak isteriz. ${tone.ask}`
+      : `Merhaba ${safeName}, bugün vadesi gelen ödemenizi hatırlatmak isteriz. ${tone.ask}`
+    reasons.push('Senaryo: bugün vadesi gelen ödeme')
   } else if (input.scenario === 'partial_followup') {
-    body = `Merhaba ${safeName}, odemenizin ${paidAmount} kismini aldik. Kalan ${remainingAmount} tutar icin planinizi paylasabilir misiniz?`
-    reasons.push('Senaryo: kismi odeme sonrasi takip')
+    body = remainingAmount
+      ? `Merhaba ${safeName}, ödemenizin ${paidAmount} kısmını aldık. Kalan ${remainingAmount} tutar için planınızı paylaşabilir misiniz?`
+      : `Merhaba ${safeName}, ödemenizin bir kısmını aldık. Kalan ödeme planınızı paylaşabilir misiniz?`
+    reasons.push('Senaryo: kısmi ödeme sonrası takip')
   } else {
-    body = `Merhaba ${safeName}, ${dueDate} tarihinde ${dueAmount} odemeniz bulunuyor. Planli hatirlatma olarak bilgi vermek istedik.`
-    reasons.push('Senaryo: yaklasan odeme')
+    body = dueAmount
+      ? `Merhaba ${safeName}, ${dueDate} tarihinde ${dueAmount} ödemeniz bulunuyor. Planlı hatırlatma olarak bilgi vermek istedik.`
+      : `Merhaba ${safeName}, ${dueDate} tarihinde ödemeniz bulunuyor. Planlı hatırlatma olarak bilgi vermek istedik.`
+    reasons.push('Senaryo: yaklaşan ödeme')
   }
 
   const text = enforceLength(`${body} ${tone.close}`, input.channel)
@@ -121,7 +131,7 @@ export function buildMessageDraft(input: MessageDraftInput): AiMessageDraft {
       ...reasons,
       `Ton: ${input.tone}`,
       `Kanal: ${input.channel}`,
-      `Maskeleme uygulandi (${safePhone})`,
+      `Maskeleme uygulandı (${safePhone})`,
     ],
   }
 }

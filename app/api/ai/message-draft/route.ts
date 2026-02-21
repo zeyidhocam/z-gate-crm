@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     const [{ data: client, error: clientError }, { data: schedules }] = await Promise.all([
       supabase
         .from('clients')
-        .select('id, full_name, name, phone')
+        .select('id, full_name, name, phone, price_agreed, price')
         .eq('id', clientId)
         .single(),
       supabase
@@ -70,6 +70,8 @@ export async function POST(request: Request) {
     const totalDue = rows.reduce((sum, row) => sum + getAmountDue(row), 0)
     const totalPaid = rows.reduce((sum, row) => sum + getAmountPaid(row), 0)
     const remaining = Math.max(0, totalDue - totalPaid)
+    const agreedAmount = Math.max(0, Number(client.price_agreed || client.price || 0))
+    const remainingFallback = remaining > 0 ? remaining : agreedAmount
 
     const today = startOfDay(new Date())
     const openRows = rows.filter((row) => getRemaining(row) > 0)
@@ -85,13 +87,13 @@ export async function POST(request: Request) {
       scenario: body.scenario,
       tone: body.tone,
       channel: body.channel,
-      clientName: client.full_name || client.name || 'Musteri',
+      clientName: client.full_name || client.name || 'Müşteri',
       phone: client.phone || null,
       nextDueDate: nextDueRow?.due_date || null,
-      nextDueAmount: nextDueRow ? getRemaining(nextDueRow) : remaining,
-      overdueAmount,
+      nextDueAmount: nextDueRow ? getRemaining(nextDueRow) : remainingFallback,
+      overdueAmount: overdueAmount > 0 ? overdueAmount : remainingFallback,
       totalPaid,
-      remaining,
+      remaining: remainingFallback,
     })
 
     return NextResponse.json({ ok: true, draft })

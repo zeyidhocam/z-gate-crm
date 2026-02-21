@@ -41,6 +41,7 @@ export function suggestPaymentPlan(input: PaymentSuggestionInput): AiPaymentSugg
   const riskLevel = input.clientRiskLevel
   const stage = input.stage || 1
   const existingOverdueCount = input.existingOverdueCount || 0
+  const riskLabel = riskLevel === 'high' ? 'yüksek' : riskLevel === 'medium' ? 'orta' : 'düşük'
 
   if (totalAmount <= 5000 && riskLevel === 'low') {
     return {
@@ -54,8 +55,8 @@ export function suggestPaymentPlan(input: PaymentSuggestionInput): AiPaymentSugg
         stage,
       }),
       reasons: [
-        'Toplam tutar 5.000 TL altinda oldugu icin tam odeme onerildi.',
-        'Risk seviyesi dusuk oldugu icin tek adimda tahsilat uygun goruldu.',
+        'Toplam tutar 5.000 TL altında olduğu için tam ödeme önerildi.',
+        'Risk seviyesi düşük olduğu için tek adımda tahsilat uygun görüldü.',
       ],
     }
   }
@@ -88,12 +89,12 @@ export function suggestPaymentPlan(input: PaymentSuggestionInput): AiPaymentSugg
     }),
     reasons: [
       totalAmount > 15000
-        ? 'Tutar 15.000 TL ustu oldugu icin kalan borc 3 taksite bolundu.'
-        : 'Tutar araligina gore kalan borc 2 taksite bolundu.',
-      `Risk seviyesi ${riskLevel} oldugu icin kapora tabani %${depositPercent} olarak secildi.`,
+        ? 'Tutar 15.000 TL üstü olduğu için kalan borç 3 taksite bölündü.'
+        : 'Tutar aralığına göre kalan borç 2 taksite bölündü.',
+      `Risk seviyesi ${riskLabel} olduğu için kapora tabanı %${depositPercent} olarak seçildi.`,
       existingOverdueCount > 0
-        ? `Musteride ${existingOverdueCount} gecikmis taksit bulundugu icin pesinat guclendirildi.`
-        : 'Gecikmis taksit kaydi olmadigi icin standart kural uygulandi.',
+        ? `Müşteride ${existingOverdueCount} gecikmiş taksit bulunduğu için peşinat güçlendirildi.`
+        : 'Gecikmiş taksit kaydı olmadığı için standart kural uygulandı.',
     ],
   }
 }

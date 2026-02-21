@@ -61,6 +61,22 @@ export const getRemaining = (schedule: Partial<PaymentSchedule>) =>
 export const isSchedulePaid = (schedule: Partial<PaymentSchedule>) =>
     schedule.status === 'paid' || schedule.is_paid || getRemaining(schedule) <= 0
 
+export const getDisplayPaymentNote = (note: string | null | undefined, source?: string | null) => {
+    if (!note) return null
+    const normalized = note.toLowerCase()
+    const isTechnical =
+        source === 'migration' ||
+        normalized.includes('backfill') ||
+        normalized.includes('restore legacy') ||
+        normalized.includes('payment_balance') ||
+        normalized.includes('step4')
+
+    if (isTechnical) {
+        return 'Geçmiş kayıt aktarımı'
+    }
+    return note
+}
+
 interface PaymentScheduleDialogProps {
     clientId: string
     clientName: string
@@ -629,8 +645,10 @@ function ScheduleItem({
                         Tahsil edilen: {amountPaid.toLocaleString('tr-TR')} TL - Kalan: {remaining.toLocaleString('tr-TR')} TL
                     </div>
                 )}
-                {schedule.note && (
-                    <div className="text-[10px] text-slate-500 truncate mt-0.5">{schedule.note}</div>
+                {getDisplayPaymentNote(schedule.note, schedule.source) && (
+                    <div className="text-[10px] text-slate-500 truncate mt-0.5">
+                        {getDisplayPaymentNote(schedule.note, schedule.source)}
+                    </div>
                 )}
             </div>
 

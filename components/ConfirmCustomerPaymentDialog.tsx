@@ -35,9 +35,9 @@ interface InstallmentItem {
 }
 
 const MODE_LABEL: Record<PaymentMode, string> = {
-  full_paid: "Tam Odendi",
+  full_paid: "Tam Ödendi",
   deposit_plan: "Kapora + Plan",
-  pay_later: "Sonradan Odeme",
+  pay_later: "Sonradan Ödeme",
 }
 
 function splitAmountEvenly(totalAmount: number, count: number): number[] {
@@ -127,7 +127,7 @@ export function ConfirmCustomerPaymentDialog({
         totalAmount: totalValue,
         firstDueDate,
         installmentCount,
-        notePrefix: "Sonradan odeme",
+        notePrefix: "Sonradan ödeme",
       })
     }
 
@@ -137,13 +137,13 @@ export function ConfirmCustomerPaymentDialog({
   const submit = async () => {
     if (!lead) return
     if (!mode) {
-      toast.error("Lutfen odeme tipi secin.")
+      toast.error("Lütfen ödeme tipi seçin.")
       return
     }
 
     const total = Number(totalAmount)
     if (!Number.isFinite(total) || total <= 0) {
-      toast.error("Toplam tutar pozitif olmali.")
+      toast.error("Toplam tutar pozitif olmalı.")
       return
     }
 
@@ -166,7 +166,7 @@ export function ConfirmCustomerPaymentDialog({
     if (mode === "deposit_plan") {
       const deposit = Number(depositAmount)
       if (!Number.isFinite(deposit) || deposit <= 0 || deposit >= total) {
-        toast.error("Kapora tutari 0 ile toplam tutar arasinda olmali.")
+        toast.error("Kapora tutarı 0 ile toplam tutar arasında olmalı.")
         return
       }
 
@@ -187,7 +187,7 @@ export function ConfirmCustomerPaymentDialog({
         totalAmount: total,
         firstDueDate: dueDate,
         installmentCount,
-        notePrefix: "Sonradan odeme",
+        notePrefix: "Sonradan ödeme",
       })
     }
 
@@ -200,10 +200,10 @@ export function ConfirmCustomerPaymentDialog({
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok || !data.ok) {
-        throw new Error(data.error || "Onay sirasinda hata olustu")
+        throw new Error(data.error || "Onay sırasında hata oluştu")
       }
 
-      toast.success("Musteri onaylandi ve odeme plani kaydedildi.")
+      toast.success("Müşteri onaylandı ve ödeme planı kaydedildi.")
       onSuccess?.()
       onOpenChange(false)
     } catch (error: unknown) {
@@ -219,7 +219,7 @@ export function ConfirmCustomerPaymentDialog({
 
     const total = Number(totalAmount)
     if (!Number.isFinite(total) || total <= 0) {
-      toast.error("Toplam tutar pozitif olmali.")
+      toast.error("Toplam tutar pozitif olmalı.")
       return
     }
 
@@ -236,11 +236,11 @@ export function ConfirmCustomerPaymentDialog({
 
       const data = await res.json().catch(() => ({}))
       if (!res.ok || !data?.ok || !data?.suggestion) {
-        throw new Error(data?.error || "AI onerisi alinamadi")
+        throw new Error(data?.error || "AI önerisi alınamadı")
       }
 
       setSuggestion(data.suggestion as AiPaymentSuggestion)
-      toast.success("AI odeme onerisi hazir.")
+      toast.success("AI ödeme önerisi hazır.")
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Beklenmedik hata"
       toast.error(message)
@@ -271,7 +271,7 @@ export function ConfirmCustomerPaymentDialog({
       }
     }
 
-    toast.success("AI onerisi forma uygulandi.")
+    toast.success("AI önerisi forma uygulandı.")
   }
 
   return (
@@ -280,16 +280,16 @@ export function ConfirmCustomerPaymentDialog({
         <DialogHeader>
           <DialogTitle className="text-slate-100 flex items-center gap-2">
             <Wallet size={18} className="text-emerald-400" />
-            Onay ve Odeme Plani
+            Onay ve Ödeme Planı
           </DialogTitle>
           <DialogDescription className="text-slate-400 text-xs">
-            Musteriyi onaylamadan once odeme modelini secmeniz gerekiyor.
+            Müşteriyi onaylamadan önce ödeme modelini seçmeniz gerekiyor.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="rounded-lg border border-slate-700 bg-slate-900/40 p-3">
-            <div className="text-xs text-slate-500 font-bold">MUSTERI</div>
+            <div className="text-xs text-slate-500 font-bold">MÜŞTERİ</div>
             <div className="text-sm text-slate-200 font-bold">{lead?.name || "-"}</div>
           </div>
 
@@ -300,7 +300,7 @@ export function ConfirmCustomerPaymentDialog({
               value={totalAmount}
               onChange={(e) => setTotalAmount(e.target.value)}
               className="bg-slate-900/50 border-slate-700 text-slate-200"
-              placeholder="Orn: 10000"
+              placeholder="Örn: 10000"
             />
           </div>
 
@@ -308,7 +308,7 @@ export function ConfirmCustomerPaymentDialog({
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="text-xs text-cyan-300 font-bold flex items-center gap-1.5">
                 <Sparkles size={14} />
-                AI Odeme Asistani
+                AI Ödeme Asistanı
               </div>
               <Button
                 type="button"
@@ -318,7 +318,7 @@ export function ConfirmCustomerPaymentDialog({
                 disabled={suggesting}
                 className="border-cyan-500/30 text-cyan-200 hover:bg-cyan-500/10"
               >
-                {suggesting ? "Hesaplaniyor..." : "AI Onerisi Al"}
+                {suggesting ? "Hesaplanıyor..." : "AI Önerisi Al"}
               </Button>
             </div>
 
@@ -326,7 +326,7 @@ export function ConfirmCustomerPaymentDialog({
               <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-2.5 space-y-2">
                 <div className="flex items-center justify-between gap-2 text-xs">
                   <span className="font-bold text-slate-200">Mod: {MODE_LABEL[suggestion.mode]}</span>
-                  <span className="text-cyan-300 font-bold">Guven: %{Math.round(suggestion.confidence * 100)}</span>
+                  <span className="text-cyan-300 font-bold">Güven: %{Math.round(suggestion.confidence * 100)}</span>
                 </div>
                 {typeof suggestion.depositAmount === "number" && suggestion.depositAmount > 0 && (
                   <div className="text-[11px] text-slate-300">
@@ -353,7 +353,7 @@ export function ConfirmCustomerPaymentDialog({
                   onClick={applySuggestion}
                   className="w-full bg-cyan-600/80 hover:bg-cyan-500 text-white"
                 >
-                  Oneriyi Uygula
+                  Öneriyi Uygula
                 </Button>
               </div>
             )}
@@ -386,7 +386,7 @@ export function ConfirmCustomerPaymentDialog({
                     value={depositAmount}
                     onChange={(e) => setDepositAmount(e.target.value)}
                     className="bg-slate-900/50 border-slate-700 text-slate-200"
-                    placeholder="Orn: 5000"
+                    placeholder="Örn: 5000"
                   />
                   <Button
                     type="button"
@@ -405,7 +405,7 @@ export function ConfirmCustomerPaymentDialog({
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-400 mb-1 block">Kalan Taksit Sayisi</label>
+                <label className="text-xs font-bold text-slate-400 mb-1 block">Kalan Taksit Sayısı</label>
                 <div className="grid grid-cols-2 gap-2">
                   {[2, 3].map((count) => (
                     <button
@@ -425,12 +425,12 @@ export function ConfirmCustomerPaymentDialog({
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-400 mb-1 block">Ilk Vade</label>
+                <label className="text-xs font-bold text-slate-400 mb-1 block">İlk Vade</label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full justify-start bg-slate-900/50 border-slate-700 text-slate-200">
                       <CalendarClock size={14} className="mr-2" />
-                      {firstDueDate ? format(firstDueDate, "dd MMMM yyyy", { locale: tr }) : "Tarih sec"}
+                      {firstDueDate ? format(firstDueDate, "dd MMMM yyyy", { locale: tr }) : "Tarih seç"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0 bg-[#0c1929] border-cyan-500/20">
@@ -444,7 +444,7 @@ export function ConfirmCustomerPaymentDialog({
           {mode === "pay_later" && (
             <div className="space-y-3 rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-3">
               <div>
-                <label className="text-xs font-bold text-slate-400 mb-1 block">Taksit Sayisi</label>
+                <label className="text-xs font-bold text-slate-400 mb-1 block">Taksit Sayısı</label>
                 <div className="grid grid-cols-3 gap-2">
                   {[1, 2, 3].map((count) => (
                     <button
@@ -464,12 +464,12 @@ export function ConfirmCustomerPaymentDialog({
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-400 mb-1 block">Ilk Vade</label>
+                <label className="text-xs font-bold text-slate-400 mb-1 block">İlk Vade</label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full justify-start bg-slate-900/50 border-slate-700 text-slate-200">
                       <CalendarClock size={14} className="mr-2" />
-                      {firstDueDate ? format(firstDueDate, "dd MMMM yyyy", { locale: tr }) : "Tarih sec"}
+                      {firstDueDate ? format(firstDueDate, "dd MMMM yyyy", { locale: tr }) : "Tarih seç"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0 bg-[#0c1929] border-cyan-500/20">
@@ -482,7 +482,7 @@ export function ConfirmCustomerPaymentDialog({
 
           {previewInstallments.length > 0 && (
             <div className="rounded-lg border border-slate-700 bg-slate-900/40 p-3">
-              <div className="text-xs text-slate-400 font-bold mb-2">PLAN ONIZLEME</div>
+              <div className="text-xs text-slate-400 font-bold mb-2">PLAN ÖNİZLEME</div>
               <div className="space-y-1">
                 {previewInstallments.map((item, index) => (
                   <div key={`${item.dueDate}-${index}`} className="text-xs text-slate-300 flex justify-between gap-3">
@@ -495,13 +495,13 @@ export function ConfirmCustomerPaymentDialog({
           )}
 
           <div>
-            <label className="text-xs font-bold text-slate-400 mb-1 block">Not (istege bagli)</label>
+            <label className="text-xs font-bold text-slate-400 mb-1 block">Not (isteğe bağlı)</label>
             <Textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
               className="bg-slate-900/50 border-slate-700 text-slate-200 resize-none"
               rows={3}
-              placeholder="Odeme anlasma notu..."
+              placeholder="Ödeme anlaşma notu..."
             />
           </div>
         </div>
@@ -514,7 +514,7 @@ export function ConfirmCustomerPaymentDialog({
             disabled={saving}
             className="text-slate-400"
           >
-            Vazgec
+            Vazgeç
           </Button>
           <Button
             type="button"

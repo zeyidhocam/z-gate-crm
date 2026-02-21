@@ -15,7 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"
 import { toast } from "sonner"
 import { useSearchParams } from "next/navigation"
-import { getAmountPaid, getAmountDue, getRemaining } from "@/components/PaymentScheduleDialog"
+import { getAmountPaid, getAmountDue, getDisplayPaymentNote, getRemaining } from "@/components/PaymentScheduleDialog"
 import type { AiMessageChannel, AiMessageScenario, AiMessageTone } from "@/lib/ai/types"
 
 interface Client {
@@ -47,6 +47,7 @@ interface PaymentScheduleWithClient {
     amount_due: number | null
     amount_paid: number | null
     status: 'pending' | 'partially_paid' | 'paid' | string
+    source: string | null
     due_date: string
     is_paid: boolean
     paid_at: string | null
@@ -173,16 +174,42 @@ export default function RemindersContent() {
         if (!newTitle.trim() || !newDate) return
 
         try {
+            const reminderTitle = newTitle.trim()
+            const reminderDescription = newDescription.trim() || null
+            const reminderDateIso = newDate.toISOString()
+
             const { error } = await supabase
                 .from('reminders')
                 .insert({
-                    title: newTitle.trim(),
-                    description: newDescription.trim() || null,
-                    reminder_date: newDate.toISOString(),
+                    title: reminderTitle,
+                    description: reminderDescription,
+                    reminder_date: reminderDateIso,
                     is_completed: false
                 })
 
             if (error) throw error
+
+            try {
+                const reminderDateText = format(newDate, 'dd MMMM yyyy HH:mm', { locale: tr })
+                const dayBefore = new Date(newDate)
+                dayBefore.setDate(dayBefore.getDate() - 1)
+                const dayBeforeText = format(dayBefore, 'dd MMMM yyyy', { locale: tr })
+
+                const message =
+                    `🔔 <b>Yeni Genel Hatırlatma Eklendi</b>\n` +
+                    `📌 <b>Başlık:</b> ${reminderTitle}\n` +
+                    `${reminderDescription ? `📝 <b>Açıklama:</b> ${reminderDescription}\n` : ''}` +
+                    `📅 <b>Hatırlatma Tarihi:</b> ${reminderDateText}\n` +
+                    `⏰ <b>Ön Bildirim:</b> ${dayBeforeText} (1 gün önce)\n`
+
+                await fetch('/api/telegram/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                })
+            } catch {
+                // Telegram bildirimi best-effort
+            }
 
             setNewTitle('')
             setNewDescription('')
@@ -349,7 +376,7 @@ export default function RemindersContent() {
 
         const raw = (messagePayment.clients?.phone || "").replace(/\D/g, '')
         if (!raw) {
-            toast.error("Musteri telefonu bulunamadi.")
+            toast.error("Müşteri telefonu bulunamadı.")
             return
         }
 
@@ -514,15 +541,15 @@ export default function RemindersContent() {
                     <DialogHeader>
                         <DialogTitle className="text-slate-100 flex items-center gap-2">
                             <MessageSquare size={18} className="text-cyan-400" />
-                            AI Mesaj Onerisi
+                            AI Mesaj Önerisi
                         </DialogTitle>
                     </DialogHeader>
 
                     <div className="space-y-3">
                         <div className="p-3 rounded-lg border border-slate-700 bg-slate-900/40">
-                            <div className="text-xs text-slate-500 font-bold">MUSTERI</div>
+                            <div className="text-xs text-slate-500 font-bold">MÜŞTERİ</div>
                             <div className="text-sm text-slate-200 font-bold">
-                                {messagePayment?.clients?.full_name || messagePayment?.clients?.name || "Musteri"}
+                                {messagePayment?.clients?.full_name || messagePayment?.clients?.name || "Müşteri"}
                             </div>
                         </div>
 
@@ -530,10 +557,10 @@ export default function RemindersContent() {
                             <div className="text-xs text-slate-400 font-bold">Senaryo</div>
                             <div className="grid grid-cols-2 gap-2">
                                 {[
-                                    { key: 'overdue', label: 'Gecikmis' },
-                                    { key: 'today_due', label: 'Bugun' },
-                                    { key: 'upcoming', label: 'Yaklasan' },
-                                    { key: 'partial_followup', label: 'Kismi Takip' },
+                                    { key: 'overdue', label: 'Gecikmiş' },
+                                    { key: 'today_due', label: 'Bugün' },
+                                    { key: 'upcoming', label: 'Yaklaşan' },
+                                    { key: 'partial_followup', label: 'Kısmi Takip' },
                                 ].map((item) => (
                                     <button
                                         key={item.key}
@@ -556,7 +583,7 @@ export default function RemindersContent() {
                             <div className="text-xs text-slate-400 font-bold">Ton</div>
                             <div className="grid grid-cols-3 gap-2">
                                 {[
-                                    { key: 'soft', label: 'Yumusak' },
+                                    { key: 'soft', label: 'Yumuşak' },
                                     { key: 'standard', label: 'Standart' },
                                     { key: 'firm', label: 'Net' },
                                 ].map((item) => (
@@ -612,7 +639,7 @@ export default function RemindersContent() {
                                     disabled={messageLoading}
                                     className="border-slate-600 text-slate-300"
                                 >
-                                    {messageLoading ? "Uretiliyor..." : "Mesaj Oner"}
+                                    {messageLoading ? "Üretiliyor..." : "Mesaj Öner"}
                                 </Button>
                             </div>
                             <Textarea
@@ -1104,6 +1131,7 @@ function PaymentCard({
     const remaining = getRemaining(payment)
     const isFullyPaid = remaining <= 0
     const isPartial = !isFullyPaid && amountPaid > 0
+    const displayNote = getDisplayPaymentNote(payment.note, payment.source)
     const suggestedScenario: AiMessageScenario = variant === 'overdue'
         ? 'overdue'
         : variant === 'today'
@@ -1165,10 +1193,10 @@ function PaymentCard({
                     {!isFullyPaid && (
                         <span>Tahsil edilen: {amountPaid.toLocaleString('tr-TR')} ₺</span>
                     )}
-                    {payment.note && (
+                    {displayNote && (
                         <>
                             <span className="text-slate-700">|</span>
-                            <span className="truncate">{payment.note}</span>
+                            <span className="truncate">{displayNote}</span>
                         </>
                     )}
                 </div>
