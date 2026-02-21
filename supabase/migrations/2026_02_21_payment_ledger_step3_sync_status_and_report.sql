@@ -16,6 +16,7 @@ computed AS (
     total_paid,
     GREATEST(total_due - total_paid, 0) AS remaining,
     CASE
+      WHEN total_due <= 0 THEN 'Ödenmedi'
       WHEN GREATEST(total_due - total_paid, 0) = 0 THEN 'Ödendi'
       WHEN total_paid > 0 THEN 'Kapora'
       ELSE 'Ödenmedi'

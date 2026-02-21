@@ -55,10 +55,10 @@ interface PaymentInfo {
 }
 
 const STAGES = [
-    { value: 1, label: "1. AÅŸama", color: "bg-amber-500", textColor: "text-amber-400", description: "BaÅŸlangÄ±Ã§" },
-    { value: 2, label: "2. AÅŸama", color: "bg-sky-500", textColor: "text-sky-400", description: "Ä°ÅŸlem BaÅŸladÄ±" },
-    { value: 3, label: "3. AÅŸama", color: "bg-violet-500", textColor: "text-violet-400", description: "Devam Ediyor" },
-    { value: 4, label: "4. AÅŸama", color: "bg-emerald-500", textColor: "text-emerald-400", description: "TamamlandÄ±" },
+    { value: 1, label: "1. Aşama", color: "bg-amber-500", textColor: "text-amber-400", description: "Başlangıç" },
+    { value: 2, label: "2. Aşama", color: "bg-sky-500", textColor: "text-sky-400", description: "İşlem Başladı" },
+    { value: 3, label: "3. Aşama", color: "bg-violet-500", textColor: "text-violet-400", description: "Devam Ediyor" },
+    { value: 4, label: "4. Aşama", color: "bg-emerald-500", textColor: "text-emerald-400", description: "Tamamlandı" },
 ]
 
 export default function CustomersPage() {
@@ -78,10 +78,10 @@ export default function CustomersPage() {
     const [archiveCustomerId, setArchiveCustomerId] = useState<string | null>(null)
     const [initialStats, setInitialStats] = useState<{ count: number, revenue: number } | null>(null)
 
-    // Ã–deme bilgileri map
+    // Ödeme bilgileri map
     const [paymentMap, setPaymentMap] = useState<Record<string, PaymentInfo>>({})
 
-    // stageFilter deÄŸiÅŸtiÄŸinde localStorage'a kaydet
+    // stageFilter değiştiğinde localStorage'a kaydet
     useEffect(() => {
         localStorage.setItem('customersStageFilter', String(stageFilter))
     }, [stageFilter])
@@ -134,7 +134,7 @@ export default function CustomersPage() {
                         map[clientId].upcomingCount++
                     }
 
-                    // Ä°lk (en yakÄ±n) Ã¶deme
+                    // İlk (en yakın) ödeme
                     if (!map[clientId].nextDate) {
                         map[clientId].nextAmount = remaining
                         map[clientId].nextDate = p.due_date
@@ -196,7 +196,7 @@ export default function CustomersPage() {
     }
 
     const removeCustomer = async (customerId: string) => {
-        if (!confirm('Bu mÃ¼ÅŸteriyi listeden kaldÄ±rmak istediÄŸinize emin misiniz?')) return
+        if (!confirm('Bu müşteriyi listeden kaldırmak istediğinize emin misiniz?')) return
 
         try {
             const { error } = await supabase
@@ -207,7 +207,7 @@ export default function CustomersPage() {
             if (error) throw error
 
             setCustomers(prev => prev.filter(c => c.id !== customerId))
-            toast.success("MÃ¼ÅŸteri listeden kaldÄ±rÄ±ldÄ±")
+            toast.success("Müşteri listeden kaldırıldı")
         } catch {
             // Hata kaydi gizlendi
         }
@@ -219,16 +219,16 @@ export default function CustomersPage() {
         try {
             const { error } = await supabase
                 .from('clients')
-                .update({ status: 'ArÅŸiv', is_confirmed: false })
+                .update({ status: 'Arşiv', is_confirmed: false })
                 .eq('id', archiveCustomerId)
 
             if (error) throw error
 
             setCustomers(prev => prev.filter(c => c.id !== archiveCustomerId))
             setArchiveCustomerId(null)
-            toast.success("MÃ¼ÅŸteri arÅŸive taÅŸÄ±ndÄ±")
+            toast.success("Müşteri arşive taşındı")
         } catch {
-            toast.error("ArÅŸivleme sÄ±rasÄ±nda hata oluÅŸtu")
+            toast.error("Arşivleme sırasında hata oluştu")
         }
     }
 
@@ -250,13 +250,13 @@ export default function CustomersPage() {
                     : c
             ))
             setEditingCustomer(null)
-            toast.success("Fiyat gÃ¼ncellendi")
+            toast.success("Fiyat güncellendi")
         } catch {
-            toast.error("Fiyat gÃ¼ncellenemedi")
+            toast.error("Fiyat güncellenemedi")
         }
     }
 
-    // Filtreleme ve sÄ±ralama
+    // Filtreleme ve sıralama
     const filteredCustomers = useMemo(() => {
         const result = customers.filter(customer => {
             const matchesSearch = search === "" ||
@@ -270,22 +270,22 @@ export default function CustomersPage() {
             return matchesSearch && matchesStage && matchesPayment
         })
 
-        // Ã–deme Ã¶ncelikli sÄ±ralama
+        // Ödeme öncelikli sıralama
         result.sort((a, b) => {
             const pa = paymentMap[a.id]
             const pb = paymentMap[b.id]
 
-            // Ã–nce gecikmiÅŸ
+            // Önce gecikmiş
             const aOverdue = pa?.isOverdue ? 1 : 0
             const bOverdue = pb?.isOverdue ? 1 : 0
             if (aOverdue !== bOverdue) return bOverdue - aOverdue
 
-            // Sonra bugÃ¼n
+            // Sonra bugün
             const aToday = pa?.isToday ? 1 : 0
             const bToday = pb?.isToday ? 1 : 0
             if (aToday !== bToday) return bToday - aToday
 
-            // Sonra bekleyen Ã¶deme olanlar
+            // Sonra bekleyen ödeme olanlar
             const aHasPayment = pa ? 1 : 0
             const bHasPayment = pb ? 1 : 0
             if (aHasPayment !== bHasPayment) return bHasPayment - aHasPayment
@@ -296,7 +296,7 @@ export default function CustomersPage() {
         return result
     }, [customers, search, stageFilter, paymentFilter, paymentMap])
 
-    // Ã–deme istatistikleri
+    // Ödeme istatistikleri
     const paymentStats = useMemo(() => {
         let overdueTotal = 0
         let todayTotal = 0
@@ -311,7 +311,7 @@ export default function CustomersPage() {
         return { overdueTotal, todayTotal, pendingTotal }
     }, [paymentMap])
 
-    // Toplam gelir ve kayÄ±t sayÄ±sÄ±
+    // Toplam gelir ve kayıt sayısı
     const totalRevenue = initialStats?.revenue || 0
     const totalCount = initialStats?.count || 0
 
@@ -332,8 +332,8 @@ export default function CustomersPage() {
                         <Users className="text-emerald-400" size={22} />
                     </div>
                     <div>
-                        <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-gradient-ocean">MÃ¼ÅŸteriler</h1>
-                        <p className="text-[10px] sm:text-sm text-slate-400">OnaylanmÄ±ÅŸ mÃ¼ÅŸteriler ve aÅŸama takibi</p>
+                        <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-gradient-ocean">Müşteriler</h1>
+                        <p className="text-[10px] sm:text-sm text-slate-400">Onaylanmış müşteriler ve aşama takibi</p>
                     </div>
                 </div>
 
@@ -341,10 +341,10 @@ export default function CustomersPage() {
                 <div className="flex items-center gap-3 sm:gap-6">
                     <div className="text-right">
                         <div className="text-base sm:text-2xl font-black text-emerald-400">{totalCount}</div>
-                        <div className="text-[9px] sm:text-xs text-slate-500 font-bold">MÃ¼ÅŸteri</div>
+                        <div className="text-[9px] sm:text-xs text-slate-500 font-bold">Müşteri</div>
                     </div>
                     <div className="text-right">
-                        <div className="text-base sm:text-2xl font-black text-cyan-400">{totalRevenue.toLocaleString('tr-TR')} â‚º</div>
+                        <div className="text-base sm:text-2xl font-black text-cyan-400">{totalRevenue.toLocaleString('tr-TR')} ₺</div>
                         <div className="text-[9px] sm:text-xs text-slate-500 font-bold">Toplam Gelir</div>
                     </div>
                 </div>
@@ -355,7 +355,7 @@ export default function CustomersPage() {
                 <div className="relative flex-1 sm:max-w-md">
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
                     <Input
-                        placeholder="MÃ¼ÅŸteri ara..."
+                        placeholder="Müşteri ara..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="pl-9 bg-[#0c1929] border-cyan-500/20 text-slate-200 h-9 text-sm"
@@ -364,7 +364,7 @@ export default function CustomersPage() {
                 <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto pb-1 sm:pb-0">
                     <Filter size={13} className="text-slate-500 shrink-0" />
 
-                    {/* Bekleyen Ã–demeler filtresi */}
+                    {/* Bekleyen Ödemeler filtresi */}
                     <Button
                         variant="ghost"
                         size="sm"
@@ -380,7 +380,7 @@ export default function CustomersPage() {
                         )}
                     >
                         <CreditCard size={12} />
-                        Ã–demeler
+                        Ödemeler
                         {paymentStats.overdueTotal > 0 && (
                             <span className="bg-red-500 text-white text-[8px] font-bold px-1 py-0.5 rounded-full ml-0.5">
                                 {paymentStats.overdueTotal}
@@ -399,7 +399,7 @@ export default function CustomersPage() {
                             stageFilter === null && !paymentFilter ? "bg-cyan-500/20 text-cyan-300" : "text-slate-400"
                         )}
                     >
-                        TÃ¼mÃ¼
+                        Tümü
                     </Button>
                     {STAGES.map(stage => (
                         <Button
@@ -423,17 +423,17 @@ export default function CustomersPage() {
                 <div className="rounded-2xl bg-[#0c1929]/80 border border-cyan-500/10 p-8 sm:p-12 text-center">
                     <Users size={40} className="text-slate-700 mx-auto mb-4" />
                     <p className="text-slate-500 font-medium text-sm sm:text-base">
-                        {paymentFilter ? "Bekleyen Ã¶demesi olan mÃ¼ÅŸteri yok" : "HenÃ¼z onaylanmÄ±ÅŸ mÃ¼ÅŸteri yok"}
+                        {paymentFilter ? "Bekleyen ödemesi olan müşteri yok" : "Henüz onaylanmış müşteri yok"}
                     </p>
                     <p className="text-slate-600 text-xs sm:text-sm mt-1">
-                        {paymentFilter ? "TÃ¼m Ã¶demeler zamanÄ±nda yapÄ±ldÄ±" : "Rezervasyonlar sayfasÄ±ndan mÃ¼ÅŸteri onaylayabilirsiniz"}
+                        {paymentFilter ? "Tüm ödemeler zamanında yapıldı" : "Rezervasyonlar sayfasından müşteri onaylayabilirsiniz"}
                     </p>
                 </div>
             ) : (
                 <div className="space-y-3 sm:space-y-4">
                     {filteredCustomers.map(customer => {
                         const currentStage = STAGES.find(s => s.value === customer.stage) || STAGES[0]
-                        const processName = customer.process_types?.name || customer.process_name || 'BelirtilmemiÅŸ'
+                        const processName = customer.process_types?.name || customer.process_name || 'Belirtilmemiş'
                         const price = customer.price_agreed || customer.price || 0
                         const pInfo = paymentMap[customer.id]
                         const hasOverduePayment = pInfo?.isOverdue
@@ -452,9 +452,9 @@ export default function CustomersPage() {
                                             : "border-cyan-500/10 hover:border-cyan-500/30"
                                 )}
                             >
-                                {/* === MOBÄ°L LAYOUT (lg altÄ±) === */}
+                                {/* === MOBİL LAYOUT (lg altı) === */}
                                 <div className="lg:hidden space-y-2.5">
-                                    {/* Ãœst satÄ±r: AÅŸama + Ä°sim + Fiyat */}
+                                    {/* Üst satır: Aşama + İsim + Fiyat */}
                                     <div className="flex items-start gap-2.5">
                                         <div className={cn(
                                             "w-9 h-9 rounded-lg flex items-center justify-center shrink-0",
@@ -464,8 +464,8 @@ export default function CustomersPage() {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-1.5">
-                                                <span className="font-bold text-sm text-slate-200 truncate">{customer.full_name || customer.name || 'Ä°simsiz'}</span>
-                                                {/* Ã–deme bildirim ikonu */}
+                                                <span className="font-bold text-sm text-slate-200 truncate">{customer.full_name || customer.name || 'İsimsiz'}</span>
+                                                {/* Ödeme bildirim ikonu */}
                                                 {hasOverduePayment && (
                                                     <span className="relative flex h-2 w-2 shrink-0">
                                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -479,12 +479,12 @@ export default function CustomersPage() {
                                             <div className="text-[11px] text-slate-500">{customer.phone || '-'}</div>
                                         </div>
                                         <div className="text-right shrink-0">
-                                            <div className="text-sm font-black text-emerald-400">{price.toLocaleString('tr-TR')} â‚º</div>
+                                            <div className="text-sm font-black text-emerald-400">{price.toLocaleString('tr-TR')} ₺</div>
                                             <div className="text-[10px] text-slate-500 truncate max-w-[90px]">{processName}</div>
                                         </div>
                                     </div>
 
-                                    {/* Ã–deme bilgisi satÄ±rÄ± (mobil) */}
+                                    {/* Ödeme bilgisi satırı (mobil) */}
                                     {hasAnyPayment && pInfo.nextDate && (
                                         <div className={cn(
                                             "flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold border",
@@ -495,13 +495,13 @@ export default function CustomersPage() {
                                                     : "bg-cyan-500/10 text-cyan-400 border-cyan-500/20"
                                         )}>
                                             {hasOverduePayment ? <AlertCircle size={12} /> : hasTodayPayment ? <Clock size={12} /> : <CreditCard size={12} />}
-                                            <span>Kalan: {pInfo.totalRemaining.toLocaleString('tr-TR')} â‚º</span>
-                                            <span className="opacity-60">â€¢</span>
+                                            <span>Kalan: {pInfo.totalRemaining.toLocaleString('tr-TR')} ₺</span>
+                                            <span className="opacity-60">•</span>
                                             <span className="opacity-80">
                                                 {hasOverduePayment
-                                                    ? `${Math.abs(differenceInDays(parseISO(pInfo.nextDate), new Date()))} gÃ¼n gecikti`
+                                                    ? `${Math.abs(differenceInDays(parseISO(pInfo.nextDate), new Date()))} gün gecikti`
                                                     : hasTodayPayment
-                                                        ? 'BugÃ¼n'
+                                                        ? 'Bugün'
                                                         : format(parseISO(pInfo.nextDate), 'd MMM', { locale: tr })
                                                 }
                                             </span>
@@ -511,7 +511,7 @@ export default function CustomersPage() {
                                         </div>
                                     )}
 
-                                    {/* AÅŸama + Aksiyon butonlarÄ± */}
+                                    {/* Aşama + Aksiyon butonları */}
                                     <div className="flex items-center gap-1">
                                         {STAGES.map(stage => (
                                             <button key={stage.value} onClick={() => updateStage(customer.id, stage.value)} className={cn("w-7 h-7 rounded-md flex items-center justify-center transition-all", customer.stage >= stage.value ? stage.color + " text-white shadow-lg" : "bg-slate-800/50 text-slate-600")} title={stage.label}>
@@ -521,48 +521,48 @@ export default function CustomersPage() {
                                         <div className="flex-1" />
                                         <PaymentScheduleDialog
                                             clientId={customer.id}
-                                            clientName={customer.full_name || customer.name || 'MÃ¼ÅŸteri'}
+                                            clientName={customer.full_name || customer.name || 'Müşteri'}
                                             totalPrice={price || null}
                                             onUpdate={fetchPaymentSchedules}
                                         />
-                                        <ReminderButton clientId={customer.id} clientName={customer.full_name || customer.name || 'MÃ¼ÅŸteri'} iconSize={14} className="h-8 w-8 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 rounded-lg transition-all" clientDetails={{ phone: customer.phone, process: processName, balance: pInfo?.totalRemaining || null, price: price }} />
+                                        <ReminderButton clientId={customer.id} clientName={customer.full_name || customer.name || 'Müşteri'} iconSize={14} className="h-8 w-8 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 rounded-lg transition-all" clientDetails={{ phone: customer.phone, process: processName, balance: pInfo?.totalRemaining || null, price: price }} />
                                         <WhatsAppButton phone={customer.phone} clientName={customer.full_name || customer.name || undefined} size="default" className="h-8 w-8 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 rounded-lg" processName={processName} reservationDate={customer.reservation_at} />
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0 bg-slate-800/50 text-slate-400 hover:text-slate-200 rounded-lg"><MoreVertical size={14} /></Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className="bg-[#0c1929] border-cyan-500/20">
-                                                <DropdownMenuItem onClick={() => setArchiveCustomerId(customer.id)} className="text-slate-300 focus:text-slate-200"><Archive size={14} className="mr-2" />ArÅŸive TaÅŸÄ±</DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => removeCustomer(customer.id)} className="text-red-400 focus:text-red-400"><Trash2 size={14} className="mr-2" />Listeden KaldÄ±r</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => setArchiveCustomerId(customer.id)} className="text-slate-300 focus:text-slate-200"><Archive size={14} className="mr-2" />Arşive Taşı</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => removeCustomer(customer.id)} className="text-red-400 focus:text-red-400"><Trash2 size={14} className="mr-2" />Listeden Kaldır</DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </div>
                                 </div>
 
-                                {/* === MASAÃœSTÃœ LAYOUT (lg ve Ã¼stÃ¼) === */}
+                                {/* === MASAÜSTÜ LAYOUT (lg ve üstü) === */}
                                 <div className="hidden lg:flex items-center gap-6">
                                     <div className={cn("w-16 h-16 rounded-xl flex flex-col items-center justify-center shrink-0", currentStage.color + "/10", "border", currentStage.color.replace("bg-", "border-") + "/30")}>
                                         <span className={cn("text-xl font-black", currentStage.textColor)}>{customer.stage}</span>
-                                        <span className="text-[9px] text-slate-500 font-bold uppercase">AÅŸama</span>
+                                        <span className="text-[9px] text-slate-500 font-bold uppercase">Aşama</span>
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-3 mb-1">
-                                            <span className="font-bold text-lg text-slate-200">{customer.full_name || customer.name || 'Ä°simsiz'}</span>
+                                            <span className="font-bold text-lg text-slate-200">{customer.full_name || customer.name || 'İsimsiz'}</span>
                                             <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full", currentStage.color + "/20", currentStage.textColor)}>{currentStage.description}</span>
-                                            {/* Ã–deme bildirim ikonlarÄ± */}
+                                            {/* Ödeme bildirim ikonları */}
                                             {hasOverduePayment && (
                                                 <span className="flex items-center gap-1 text-[10px] font-bold text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full">
                                                     <span className="relative flex h-2 w-2">
                                                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                                                         <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
                                                     </span>
-                                                    GecikmiÅŸ Ã–deme
+                                                    Gecikmiş Ödeme
                                                 </span>
                                             )}
                                             {!hasOverduePayment && hasTodayPayment && (
                                                 <span className="flex items-center gap-1 text-[10px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full">
                                                     <Clock size={10} />
-                                                    BugÃ¼n Ã–deme
+                                                    Bugün Ödeme
                                                 </span>
                                             )}
                                         </div>
@@ -572,29 +572,29 @@ export default function CustomersPage() {
                                         </div>
                                     </div>
 
-                                    {/* Fiyat + Ã–deme Bilgisi */}
+                                    {/* Fiyat + Ödeme Bilgisi */}
                                     <div className="text-right shrink-0 group/price">
                                         <div className="text-sm font-bold text-slate-300 mb-1">{processName}</div>
                                         <div className="flex items-center justify-end gap-2 text-lg font-black text-emerald-400">
-                                            <span>{price.toLocaleString('tr-TR')} â‚º</span>
+                                            <span>{price.toLocaleString('tr-TR')} ₺</span>
                                             <div className="flex items-center gap-1">
-                                                <button onClick={() => { setEditingCustomer(customer); setEditPrice(String(customer.price_agreed || customer.price || '')) }} className="opacity-0 group-hover/price:opacity-100 p-1 hover:bg-slate-700/50 rounded transition-all text-cyan-400 cursor-pointer" title="HÄ±zlÄ± DÃ¼zenle"><Edit size={14} /></button>
+                                                <button onClick={() => { setEditingCustomer(customer); setEditPrice(String(customer.price_agreed || customer.price || '')) }} className="opacity-0 group-hover/price:opacity-100 p-1 hover:bg-slate-700/50 rounded transition-all text-cyan-400 cursor-pointer" title="Hızlı Düzenle"><Edit size={14} /></button>
                                             </div>
                                         </div>
-                                        {/* Ã–deme Ã¶zet badge */}
+                                        {/* Ödeme özet badge */}
                                         {hasAnyPayment && pInfo.nextDate && (
                                             <div className={cn(
                                                 "mt-1.5 flex items-center justify-end gap-1.5 text-[10px] font-bold",
                                                 hasOverduePayment ? "text-red-400" : hasTodayPayment ? "text-amber-400" : "text-cyan-400"
                                             )}>
                                                 {hasOverduePayment ? <AlertCircle size={10} /> : hasTodayPayment ? <Clock size={10} /> : <CreditCard size={10} />}
-                                                <span>Kalan: {pInfo.totalRemaining.toLocaleString('tr-TR')} â‚º</span>
-                                                <span className="opacity-50">â€¢</span>
+                                                <span>Kalan: {pInfo.totalRemaining.toLocaleString('tr-TR')} ₺</span>
+                                                <span className="opacity-50">•</span>
                                                 <span className="opacity-70">
                                                     {hasOverduePayment
                                                         ? `${Math.abs(differenceInDays(parseISO(pInfo.nextDate), new Date()))}g gecikti`
                                                         : hasTodayPayment
-                                                            ? 'BugÃ¼n'
+                                                            ? 'Bugün'
                                                             : format(parseISO(pInfo.nextDate), 'd MMM', { locale: tr })
                                                     }
                                                 </span>
@@ -602,31 +602,31 @@ export default function CustomersPage() {
                                         )}
                                     </div>
 
-                                    {/* AÅŸama butonlarÄ± */}
+                                    {/* Aşama butonları */}
                                     <div className="flex items-center gap-1 shrink-0">
                                         {STAGES.map(stage => (<button key={stage.value} onClick={() => updateStage(customer.id, stage.value)} className={cn("w-8 h-8 rounded-lg flex items-center justify-center transition-all", customer.stage >= stage.value ? stage.color + " text-white shadow-lg" : "bg-slate-800/50 text-slate-600 hover:bg-slate-700")} title={stage.label}>{customer.stage >= stage.value ? <CheckCircle2 size={16} /> : <Circle size={16} />}</button>))}
                                     </div>
 
-                                    {/* Aksiyon butonlarÄ± */}
+                                    {/* Aksiyon butonları */}
                                     <div className="flex items-center gap-2 shrink-0">
                                         <PaymentScheduleDialog
                                             clientId={customer.id}
-                                            clientName={customer.full_name || customer.name || 'MÃ¼ÅŸteri'}
+                                            clientName={customer.full_name || customer.name || 'Müşteri'}
                                             totalPrice={price || null}
                                             onUpdate={fetchPaymentSchedules}
                                             trigger={
-                                                <Button variant="ghost" size="icon" className="h-10 w-10 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 hover:text-emerald-400 rounded-xl transition-all" title="Ã–deme PlanÄ±">
+                                                <Button variant="ghost" size="icon" className="h-10 w-10 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 hover:text-emerald-400 rounded-xl transition-all" title="Ödeme Planı">
                                                     <CreditCard size={20} />
                                                 </Button>
                                             }
                                         />
-                                        <ReminderButton clientId={customer.id} clientName={customer.full_name || customer.name || 'MÃ¼ÅŸteri'} iconSize={20} className="h-10 w-10 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 hover:text-amber-400 rounded-xl transition-all" clientDetails={{ phone: customer.phone, process: processName, balance: pInfo?.totalRemaining || null, price: price }} />
+                                        <ReminderButton clientId={customer.id} clientName={customer.full_name || customer.name || 'Müşteri'} iconSize={20} className="h-10 w-10 bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 hover:text-amber-400 rounded-xl transition-all" clientDetails={{ phone: customer.phone, process: processName, balance: pInfo?.totalRemaining || null, price: price }} />
                                         <WhatsAppButton phone={customer.phone} clientName={customer.full_name || customer.name || undefined} size="default" className="h-10 w-10 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 hover:text-[#25D366] rounded-xl" processName={processName} reservationDate={customer.reservation_at} />
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild><Button variant="ghost" size="sm" className="h-10 w-10 p-0 bg-slate-800/50 text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 rounded-xl"><MoreVertical size={20} /></Button></DropdownMenuTrigger>
                                             <DropdownMenuContent align="end" className="bg-[#0c1929] border-cyan-500/20">
-                                                <DropdownMenuItem onClick={() => setArchiveCustomerId(customer.id)} className="text-slate-300 focus:text-slate-200"><Archive size={14} className="mr-2" />ArÅŸive TaÅŸÄ±</DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => removeCustomer(customer.id)} className="text-red-400 focus:text-red-400"><Trash2 size={14} className="mr-2" />Listeden KaldÄ±r</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => setArchiveCustomerId(customer.id)} className="text-slate-300 focus:text-slate-200"><Archive size={14} className="mr-2" />Arşive Taşı</DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => removeCustomer(customer.id)} className="text-red-400 focus:text-red-400"><Trash2 size={14} className="mr-2" />Listeden Kaldır</DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </div>
@@ -643,21 +643,21 @@ export default function CustomersPage() {
                     <DialogHeader>
                         <DialogTitle className="text-slate-100 flex items-center gap-2">
                             <Edit size={20} className="text-cyan-400" />
-                            Fiyat DÃ¼zenle
+                            Fiyat Düzenle
                         </DialogTitle>
                         <DialogDescription className="text-slate-400 text-xs">
-                            MÃ¼ÅŸteri iÃ§in anlaÅŸÄ±lan fiyatÄ± gÃ¼ncelleyin.
+                            Müşteri için anlaşılan fiyatı güncelleyin.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 mt-4">
                         <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
-                            <div className="text-xs text-slate-500 font-bold">MÃ¼ÅŸteri</div>
+                            <div className="text-xs text-slate-500 font-bold">Müşteri</div>
                             <div className="text-sm text-slate-200 font-bold">
-                                {editingCustomer?.full_name || editingCustomer?.name || 'MÃ¼ÅŸteri'}
+                                {editingCustomer?.full_name || editingCustomer?.name || 'Müşteri'}
                             </div>
                         </div>
                         <div>
-                            <label className="text-xs font-bold text-slate-400 mb-1 block">Yeni Fiyat (â‚º)</label>
+                            <label className="text-xs font-bold text-slate-400 mb-1 block">Yeni Fiyat (₺)</label>
                             <Input
                                 type="number"
                                 value={editPrice}
@@ -669,7 +669,7 @@ export default function CustomersPage() {
                     </div>
                     <DialogFooter className="mt-6">
                         <Button variant="ghost" onClick={() => setEditingCustomer(null)} className="text-slate-400">
-                            Ä°ptal
+                            İptal
                         </Button>
                         <Button
                             onClick={handleSavePrice}
@@ -687,29 +687,29 @@ export default function CustomersPage() {
                     <DialogHeader>
                         <DialogTitle className="text-slate-100 flex items-center gap-2">
                             <Archive size={20} className="text-amber-400" />
-                            ArÅŸive TaÅŸÄ±
+                            Arşive Taşı
                         </DialogTitle>
                         <DialogDescription className="text-slate-400 text-xs">
-                            Bu iÅŸlem mÃ¼ÅŸteriyi aktif listeden kaldÄ±rÄ±r.
+                            Bu işlem müşteriyi aktif listeden kaldırır.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="py-4">
                         <p className="text-slate-300 text-sm">
-                            Bu mÃ¼ÅŸteriyi arÅŸive taÅŸÄ±mak istediÄŸinize emin misiniz?
+                            Bu müşteriyi arşive taşımak istediğinize emin misiniz?
                         </p>
                         <p className="text-slate-500 text-xs mt-2">
-                            MÃ¼ÅŸteri aktif listesinden kaldÄ±rÄ±lacak ve arÅŸiv kategorisine taÅŸÄ±nacak.
+                            Müşteri aktif listesinden kaldırılacak ve arşiv kategorisine taşınacak.
                         </p>
                     </div>
                     <DialogFooter>
                         <Button variant="ghost" onClick={() => setArchiveCustomerId(null)} className="text-slate-400">
-                            Ä°ptal
+                            İptal
                         </Button>
                         <Button
                             onClick={handleArchive}
                             className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold"
                         >
-                            ArÅŸive TaÅŸÄ±
+                            Arşive Taşı
                         </Button>
                     </DialogFooter>
                 </DialogContent>
