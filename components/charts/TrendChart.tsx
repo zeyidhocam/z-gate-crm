@@ -13,12 +13,13 @@ interface TrendChartProps {
 }
 
 // Custom tooltip
-const CustomTooltip = ({ active, payload, label }: { active?: boolean, payload?: Array<{ value: number, payload: unknown }>, label?: string }) => {
-    if (active && payload && payload.length) {
+const CustomTooltip = ({ active, payload, label }: { active?: boolean, payload?: Array<{ value?: number, payload?: unknown }>, label?: string }) => {
+    if (active && payload?.length) {
+        const item = payload[0]
         return (
             <div className="bg-[#0c1929] border border-cyan-500/30 rounded-xl px-4 py-3 shadow-xl shadow-cyan-500/10">
-                <p className="text-xs font-bold text-slate-400 mb-1">{label}</p>
-                <p className="text-lg font-black text-cyan-300">{payload[0].value} <span className="text-xs text-slate-400">kayıt</span></p>
+                <p className="text-xs font-bold text-slate-400 mb-1">{label || '-'}</p>
+                <p className="text-lg font-black text-cyan-300">{item.value || 0} <span className="text-xs text-slate-400">kayıt</span></p>
             </div>
         )
     }
@@ -28,7 +29,7 @@ const CustomTooltip = ({ active, payload, label }: { active?: boolean, payload?:
 // Custom dot component
 const CustomDot = (props: { cx?: number, cy?: number, value?: number }) => {
     const { cx, cy, value } = props
-    if (value === 0) return null
+    if (!cx || !cy || !value) return null
     return (
         <circle
             cx={cx}
@@ -119,3 +120,4 @@ export function TrendChart({ data }: TrendChartProps) {
         </div>
     )
 }
+

@@ -8,11 +8,13 @@ import { tr } from "date-fns/locale"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { WhatsAppNameLink } from "@/components/WhatsAppNameLink"
 
 interface Client {
     id: string
     full_name: string | null
     name: string | null
+    phone: string | null
     price_agreed: number | null
     price: number | null
     status: string
@@ -86,7 +88,7 @@ export default function FinancePage() {
             // Sadece onaylı müşterilerden gelir hesapla
             const { data, error } = await supabase
                 .from('clients')
-                .select('id, full_name, name, price_agreed, price, status, created_at, reservation_at, confirmed_at, process_types(name), process_name')
+                .select('id, full_name, name, phone, price_agreed, price, status, created_at, reservation_at, confirmed_at, process_types(name), process_name')
                 .eq('is_confirmed', true)
 
             if (error) throw error
@@ -195,7 +197,7 @@ export default function FinancePage() {
         const headers = ['İsim', 'Telefon', 'İşlem', 'Fiyat', 'Durum', 'Tarih']
         const rows = clients.map(c => [
             c.full_name || c.name || 'İsimsiz',
-            '-',
+            c.phone || '-',
             c.process_types?.name || '-',
             c.price_agreed?.toString() || '0',
             c.status,
@@ -367,9 +369,11 @@ export default function FinancePage() {
                             {clients.slice(0, 10).map(client => (
                                 <tr key={client.id} className="border-b border-cyan-500/5 hover:bg-cyan-500/5 transition-colors">
                                     <td className="py-4 px-4">
-                                        <span className="font-bold text-slate-200">
-                                            {client.full_name || client.name || 'İsimsiz'}
-                                        </span>
+                                        <WhatsAppNameLink
+                                            name={client.full_name || client.name || 'İsimsiz'}
+                                            phone={client.phone}
+                                            className="text-base font-extrabold text-slate-200"
+                                        />
                                     </td>
                                     <td className="py-4 px-4">
                                         <span className="text-sm text-slate-400">

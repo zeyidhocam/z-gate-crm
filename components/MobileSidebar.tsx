@@ -31,7 +31,7 @@ export function MobileSidebar() {
                     Ancak SheetContent içinde olduğu için layout bozulmaz.
                 */}
                 <div className="h-full w-full">
-                    <Sidebar className="w-full h-full border-r-0" />
+                    <Sidebar className="w-full h-full border-r-0" hideBrandText />
                 </div>
             </SheetContent>
         </Sheet>

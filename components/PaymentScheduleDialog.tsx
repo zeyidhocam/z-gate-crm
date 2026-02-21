@@ -103,6 +103,16 @@ export function PaymentScheduleDialog({
     const [showForm, setShowForm] = useState(false)
     const [calendarOpen, setCalendarOpen] = useState(false)
 
+    const getAuthHeaders = async () => {
+        const headers: Record<string, string> = { "Content-Type": "application/json" }
+        const { data } = await supabase.auth.getSession()
+        const accessToken = data.session?.access_token
+        if (accessToken) {
+            headers.Authorization = `Bearer ${accessToken}`
+        }
+        return headers
+    }
+
     const fetchSchedules = useCallback(async () => {
         if (!open) return
         setLoading(true)
@@ -144,7 +154,7 @@ export function PaymentScheduleDialog({
 
             const response = await fetch('/api/payments/schedules', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: await getAuthHeaders(),
                 body: JSON.stringify({
                     clientId,
                     items: [{ amount, dueDate: newDate.toISOString(), note: newNote.trim() || undefined }]
@@ -161,7 +171,7 @@ export function PaymentScheduleDialog({
                 const message = `Yeni odeme plani\nMusteri: ${clientName}\nTutar: ${amount.toLocaleString('tr-TR')} TL\nVade: ${format(newDate, 'dd MMMM yyyy', { locale: tr })}`
                 await fetch('/api/telegram/send', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: await getAuthHeaders(),
                     body: JSON.stringify({ message })
                 })
             } catch {
@@ -210,7 +220,7 @@ export function PaymentScheduleDialog({
 
             const response = await fetch('/api/payments/collect', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: await getAuthHeaders(),
                 body: JSON.stringify({
                     clientId,
                     scheduleId,

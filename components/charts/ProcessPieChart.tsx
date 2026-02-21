@@ -45,12 +45,13 @@ const renderCustomLabel = ({ cx = 0, cy = 0, midAngle = 0, innerRadius = 0, oute
 }
 
 // Custom tooltip
-const CustomTooltip = ({ active, payload }: { active?: boolean, payload?: Array<{ name: string, value: number, payload: ProcessData }> }) => {
-    if (active && payload && payload.length) {
+const CustomTooltip = ({ active, payload }: { active?: boolean, payload?: Array<{ name?: string, value?: number, payload?: ProcessData }> }) => {
+    if (active && payload?.length) {
+        const item = payload[0]
         return (
             <div className="bg-[#0c1929] border border-cyan-500/30 rounded-xl px-4 py-3 shadow-xl shadow-cyan-500/10">
-                <p className="text-sm font-bold text-cyan-300 mb-1">{payload[0].name}</p>
-                <p className="text-lg font-black text-white">{payload[0].value} <span className="text-xs text-slate-400">müşteri</span></p>
+                <p className="text-sm font-bold text-cyan-300 mb-1">{item.name || '-'}</p>
+                <p className="text-lg font-black text-white">{item.value || 0} <span className="text-xs text-slate-400">müşteri</span></p>
             </div>
         )
     }
@@ -122,3 +123,4 @@ export function ProcessPieChart({ data }: ProcessPieChartProps) {
         </div>
     )
 }
+

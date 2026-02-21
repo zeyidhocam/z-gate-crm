@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import { useState, useEffect, useMemo, useCallback } from "react"
-import { Users, Search, Phone, Calendar, CheckCircle2, Circle, Filter, MoreVertical, Trash2, Archive, Edit, CreditCard, AlertCircle, Clock } from "lucide-react"
+import { Users, Search, Phone, Calendar, CheckCircle2, Circle, Filter, MoreVertical, Trash2, Archive, Edit, CreditCard, AlertCircle, Clock, Star } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { format, parseISO, isPast, isToday as isDateToday, differenceInDays } from "date-fns"
 import { tr } from "date-fns/locale"
@@ -10,6 +10,7 @@ import type { AiRiskScore } from "@/lib/ai/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { WhatsAppButton } from "@/components/WhatsAppButton"
+import { WhatsAppNameLink } from "@/components/WhatsAppNameLink"
 import { ReminderButton } from "@/components/ReminderButton"
 import { PaymentScheduleDialog } from "@/components/PaymentScheduleDialog"
 import { toast } from "sonner"
@@ -33,6 +34,8 @@ interface Customer {
     full_name: string | null
     name: string | null
     phone: string | null
+    is_starred: boolean | null
+    starred_at: string | null
     price_agreed: number | null
     price: number | null
     process_name: string | null
@@ -210,7 +213,7 @@ export default function CustomersPage() {
             setLoading(true)
             const { data, error } = await supabase
                 .from('clients')
-                .select('id, full_name, name, phone, price_agreed, price, process_name, process_types(name), stage, confirmed_at, created_at, notes, reservation_at')
+                .select('*, process_types(name)')
                 .eq('is_confirmed', true)
                 .order('confirmed_at', { ascending: false })
 
@@ -230,7 +233,59 @@ export default function CustomersPage() {
         }
     }
 
+    const writeClientAuditLog = useCallback(async (customerId: string, action: string, changes: unknown) => {
+        try {
+            const { data } = await supabase.auth.getUser()
+            await supabase.from('audit_logs').insert({
+                table_name: 'clients',
+                record_id: customerId,
+                user_id: data.user?.id || null,
+                action,
+                changes,
+            })
+        } catch {
+            // best-effort
+        }
+    }, [])
+
+    const toggleStar = async (customer: Customer) => {
+        const nextValue = !customer.is_starred
+        const nextStarredAt = nextValue ? new Date().toISOString() : null
+
+        setCustomers((prev) =>
+            prev.map((item) =>
+                item.id === customer.id
+                    ? { ...item, is_starred: nextValue, starred_at: nextStarredAt }
+                    : item
+            )
+        )
+
+        try {
+            const { error } = await supabase
+                .from('clients')
+                .update({ is_starred: nextValue, starred_at: nextStarredAt })
+                .eq('id', customer.id)
+
+            if (error) throw error
+
+            await writeClientAuditLog(customer.id, nextValue ? 'client_starred' : 'client_unstarred', {
+                is_starred: nextValue,
+                starred_at: nextStarredAt,
+            })
+        } catch {
+            setCustomers((prev) =>
+                prev.map((item) =>
+                    item.id === customer.id
+                        ? { ...item, is_starred: customer.is_starred, starred_at: customer.starred_at }
+                        : item
+                )
+            )
+            toast.error("Yildiz durumu guncellenemedi")
+        }
+    }
+
     const updateStage = async (customerId: string, newStage: number) => {
+        const previous = customers.find((c) => c.id === customerId)
         try {
             const { error } = await supabase
                 .from('clients')
@@ -242,6 +297,11 @@ export default function CustomersPage() {
             setCustomers(prev =>
                 prev.map(c => c.id === customerId ? { ...c, stage: newStage } : c)
             )
+
+            await writeClientAuditLog(customerId, 'customer_stage_updated', {
+                old_stage: previous?.stage ?? null,
+                new_stage: newStage,
+            })
         } catch {
             // Hata kaydi gizlendi
         }
@@ -259,6 +319,10 @@ export default function CustomersPage() {
             if (error) throw error
 
             setCustomers(prev => prev.filter(c => c.id !== customerId))
+            await writeClientAuditLog(customerId, 'customer_removed_from_confirmed', {
+                is_confirmed: false,
+                stage: 1,
+            })
             toast.success("Müşteri listeden kaldırıldı")
         } catch {
             // Hata kaydi gizlendi
@@ -277,6 +341,10 @@ export default function CustomersPage() {
             if (error) throw error
 
             setCustomers(prev => prev.filter(c => c.id !== archiveCustomerId))
+            await writeClientAuditLog(archiveCustomerId, 'customer_archived', {
+                status: 'Arşiv',
+                is_confirmed: false,
+            })
             setArchiveCustomerId(null)
             toast.success("Müşteri arşive taşındı")
         } catch {
@@ -301,6 +369,10 @@ export default function CustomersPage() {
                     ? { ...c, price_agreed: newPrice }
                     : c
             ))
+            await writeClientAuditLog(editingCustomer.id, 'customer_price_updated', {
+                old_price: editingCustomer.price_agreed || editingCustomer.price || 0,
+                new_price: newPrice,
+            })
             setEditingCustomer(null)
             toast.success("Fiyat güncellendi")
         } catch {
@@ -324,6 +396,16 @@ export default function CustomersPage() {
 
         // Ödeme öncelikli sıralama
         result.sort((a, b) => {
+            const aStar = a.is_starred ? 1 : 0
+            const bStar = b.is_starred ? 1 : 0
+            if (aStar !== bStar) return bStar - aStar
+
+            if (aStar && bStar) {
+                const aStarTime = a.starred_at ? new Date(a.starred_at).getTime() : 0
+                const bStarTime = b.starred_at ? new Date(b.starred_at).getTime() : 0
+                if (aStarTime !== bStarTime) return bStarTime - aStarTime
+            }
+
             const riskA = riskMap[a.id]
             const riskB = riskMap[b.id]
             const riskLevelDiff =
@@ -519,6 +601,9 @@ export default function CustomersPage() {
                                 key={customer.id}
                                 className={cn(
                                     "group p-3 sm:p-4 lg:p-5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-[#0c1929]/90 to-[#0a1628]/80 border transition-all",
+                                    customer.is_starred
+                                        ? "from-amber-500/10 via-[#0c1929]/95 to-[#0a1628]/90 border-amber-400/35 hover:border-amber-300/60 hover:shadow-[0_0_24px_-8px_rgba(251,191,36,0.55)]"
+                                        : "",
                                     hasOverduePayment
                                         ? "border-red-500/30 border-l-[3px] border-l-red-500"
                                         : hasTodayPayment
@@ -538,7 +623,27 @@ export default function CustomersPage() {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-1.5">
-                                                <span className="font-bold text-sm text-slate-200 truncate">{customer.full_name || customer.name || 'İsimsiz'}</span>
+                                                <WhatsAppNameLink
+                                                    name={customer.full_name || customer.name || 'İsimsiz'}
+                                                    phone={customer.phone}
+                                                    className="text-base font-extrabold text-slate-200 truncate"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleStar(customer)}
+                                                    className="shrink-0 p-1 rounded-md hover:bg-amber-400/10 transition-colors"
+                                                    title={customer.is_starred ? "Yildizi kaldir" : "Yildizla"}
+                                                >
+                                                    <Star
+                                                        size={13}
+                                                        className={cn(
+                                                            "transition-colors",
+                                                            customer.is_starred
+                                                                ? "text-amber-300 fill-amber-300"
+                                                                : "text-slate-500 hover:text-amber-300"
+                                                        )}
+                                                    />
+                                                </button>
                                                 {/* Ödeme bildirim ikonu */}
                                                 {hasOverduePayment && (
                                                     <span className="relative flex h-2 w-2 shrink-0">
@@ -627,7 +732,27 @@ export default function CustomersPage() {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-3 mb-1">
-                                            <span className="font-bold text-lg text-slate-200">{customer.full_name || customer.name || 'İsimsiz'}</span>
+                                            <WhatsAppNameLink
+                                                name={customer.full_name || customer.name || 'İsimsiz'}
+                                                phone={customer.phone}
+                                                className="text-xl font-extrabold text-slate-200"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => toggleStar(customer)}
+                                                className="p-1 rounded-md hover:bg-amber-400/10 transition-colors"
+                                                title={customer.is_starred ? "Yildizi kaldir" : "Yildizla"}
+                                            >
+                                                <Star
+                                                    size={16}
+                                                    className={cn(
+                                                        "transition-colors",
+                                                        customer.is_starred
+                                                            ? "text-amber-300 fill-amber-300"
+                                                            : "text-slate-500 hover:text-amber-300"
+                                                    )}
+                                                />
+                                            </button>
                                             <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full", currentStage.color + "/20", currentStage.textColor)}>{currentStage.description}</span>
                                             <span
                                                 className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full border", riskBadgeClass)}
@@ -738,9 +863,11 @@ export default function CustomersPage() {
                     <div className="space-y-4 mt-4">
                         <div className="p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
                             <div className="text-xs text-slate-500 font-bold">Müşteri</div>
-                            <div className="text-sm text-slate-200 font-bold">
-                                {editingCustomer?.full_name || editingCustomer?.name || 'Müşteri'}
-                            </div>
+                            <WhatsAppNameLink
+                                name={editingCustomer?.full_name || editingCustomer?.name || 'Müşteri'}
+                                phone={editingCustomer?.phone}
+                                className="text-base font-extrabold text-slate-200"
+                            />
                         </div>
                         <div>
                             <label className="text-xs font-bold text-slate-400 mb-1 block">Yeni Fiyat (₺)</label>

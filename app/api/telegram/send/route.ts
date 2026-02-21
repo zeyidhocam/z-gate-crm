@@ -18,7 +18,8 @@ export async function POST(request: Request) {
             )
         }
 
-        const supabase = createServerSupabaseClient()
+        const accessToken = request.headers.get('authorization')
+        const supabase = createServerSupabaseClient(accessToken)
         const credentials = await getTelegramCredentials(supabase)
 
         if (!credentials) {

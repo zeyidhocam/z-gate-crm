@@ -10,10 +10,12 @@ import { format, parseISO, setHours, setMinutes } from "date-fns"
 import { tr } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { WhatsAppNameLink } from "@/components/WhatsAppNameLink"
 
 interface Lead {
   id: string
   name: string
+  phone?: string | null
   reservation_at?: string
 }
 
@@ -76,7 +78,11 @@ export function ReservationEditDialog({ client, open, onOpenChange, onSave }: Re
         <div className="space-y-4 py-4">
           <div className="p-3 bg-cyan-500/10 rounded-lg border border-cyan-500/20 mb-4">
             <div className="text-xs text-cyan-400 font-bold uppercase tracking-wider mb-1">Müşteri</div>
-            <div className="font-bold text-slate-200">{client.name}</div>
+            <WhatsAppNameLink
+              name={client.name}
+              phone={client.phone || null}
+              className="text-base font-extrabold text-slate-200"
+            />
           </div>
 
           <div className="space-y-2">

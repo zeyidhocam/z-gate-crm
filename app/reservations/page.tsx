@@ -7,7 +7,7 @@ import { tr } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 // Icons
 import {
-    Calendar as CalendarIcon, Copy, Check, ChevronRight, Edit, User, CheckCircle, XCircle, CalendarClock,
+    Calendar as CalendarIcon, Copy, Check, ChevronRight, Edit, CheckCircle, XCircle, CalendarClock,
     Wallet, CreditCard, AlertCircle, TrendingUp
 } from "lucide-react"
 // UI Components
@@ -18,6 +18,7 @@ import { ClientEditDialog, Client } from "@/components/ClientEditDialog"
 import { ReservationEditDialog } from "@/components/ReservationEditDialog"
 import { ReminderButton } from "@/components/ReminderButton"
 import { WhatsAppButton } from "@/components/WhatsAppButton"
+import { WhatsAppNameLink } from "@/components/WhatsAppNameLink"
 import { ConfirmCustomerPaymentDialog } from "@/components/ConfirmCustomerPaymentDialog"
 
 
@@ -429,9 +430,11 @@ export default function ReservationsPage() {
                                                     {/* Name & Phone */}
                                                     <div className="w-full md:w-[200px] shrink-0 flex flex-row md:flex-col justify-between md:justify-center items-center md:items-start gap-1">
                                                         <div>
-                                                            <div className="text-[15px] md:text-[14px] font-bold text-slate-200 truncate leading-tight">
-                                                                {lead.name}
-                                                            </div>
+                                                            <WhatsAppNameLink
+                                                                name={lead.name}
+                                                                phone={lead.phone}
+                                                                className="text-[16px] md:text-[15px] font-extrabold text-slate-200 truncate leading-tight"
+                                                            />
                                                             <div className="text-[13px] md:text-[12px] font-semibold text-slate-500/90 truncate font-sans">{lead.phone || '-'}</div>
                                                         </div>
                                                         {/* Mobile Date Badge */}
@@ -491,8 +494,12 @@ export default function ReservationsPage() {
                                                             <DialogContent className="bg-slate-950 border-slate-800 w-[95vw] max-w-lg">
                                                                 <DialogHeader>
                                                                     <DialogTitle className="text-slate-100 flex items-center gap-2">
-                                                                        <User size={18} className="text-slate-400" />
-                                                                        {lead.name} - Detaylar
+                                                                        <WhatsAppNameLink
+                                                                            name={lead.name}
+                                                                            phone={lead.phone || null}
+                                                                            className="text-base font-extrabold text-slate-100"
+                                                                        />
+                                                                        <span className="text-xs font-semibold text-slate-400">- Detaylar</span>
                                                                     </DialogTitle>
                                                                     <DialogDescription className="text-slate-400 text-xs">
                                                                         Müşteri ile ilgili yapay zeka özeti ve detaylar.

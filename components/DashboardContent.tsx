@@ -9,6 +9,7 @@ import { TrendChart } from '@/components/charts/TrendChart'
 import { ConversionCard } from '@/components/charts/ConversionCard'
 import { AIInsights } from '@/components/AIInsights'
 import { ReminderAlert } from '@/components/ReminderAlert'
+import { WhatsAppNameLink } from '@/components/WhatsAppNameLink'
 import { supabase } from '@/lib/supabase'
 import { format, parseISO, isSameDay, subDays } from 'date-fns'
 import { tr } from 'date-fns/locale'
@@ -372,7 +373,11 @@ export default function DashboardContent() {
                                                     <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800/50 hover:border-cyan-500/50 hover:shadow-[0_0_15px_-5px_rgba(34,211,238,0.3)] transition-all duration-200 hover:scale-[1.02] group">
                                                         <div className="flex items-start justify-between mb-3">
                                                             <div>
-                                                                <div className="font-bold text-slate-200 text-base">{lead.name}</div>
+                                                                <WhatsAppNameLink
+                                                                    name={lead.name}
+                                                                    phone={lead.phone || null}
+                                                                    className="text-[17px] font-extrabold text-slate-200"
+                                                                />
                                                                 <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5 font-medium">
                                                                     <Phone size={12} />
                                                                     {lead.phone || '-'}

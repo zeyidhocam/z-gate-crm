@@ -27,6 +27,7 @@ export interface PaymentScheduleRow {
   installment_no: number | null
   due_date: string
   is_paid: boolean | null
+  note?: string | null
 }
 
 function toNumber(value: unknown): number {
@@ -131,6 +132,82 @@ function normalizeMethod(method?: string): PaymentMethod {
   return 'cash'
 }
 
+async function safeInsertAuditLog(
+  supabase: SupabaseClient,
+  params: {
+    recordId: string
+    action: string
+    tableName?: string
+    changes?: unknown
+    userId?: string | null
+  }
+) {
+  const { recordId, action, tableName = 'clients', changes, userId } = params
+  try {
+    await supabase.from('audit_logs').insert({
+      table_name: tableName,
+      record_id: recordId,
+      action,
+      user_id: userId || null,
+      changes: changes ?? null,
+    })
+  } catch {
+    // best-effort log write
+  }
+}
+
+function buildPaymentReminderTitle(clientName: string) {
+  return `Odeme takibi: ${clientName}`
+}
+
+function buildPaymentReminderDescription(schedule: PaymentScheduleRow) {
+  const parts: string[] = []
+  if (typeof schedule.installment_no === 'number') {
+    parts.push(`Taksit #${schedule.installment_no}`)
+  }
+  if (schedule.note) {
+    parts.push(schedule.note)
+  }
+  return parts.join(' - ') || null
+}
+
+async function syncReminderForSchedules(
+  supabase: SupabaseClient,
+  clientId: string,
+  schedules: PaymentScheduleRow[]
+) {
+  if (!schedules.length) return
+
+  try {
+    const { data: client } = await supabase
+      .from('clients')
+      .select('full_name, name')
+      .eq('id', clientId)
+      .maybeSingle()
+
+    const clientName =
+      (client as { full_name?: string | null; name?: string | null } | null)?.full_name ||
+      (client as { full_name?: string | null; name?: string | null } | null)?.name ||
+      'Musteri'
+
+    const rows = schedules.map((schedule) => ({
+      client_id: clientId,
+      schedule_id: schedule.id,
+      title: buildPaymentReminderTitle(clientName),
+      description: buildPaymentReminderDescription(schedule),
+      reminder_date: schedule.due_date,
+      is_completed: getScheduleRemaining(schedule) <= 0,
+      source: 'payment_schedule',
+    }))
+
+    await supabase
+      .from('reminders')
+      .upsert(rows, { onConflict: 'schedule_id', ignoreDuplicates: false })
+  } catch {
+    // reminders table may not exist yet
+  }
+}
+
 export async function createSchedulesForClient(
   supabase: SupabaseClient,
   params: {
@@ -181,10 +258,25 @@ export async function createSchedulesForClient(
   const { data, error } = await supabase
     .from('payment_schedules')
     .insert(rows)
-    .select('id, client_id, amount, amount_due, amount_paid, status, installment_no, due_date, is_paid')
+    .select('id, client_id, amount, amount_due, amount_paid, status, installment_no, due_date, is_paid, note')
 
   if (error) throw new Error(error.message)
-  return (data || []) as unknown as PaymentScheduleRow[]
+  const created = (data || []) as unknown as PaymentScheduleRow[]
+
+  await syncReminderForSchedules(supabase, clientId, created)
+  await safeInsertAuditLog(supabase, {
+    recordId: clientId,
+    action: 'payment_schedule_created',
+    tableName: 'clients',
+    changes: {
+      source,
+      scheduleCount: created.length,
+      scheduleIds: created.map((row) => row.id),
+      installmentNos: created.map((row) => row.installment_no),
+    },
+  })
+
+  return created
 }
 
 async function updateScheduleAfterCollection(
@@ -320,7 +412,39 @@ export async function collectPayment(
     }
   }
 
+  if (updatedSchedules.length) {
+    try {
+      const { data: updatedRows } = await supabase
+        .from('payment_schedules')
+        .select('id, client_id, amount, amount_due, amount_paid, status, installment_no, due_date, is_paid, note')
+        .in('id', updatedSchedules)
+
+      await syncReminderForSchedules(
+        supabase,
+        clientId,
+        ((updatedRows || []) as unknown as PaymentScheduleRow[])
+      )
+    } catch {
+      // reminders sync is best-effort
+    }
+  }
+
   const paymentSummary = await syncClientPaymentStatus(supabase, clientId)
+  await safeInsertAuditLog(supabase, {
+    recordId: clientId,
+    action: 'payment_collected',
+    tableName: 'clients',
+    changes: {
+      amount,
+      method: normalizeMethod(method),
+      scheduleId: scheduleId || null,
+      updatedSchedules,
+      source,
+      paidAt: paidAt || new Date().toISOString(),
+      note: note || null,
+    },
+    userId: createdBy || null,
+  })
   return { updatedSchedules, paymentSummary }
 }
 

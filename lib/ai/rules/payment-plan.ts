@@ -46,6 +46,7 @@ export function suggestPaymentPlan(input: PaymentSuggestionInput): AiPaymentSugg
   if (totalAmount <= 5000 && riskLevel === 'low') {
     return {
       mode: 'full_paid',
+      depositAmount: totalAmount,
       installmentCount: 1,
       installments: [],
       confidence: buildConfidence({

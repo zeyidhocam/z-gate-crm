@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -8,7 +8,12 @@ import { twMerge } from 'tailwind-merge'
 import { useSettings } from '@/components/providers/settings-provider'
 import { supabase } from '@/lib/supabase'
 
-export function Sidebar({ className }: { className?: string }) {
+interface SidebarProps {
+    className?: string
+    hideBrandText?: boolean
+}
+
+export function Sidebar({ className, hideBrandText = false }: SidebarProps) {
     const pathname = usePathname()
     const { config } = useSettings()
     const [reminderCount, setReminderCount] = useState(0)
@@ -23,13 +28,13 @@ export function Sidebar({ className }: { className?: string }) {
             const data = await res.json() as any
 
             if (data.ok) {
-                toast.success("Rapor başarıyla Telegram'a gönderildi!")
+                toast.success("Rapor baÅŸarÄ±yla Telegram'a gÃ¶nderildi!")
             } else {
-                toast.error("Rapor gönderilemedi: " + (data.error || "Bilinmeyen hata"))
+                toast.error("Rapor gÃ¶nderilemedi: " + (data.error || "Bilinmeyen hata"))
             }
         } catch {
             // Hata kaydi gizlendi
-            toast.error("İstek sırasında bir hata oluştu")
+            toast.error("Ä°stek sÄ±rasÄ±nda bir hata oluÅŸtu")
         } finally {
             setSendingReport(false)
         }
@@ -38,44 +43,24 @@ export function Sidebar({ className }: { className?: string }) {
     // Fetch reminder + payment due counts
     useEffect(() => {
         const fetchCounts = async () => {
-            // Reminders
-            const { data: reminderData } = await supabase
-                .from('reminders')
-                .select('id, reminder_date')
-                .eq('is_completed', false)
+            const nowIso = new Date().toISOString()
 
-            if (reminderData) {
-                const now = new Date()
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const count = reminderData.filter((r: any) => {
-                    const date = new Date(r.reminder_date)
-                    return date <= now || date.toDateString() === now.toDateString()
-                }).length
-                setReminderCount(count)
-            }
+            // Reminders
+            const { count: reminderDueCount } = await supabase
+                .from('reminders')
+                .select('*', { count: 'exact', head: true })
+                .eq('is_completed', false)
+                .lte('reminder_date', nowIso)
+            setReminderCount(reminderDueCount || 0)
 
             // Payment schedules due
             try {
-                const { data: paymentData } = await supabase
+                const { count: duePaymentCount } = await supabase
                     .from('payment_schedules')
-                    .select('id, due_date, amount, amount_due, amount_paid, is_paid')
-
-                if (paymentData) {
-                    const now = new Date()
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const count = paymentData.filter((p: any) => {
-                        const amountDue = Number(p.amount_due || p.amount || 0)
-                        const amountPaid = Number(p.amount_paid || 0) > 0
-                            ? Number(p.amount_paid)
-                            : (p.is_paid ? amountDue : 0)
-                        const remaining = Math.max(0, amountDue - amountPaid)
-                        if (remaining <= 0) return false
-
-                        const date = new Date(p.due_date)
-                        return date <= now || date.toDateString() === now.toDateString()
-                    }).length
-                    setPaymentDueCount(count)
-                }
+                    .select('*', { count: 'exact', head: true })
+                    .eq('is_paid', false)
+                    .lte('due_date', nowIso)
+                setPaymentDueCount(duePaymentCount || 0)
             } catch {
                 // Table might not exist yet
             }
@@ -93,11 +78,11 @@ export function Sidebar({ className }: { className?: string }) {
         { label: 'Ana Sayfa', icon: LayoutDashboard, path: '/' },
         { label: 'Rezervasyonlar', icon: Calendar, path: '/reservations' },
         { label: 'Takvim', icon: CalendarDays, path: '/calendar' },
-        { label: 'Müşteriler', icon: Users, path: '/customers' },
-        { label: 'Kayıtlar', icon: Users, path: '/clients' },
+        { label: 'MÃ¼ÅŸteriler', icon: Users, path: '/customers' },
+        { label: 'KayÄ±tlar', icon: Users, path: '/clients' },
         { label: 'Finans', icon: DollarSign, path: '/finance' },
-        { label: 'Hatırlatmalar', icon: Bell, path: '/reminders', badge: reminderCount + paymentDueCount },
-        { label: 'Kişisel Kasa Analysis', icon: Wallet, path: '/analysis' },
+        { label: 'HatÄ±rlatmalar', icon: Bell, path: '/reminders', badge: reminderCount + paymentDueCount },
+        { label: 'KiÅŸisel Kasa Analysis', icon: Wallet, path: '/analysis' },
         { label: 'Ayarlar', icon: Settings, path: '/settings' },
     ]
 
@@ -111,15 +96,17 @@ export function Sidebar({ className }: { className?: string }) {
                     alt="Logo"
                     className="w-12 h-12 rounded-xl shadow-lg shadow-cyan-500/20 group-hover:scale-105 transition-transform"
                 />
-                <div>
-                    <h1
-                        className="text-2xl font-black tracking-tight text-gradient-ocean group-hover:opacity-80 transition-opacity"
-                        title={config.appName}
-                    >
-                        {config.appName}
-                    </h1>
-                    <p className="text-xs text-cyan-400/60 font-medium">Yönetim Paneli</p>
-                </div>
+                {!hideBrandText ? (
+                    <div>
+                        <h1
+                            className="text-2xl font-black tracking-tight text-gradient-ocean group-hover:opacity-80 transition-opacity"
+                            title={config.appName}
+                        >
+                            {config.appName}
+                        </h1>
+                        <p className="text-xs text-cyan-400/60 font-medium">Yonetim Paneli</p>
+                    </div>
+                ) : null}
             </Link>
 
             {/* Navigation Items */}
@@ -178,7 +165,7 @@ export function Sidebar({ className }: { className?: string }) {
                     className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 hover:from-cyan-500/20 hover:to-blue-500/20 border border-cyan-500/20 rounded-xl py-2.5 text-xs font-bold text-cyan-400 transition-all disabled:opacity-50 hover:shadow-[0_0_15px_rgba(34,211,238,0.2)] group"
                 >
                     <Send size={14} className={twMerge("transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5", sendingReport && "animate-pulse")} />
-                    {sendingReport ? "Gönderiliyor..." : "Manuel Rapor Gönder"}
+                    {sendingReport ? "GÃ¶nderiliyor..." : "Manuel Rapor GÃ¶nder"}
                 </button>
                 <div className="px-2 text-[10px] text-slate-600 text-center font-mono">
                     Ocean Elite v1.0

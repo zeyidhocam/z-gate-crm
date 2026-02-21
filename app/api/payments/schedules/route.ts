@@ -24,7 +24,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: 'items is required' }, { status: 400 })
     }
 
-    const supabase = createServerSupabaseClient()
+    const accessToken = request.headers.get('authorization')
+    const supabase = createServerSupabaseClient(accessToken)
     const normalizedItems: CreateScheduleItemInput[] = items.map((item) => ({
       amount: Number(item.amount),
       dueDate: item.dueDate,

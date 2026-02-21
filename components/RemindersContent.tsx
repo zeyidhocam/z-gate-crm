@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { WhatsAppButton } from "@/components/WhatsAppButton"
+import { WhatsAppNameLink } from "@/components/WhatsAppNameLink"
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog"
@@ -92,6 +93,15 @@ export default function RemindersContent() {
     const [messageDraft, setMessageDraft] = useState("")
     const [messageReasons, setMessageReasons] = useState<string[]>([])
     const [messageLoading, setMessageLoading] = useState(false)
+    const getAuthHeaders = async () => {
+        const headers: Record<string, string> = { "Content-Type": "application/json" }
+        const { data } = await supabase.auth.getSession()
+        const accessToken = data.session?.access_token
+        if (accessToken) {
+            headers.Authorization = `Bearer ${accessToken}`
+        }
+        return headers
+    }
 
     // URL parametresinden tab yükle
     useEffect(() => {
@@ -204,7 +214,7 @@ export default function RemindersContent() {
 
                 await fetch('/api/telegram/send', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: await getAuthHeaders(),
                     body: JSON.stringify({ message })
                 })
             } catch {
@@ -278,7 +288,7 @@ export default function RemindersContent() {
 
             const response = await fetch('/api/payments/collect', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: await getAuthHeaders(),
                 body: JSON.stringify({
                     clientId: schedule.client_id,
                     scheduleId: schedule.id,
@@ -331,7 +341,7 @@ export default function RemindersContent() {
         try {
             const response = await fetch('/api/ai/message-draft', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: await getAuthHeaders(),
                 body: JSON.stringify({
                     clientId: messagePayment.client_id,
                     scenario: messageScenario,
@@ -548,9 +558,11 @@ export default function RemindersContent() {
                     <div className="space-y-3">
                         <div className="p-3 rounded-lg border border-slate-700 bg-slate-900/40">
                             <div className="text-xs text-slate-500 font-bold">MÜŞTERİ</div>
-                            <div className="text-sm text-slate-200 font-bold">
-                                {messagePayment?.clients?.full_name || messagePayment?.clients?.name || "Müşteri"}
-                            </div>
+                            <WhatsAppNameLink
+                                name={messagePayment?.clients?.full_name || messagePayment?.clients?.name || "Müşteri"}
+                                phone={messagePayment?.clients?.phone}
+                                className="text-base font-extrabold text-slate-200"
+                            />
                         </div>
 
                         <div className="space-y-2">
@@ -1014,7 +1026,11 @@ export default function RemindersContent() {
                                     <span className="text-lg font-black">{client.daysSince}</span>
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="font-bold text-slate-200">{client.full_name || client.name || 'İsimsiz'}</div>
+                                    <WhatsAppNameLink
+                                        name={client.full_name || client.name || 'İsimsiz'}
+                                        phone={client.phone}
+                                        className="text-base font-extrabold text-slate-200"
+                                    />
                                     <div className="text-xs text-slate-500">{client.phone || '-'}</div>
                                 </div>
                                 <div className="text-right shrink-0">
@@ -1173,7 +1189,11 @@ function PaymentCard({
             {/* Client & Amount */}
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-slate-200 text-sm">{clientName}</span>
+                    <WhatsAppNameLink
+                        name={clientName}
+                        phone={payment.clients?.phone}
+                        className="text-base font-extrabold text-slate-200"
+                    />
                     <span className={cn("text-sm font-black", c.text)}>
                         {remaining > 0 ? remaining.toLocaleString('tr-TR') : amountDue.toLocaleString('tr-TR')} ₺
                     </span>

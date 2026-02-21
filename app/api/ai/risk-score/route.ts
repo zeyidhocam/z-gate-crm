@@ -10,7 +10,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ ok: false, error: 'clientId is required' }, { status: 400 })
     }
 
-    const supabase = createServerSupabaseClient()
+    const accessToken = request.headers.get('authorization')
+    const supabase = createServerSupabaseClient(accessToken)
 
     const [{ data: client, error: clientError }, { data: schedules }, { data: transactions }] = await Promise.all([
       supabase.from('clients').select('id').eq('id', clientId).single(),

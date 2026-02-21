@@ -8,6 +8,7 @@ import { tr } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { WhatsAppNameLink } from "@/components/WhatsAppNameLink"
 
 interface Reservation {
     id: string
@@ -184,7 +185,13 @@ export default function CalendarPage() {
                                         >
                                             <span className="hidden sm:inline">{format(parseISO(res.reservation_at), 'HH:mm')} - </span>
                                             <span className="sm:hidden">{format(parseISO(res.reservation_at), 'HH:mm')}</span>
-                                            <span className="hidden sm:inline">{res.full_name || res.name}</span>
+                                            <span className="hidden sm:inline">
+                                                <WhatsAppNameLink
+                                                    name={res.full_name || res.name || 'İsimsiz'}
+                                                    phone={res.phone}
+                                                    className="text-[10px] font-extrabold text-purple-300"
+                                                />
+                                            </span>
                                         </div>
                                     ))}
                                     {dayReservations.length > (typeof window !== 'undefined' && window.innerWidth < 640 ? 1 : 2) && (
@@ -218,9 +225,11 @@ export default function CalendarPage() {
                             >
                                 <div className="flex items-start justify-between mb-2">
                                     <div>
-                                        <div className="font-bold text-slate-200">
-                                            {res.full_name || res.name || 'İsimsiz'}
-                                        </div>
+                                        <WhatsAppNameLink
+                                            name={res.full_name || res.name || 'İsimsiz'}
+                                            phone={res.phone}
+                                            className="text-base font-extrabold text-slate-200"
+                                        />
                                         <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-0.5">
                                             <Phone size={12} />
                                             {res.phone || '-'}

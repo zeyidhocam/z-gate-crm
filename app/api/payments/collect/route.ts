@@ -25,7 +25,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: 'amount must be positive' }, { status: 400 })
     }
 
-    const supabase = createServerSupabaseClient()
+    const accessToken = request.headers.get('authorization')
+    const supabase = createServerSupabaseClient(accessToken)
     const result = await collectPayment(supabase, {
       clientId,
       scheduleId,

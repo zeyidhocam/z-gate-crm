@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import type { AiPaymentSuggestion } from "@/lib/ai/types"
+import { supabase } from "@/lib/supabase"
 
 type PaymentMode = "full_paid" | "deposit_plan" | "pay_later"
 
@@ -83,6 +84,16 @@ export function ConfirmCustomerPaymentDialog({
   const [saving, setSaving] = useState(false)
   const [suggesting, setSuggesting] = useState(false)
   const [suggestion, setSuggestion] = useState<AiPaymentSuggestion | null>(null)
+
+  const getAuthHeaders = async () => {
+    const headers: Record<string, string> = { "Content-Type": "application/json" }
+    const { data } = await supabase.auth.getSession()
+    const accessToken = data.session?.access_token
+    if (accessToken) {
+      headers.Authorization = `Bearer ${accessToken}`
+    }
+    return headers
+  }
 
   useEffect(() => {
     if (!open || !lead) return
@@ -195,7 +206,7 @@ export function ConfirmCustomerPaymentDialog({
     try {
       const res = await fetch("/api/customers/confirm-with-payment", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await getAuthHeaders(),
         body: JSON.stringify(body),
       })
       const data = await res.json().catch(() => ({}))
@@ -227,7 +238,7 @@ export function ConfirmCustomerPaymentDialog({
     try {
       const res = await fetch("/api/ai/payment-plan-suggest", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await getAuthHeaders(),
         body: JSON.stringify({
           clientId: lead.id,
           totalAmount: total,

@@ -62,8 +62,9 @@ export async function GET() {
             .gte('confirmed_at', todayStart)
             .lte('confirmed_at', todayEnd)
 
-        const newCustomersCount = newCustomers?.length || 0
-        const revenue = newCustomers?.reduce((sum, client) => sum + (client.price_agreed || 0), 0) || 0
+        const safeNewCustomers = newCustomers || []
+        const newCustomersCount = safeNewCustomers.length
+        const revenue = safeNewCustomers.reduce((sum, client) => sum + (client.price_agreed || 0), 0)
 
         // 2.4 Cancellations/Archives (Updated to Archive Today)
         const { count: archivedResult } = await supabase

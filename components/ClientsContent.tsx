@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-import { Search, ChevronRight, Edit, CalendarDays, Copy, Check, Sparkles, Clock, Archive, User, Info, CreditCard } from "lucide-react"
+import { Search, ChevronRight, Edit, CalendarDays, Copy, Check, Sparkles, Clock, Archive, Info, CreditCard, Star } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import RecentActivity from "@/components/RecentActivity"
 import { cn } from "@/lib/utils"
@@ -15,6 +15,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { tr } from "date-fns/locale"
 import { format } from "date-fns"
 import { WhatsAppButton } from "@/components/WhatsAppButton"
+import { WhatsAppNameLink } from "@/components/WhatsAppNameLink"
 import { ReminderButton } from "@/components/ReminderButton"
 import { NewClientDialog } from "@/components/NewClientDialog"
 import { PaymentScheduleDialog } from "@/components/PaymentScheduleDialog"
@@ -46,6 +47,8 @@ interface Client {
     full_name: string | null
     name: string | null // Legacy support
     phone: string | null
+    is_starred: boolean | null
+    starred_at: string | null
     mother_name: string | null
     status: string | null
     created_at: string
@@ -143,6 +146,57 @@ export default function ClientsContent() {
         setTimeout(() => setCopiedText(null), 2000)
     }
 
+    const writeClientAuditLog = async (clientId: string, action: string, changes: unknown) => {
+        try {
+            const { data } = await supabase.auth.getUser()
+            await supabase.from('audit_logs').insert({
+                table_name: 'clients',
+                record_id: clientId,
+                user_id: data.user?.id || null,
+                action,
+                changes,
+            })
+        } catch {
+            // best-effort
+        }
+    }
+
+    const toggleStar = async (client: Client) => {
+        const nextValue = !client.is_starred
+        const nextStarredAt = nextValue ? new Date().toISOString() : null
+
+        setClients((prev) =>
+            prev.map((row) =>
+                row.id === client.id
+                    ? { ...row, is_starred: nextValue, starred_at: nextStarredAt }
+                    : row
+            )
+        )
+
+        try {
+            const { error } = await supabase
+                .from('clients')
+                .update({ is_starred: nextValue, starred_at: nextStarredAt })
+                .eq('id', client.id)
+
+            if (error) throw error
+
+            await writeClientAuditLog(client.id, nextValue ? 'client_starred' : 'client_unstarred', {
+                is_starred: nextValue,
+                starred_at: nextStarredAt,
+            })
+        } catch {
+            setClients((prev) =>
+                prev.map((row) =>
+                    row.id === client.id
+                        ? { ...row, is_starred: client.is_starred, starred_at: client.starred_at }
+                        : row
+                )
+            )
+            toast.error("Yildiz durumu guncellenemedi.")
+        }
+    }
+
     const handleReservation = async (clientId: string, date: Date | undefined) => {
         if (!date) return
         try {
@@ -155,6 +209,10 @@ export default function ClientsContent() {
                 // Optimistic Update
                 setClients(prev => prev.map(c => c.id === clientId ? { ...c, status: 'Rezervasyon', reservation_at: date!.toISOString() } : c))
                 setReservationDate(undefined)
+                await writeClientAuditLog(clientId, 'client_reservation_set', {
+                    status: 'Rezervasyon',
+                    reservation_at: date.toISOString(),
+                })
             }
         } catch {
             // Hata kaydi gizlendi
@@ -162,6 +220,7 @@ export default function ClientsContent() {
     }
 
     const updateStatus = async (id: string, newStatus: string) => {
+        const previous = clients.find((item) => item.id === id)?.status || null
         setClients(prev => prev.map(c => c.id === id ? { ...c, status: newStatus } : c))
 
         // Aktif kategorisine geçince Müşteriler sayfasında görünmesi için is_confirmed ve confirmed_at set et
@@ -179,6 +238,11 @@ export default function ClientsContent() {
         } else {
             await supabase.from('clients').update({ status: newStatus }).eq('id', id)
         }
+
+        await writeClientAuditLog(id, 'client_status_updated', {
+            old_status: previous,
+            new_status: newStatus,
+        })
     }
 
 
@@ -192,6 +256,7 @@ export default function ClientsContent() {
         // Optimistic Update
         setClients(prev => prev.map(c => c.id === id ? { ...c, status: 'Arşiv' } : c))
         await supabase.from('clients').update({ status: 'Arşiv' }).eq('id', id)
+        await writeClientAuditLog(id, 'client_archived', { status: 'Arşiv' })
         toast.success("Müşteri arşive taşındı.")
     }
 
@@ -213,6 +278,7 @@ export default function ClientsContent() {
 
             // Optimistic Update
             setClients(prev => prev.map(c => c.id === editingClient.id ? { ...c, ...updatedClient } : c))
+            await writeClientAuditLog(editingClient.id, 'client_updated', updatedClient)
             setEditingClient(null) // Close Dialog
             window.location.reload() // Reload to fetch relations if needed, or we can fetch single
 
@@ -263,7 +329,19 @@ export default function ClientsContent() {
             {/* List Layout */}
             <div className="space-y-4 sm:space-y-6">
                 {ORDERED_CATEGORIES.map(category => {
-                    const categoryItems = filteredClients.filter(l => (l.status || 'Yeni') === category)
+                    const categoryItems = filteredClients
+                        .filter(l => (l.status || 'Yeni') === category)
+                        .sort((a, b) => {
+                            const aStar = a.is_starred ? 1 : 0
+                            const bStar = b.is_starred ? 1 : 0
+                            if (aStar !== bStar) return bStar - aStar
+
+                            const aStarTime = a.starred_at ? new Date(a.starred_at).getTime() : 0
+                            const bStarTime = b.starred_at ? new Date(b.starred_at).getTime() : 0
+                            if (aStarTime !== bStarTime) return bStarTime - aStarTime
+
+                            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                        })
                     const config = CATEGORIES[category] || CATEGORIES['Yeni']
                     const isOpen = expanded[category]
 
@@ -316,12 +394,39 @@ export default function ClientsContent() {
                                         categoryItems.map(client => (
                                             <React.Fragment key={client.id}>
                                                 {/* === MOBİL KART GÖRÜNÜMÜ (lg altı) === */}
-                                                <div className="lg:hidden p-3 sm:p-4 rounded-xl bg-[#040d17]/30 border border-transparent hover:border-cyan-500/10 space-y-3">
+                                                <div
+                                                    className={cn(
+                                                        "lg:hidden p-3 sm:p-4 rounded-xl bg-[#040d17]/30 border border-transparent hover:border-cyan-500/10 space-y-3 transition-all",
+                                                        client.is_starred
+                                                            ? "border-amber-400/35 bg-gradient-to-r from-amber-500/10 via-[#040d17]/40 to-[#040d17]/30 hover:border-amber-300/60"
+                                                            : ""
+                                                    )}
+                                                >
                                                     {/* Üst: İsim, Durum, Fiyat */}
                                                     <div className="flex items-start justify-between gap-2">
                                                         <div className="min-w-0 flex-1">
-                                                            <div className="text-sm font-bold text-slate-200 truncate">
-                                                                {client.full_name || client.name || 'İsimsiz'}
+                                                            <div className="flex items-center gap-1">
+                                                                <WhatsAppNameLink
+                                                                    name={client.full_name || client.name || 'İsimsiz'}
+                                                                    phone={client.phone}
+                                                                    className="text-base font-extrabold text-slate-200 truncate"
+                                                                />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => toggleStar(client)}
+                                                                    className="shrink-0 p-1 rounded-md hover:bg-amber-400/10 transition-colors"
+                                                                    title={client.is_starred ? "Yildizi kaldir" : "Yildizla"}
+                                                                >
+                                                                    <Star
+                                                                        size={13}
+                                                                        className={cn(
+                                                                            "transition-colors",
+                                                                            client.is_starred
+                                                                                ? "text-amber-300 fill-amber-300"
+                                                                                : "text-slate-500 hover:text-amber-300"
+                                                                        )}
+                                                                    />
+                                                                </button>
                                                             </div>
                                                             <div className="text-xs font-semibold text-slate-500 truncate">{client.phone || '-'}</div>
                                                         </div>
@@ -374,8 +479,12 @@ export default function ClientsContent() {
                                                             <DialogContent className="bg-[#0c1929] border-cyan-500/20 max-w-[calc(100vw-2rem)] sm:max-w-lg">
                                                                 <DialogHeader>
                                                                     <DialogTitle className="text-slate-100 flex items-center gap-2 text-base">
-                                                                        <User size={16} className="text-slate-400" />
-                                                                        {client.full_name} - Detaylar
+                                                                        <WhatsAppNameLink
+                                                                            name={client.full_name || client.name || "İsimsiz"}
+                                                                            phone={client.phone || null}
+                                                                            className="text-base font-extrabold text-slate-100"
+                                                                        />
+                                                                        <span className="text-xs font-semibold text-slate-400">- Detaylar</span>
                                                                     </DialogTitle>
                                                                 </DialogHeader>
                                                                 <div className="mt-3 p-3 bg-slate-900/50 rounded-lg border border-slate-800 space-y-3">
@@ -449,11 +558,38 @@ export default function ClientsContent() {
                                                 </div>
 
                                                 {/* === MASAÜSTÜ TABLO GÖRÜNÜMÜ (lg ve üstü) === */}
-                                                <div className="hidden lg:flex items-center gap-8 px-6 py-5 rounded-xl hover:bg-gradient-to-r hover:from-cyan-500/5 hover:to-transparent transition-all duration-150 hover:scale-[1.005] border border-transparent hover:border-cyan-500/10 group bg-[#040d17]/30">
+                                                <div
+                                                    className={cn(
+                                                        "hidden lg:flex items-center gap-8 px-6 py-5 rounded-xl hover:bg-gradient-to-r hover:from-cyan-500/5 hover:to-transparent transition-all duration-150 hover:scale-[1.005] border border-transparent hover:border-cyan-500/10 group bg-[#040d17]/30",
+                                                        client.is_starred
+                                                            ? "border-amber-400/35 bg-gradient-to-r from-amber-500/10 via-[#040d17]/40 to-[#040d17]/30 hover:border-amber-300/60 hover:shadow-[0_0_24px_-8px_rgba(251,191,36,0.55)]"
+                                                            : ""
+                                                    )}
+                                                >
                                                     {/* Name & Phone */}
                                                     <div className="w-[240px] shrink-0 flex flex-col justify-center gap-1">
-                                                        <div className="text-[15px] font-bold text-slate-200 truncate leading-tight">
-                                                            {client.full_name || client.name || 'İsimsiz'}
+                                                        <div className="flex items-center gap-1">
+                                                            <WhatsAppNameLink
+                                                                name={client.full_name || client.name || 'İsimsiz'}
+                                                                phone={client.phone}
+                                                                className="text-[17px] font-extrabold text-slate-200 truncate leading-tight"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => toggleStar(client)}
+                                                                className="shrink-0 p-1 rounded-md hover:bg-amber-400/10 transition-colors"
+                                                                title={client.is_starred ? "Yildizi kaldir" : "Yildizla"}
+                                                            >
+                                                                <Star
+                                                                    size={14}
+                                                                    className={cn(
+                                                                        "transition-colors",
+                                                                        client.is_starred
+                                                                            ? "text-amber-300 fill-amber-300"
+                                                                            : "text-slate-500 hover:text-amber-300"
+                                                                    )}
+                                                                />
+                                                            </button>
                                                         </div>
                                                         <div className="text-[13px] font-semibold text-slate-500/90 truncate font-sans">{client.phone || '-'}</div>
                                                         <div className="text-[10px] text-slate-600 font-medium">
@@ -521,8 +657,12 @@ export default function ClientsContent() {
                                                             <DialogContent className="bg-[#0c1929] border-cyan-500/20">
                                                                 <DialogHeader>
                                                                     <DialogTitle className="text-slate-100 flex items-center gap-2">
-                                                                        <User size={18} className="text-slate-400" />
-                                                                        {client.full_name} - Detaylar
+                                                                        <WhatsAppNameLink
+                                                                            name={client.full_name || client.name || "İsimsiz"}
+                                                                            phone={client.phone || null}
+                                                                            className="text-base font-extrabold text-slate-100"
+                                                                        />
+                                                                        <span className="text-xs font-semibold text-slate-400">- Detaylar</span>
                                                                     </DialogTitle>
                                                                 </DialogHeader>
                                                                 <div className="mt-4 p-4 bg-slate-900/50 rounded-lg border border-slate-800 space-y-3">
