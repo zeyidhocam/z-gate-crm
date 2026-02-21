@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase"
 import { format, parseISO, isPast, isToday as isDateToday, differenceInDays } from "date-fns"
 import { tr } from "date-fns/locale"
 import { cn } from "@/lib/utils"
+import type { AiRiskScore } from "@/lib/ai/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { WhatsAppButton } from "@/components/WhatsAppButton"
@@ -61,6 +62,18 @@ const STAGES = [
     { value: 4, label: "4. Aşama", color: "bg-emerald-500", textColor: "text-emerald-400", description: "Tamamlandı" },
 ]
 
+const RISK_PRIORITY: Record<AiRiskScore["level"], number> = {
+    high: 3,
+    medium: 2,
+    low: 1,
+}
+
+const RISK_LABEL: Record<AiRiskScore["level"], string> = {
+    high: "Yüksek Risk",
+    medium: "Orta Risk",
+    low: "Düşük Risk",
+}
+
 export default function CustomersPage() {
     const [customers, setCustomers] = useState<Customer[]>([])
     const [loading, setLoading] = useState(true)
@@ -80,6 +93,7 @@ export default function CustomersPage() {
 
     // Ödeme bilgileri map
     const [paymentMap, setPaymentMap] = useState<Record<string, PaymentInfo>>({})
+    const [riskMap, setRiskMap] = useState<Record<string, AiRiskScore>>({})
 
     // stageFilter değiştiğinde localStorage'a kaydet
     useEffect(() => {
@@ -147,11 +161,49 @@ export default function CustomersPage() {
         }
     }, [])
 
+    const fetchRiskScores = useCallback(async (clientIds: string[]) => {
+        if (!clientIds.length) {
+            setRiskMap({})
+            return
+        }
+
+        const nextMap: Record<string, AiRiskScore> = {}
+        const chunkSize = 12
+
+        for (let i = 0; i < clientIds.length; i += chunkSize) {
+            const chunk = clientIds.slice(i, i + chunkSize)
+            const chunkResults = await Promise.all(
+                chunk.map(async (clientId) => {
+                    try {
+                        const response = await fetch(`/api/ai/risk-score?clientId=${clientId}`)
+                        const data = await response.json().catch(() => ({}))
+                        if (!response.ok || !data?.ok || !data?.risk) return null
+                        return { clientId, risk: data.risk as AiRiskScore }
+                    } catch {
+                        return null
+                    }
+                })
+            )
+
+            chunkResults.forEach((item) => {
+                if (!item) return
+                nextMap[item.clientId] = item.risk
+            })
+        }
+
+        setRiskMap(nextMap)
+    }, [])
+
     useEffect(() => {
         fetchCustomers()
         fetchPaymentSchedules()
         // eslint-disable-next-line
     }, [])
+
+    useEffect(() => {
+        const ids = customers.map((customer) => customer.id)
+        fetchRiskScores(ids)
+    }, [customers, fetchRiskScores])
 
     const fetchCustomers = async () => {
         try {
@@ -272,6 +324,16 @@ export default function CustomersPage() {
 
         // Ödeme öncelikli sıralama
         result.sort((a, b) => {
+            const riskA = riskMap[a.id]
+            const riskB = riskMap[b.id]
+            const riskLevelDiff =
+                (riskB ? RISK_PRIORITY[riskB.level] : 0) -
+                (riskA ? RISK_PRIORITY[riskA.level] : 0)
+            if (riskLevelDiff !== 0) return riskLevelDiff
+
+            const riskScoreDiff = (riskB?.score || 0) - (riskA?.score || 0)
+            if (riskScoreDiff !== 0) return riskScoreDiff
+
             const pa = paymentMap[a.id]
             const pb = paymentMap[b.id]
 
@@ -294,7 +356,7 @@ export default function CustomersPage() {
         })
 
         return result
-    }, [customers, search, stageFilter, paymentFilter, paymentMap])
+    }, [customers, search, stageFilter, paymentFilter, paymentMap, riskMap])
 
     // Ödeme istatistikleri
     const paymentStats = useMemo(() => {
@@ -436,6 +498,18 @@ export default function CustomersPage() {
                         const processName = customer.process_types?.name || customer.process_name || 'Belirtilmemiş'
                         const price = customer.price_agreed || customer.price || 0
                         const pInfo = paymentMap[customer.id]
+                        const risk = riskMap[customer.id]
+                        const riskLabel = risk ? RISK_LABEL[risk.level] : "Risk hesaplanıyor"
+                        const riskBadgeClass = risk
+                            ? risk.level === "high"
+                                ? "bg-red-500/15 text-red-300 border-red-500/30"
+                                : risk.level === "medium"
+                                    ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
+                                    : "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+                            : "bg-slate-700/40 text-slate-300 border-slate-600/50"
+                        const riskTitle = risk
+                            ? risk.factors.map((factor) => `${factor.key}: ${factor.value} (etki ${factor.impact})`).join(" | ")
+                            : "Risk skoru hesaplanıyor"
                         const hasOverduePayment = pInfo?.isOverdue
                         const hasTodayPayment = pInfo?.isToday
                         const hasAnyPayment = !!pInfo
@@ -475,6 +549,12 @@ export default function CustomersPage() {
                                                 {!hasOverduePayment && hasTodayPayment && (
                                                     <Clock size={12} className="text-amber-400 shrink-0" />
                                                 )}
+                                            </div>
+                                            <div
+                                                className={cn("mt-1 inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold", riskBadgeClass)}
+                                                title={riskTitle}
+                                            >
+                                                {risk ? `${riskLabel} (${risk.score})` : riskLabel}
                                             </div>
                                             <div className="text-[11px] text-slate-500">{customer.phone || '-'}</div>
                                         </div>
@@ -549,6 +629,12 @@ export default function CustomersPage() {
                                         <div className="flex items-center gap-3 mb-1">
                                             <span className="font-bold text-lg text-slate-200">{customer.full_name || customer.name || 'İsimsiz'}</span>
                                             <span className={cn("text-xs font-bold px-2 py-0.5 rounded-full", currentStage.color + "/20", currentStage.textColor)}>{currentStage.description}</span>
+                                            <span
+                                                className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full border", riskBadgeClass)}
+                                                title={riskTitle}
+                                            >
+                                                {risk ? `${riskLabel} (${risk.score})` : riskLabel}
+                                            </span>
                                             {/* Ödeme bildirim ikonları */}
                                             {hasOverduePayment && (
                                                 <span className="flex items-center gap-1 text-[10px] font-bold text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full">

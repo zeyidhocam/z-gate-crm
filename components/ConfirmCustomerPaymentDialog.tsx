@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { addDays, addMonths, format } from "date-fns"
 import { tr } from "date-fns/locale"
-import { Wallet, CheckCircle2, CalendarClock } from "lucide-react"
+import { Wallet, CheckCircle2, CalendarClock, Sparkles } from "lucide-react"
 import { toast } from "sonner"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import type { AiPaymentSuggestion } from "@/lib/ai/types"
 
 type PaymentMode = "full_paid" | "deposit_plan" | "pay_later"
 
@@ -80,6 +81,8 @@ export function ConfirmCustomerPaymentDialog({
   const [firstDueDate, setFirstDueDate] = useState<Date | undefined>(addDays(new Date(), 7))
   const [note, setNote] = useState("")
   const [saving, setSaving] = useState(false)
+  const [suggesting, setSuggesting] = useState(false)
+  const [suggestion, setSuggestion] = useState<AiPaymentSuggestion | null>(null)
 
   useEffect(() => {
     if (!open || !lead) return
@@ -89,6 +92,7 @@ export function ConfirmCustomerPaymentDialog({
     setInstallmentCount(2)
     setFirstDueDate(addDays(new Date(), 7))
     setNote("")
+    setSuggestion(null)
   }, [open, lead])
 
   useEffect(() => {
@@ -210,6 +214,66 @@ export function ConfirmCustomerPaymentDialog({
     }
   }
 
+  const fetchSuggestion = async () => {
+    if (!lead) return
+
+    const total = Number(totalAmount)
+    if (!Number.isFinite(total) || total <= 0) {
+      toast.error("Toplam tutar pozitif olmali.")
+      return
+    }
+
+    setSuggesting(true)
+    try {
+      const res = await fetch("/api/ai/payment-plan-suggest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clientId: lead.id,
+          totalAmount: total,
+        }),
+      })
+
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok || !data?.ok || !data?.suggestion) {
+        throw new Error(data?.error || "AI onerisi alinamadi")
+      }
+
+      setSuggestion(data.suggestion as AiPaymentSuggestion)
+      toast.success("AI odeme onerisi hazir.")
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Beklenmedik hata"
+      toast.error(message)
+    } finally {
+      setSuggesting(false)
+    }
+  }
+
+  const applySuggestion = () => {
+    if (!suggestion) return
+
+    setMode(suggestion.mode)
+    setDepositAmount(suggestion.depositAmount ? String(suggestion.depositAmount) : "")
+
+    if (suggestion.installmentCount) {
+      if (suggestion.mode === "deposit_plan") {
+        const count = suggestion.installmentCount < 2 ? 2 : suggestion.installmentCount
+        setInstallmentCount((count > 3 ? 3 : count) as 2 | 3)
+      } else {
+        setInstallmentCount((suggestion.installmentCount > 3 ? 3 : suggestion.installmentCount) as 1 | 2 | 3)
+      }
+    }
+
+    if (suggestion.installments.length > 0) {
+      const firstDate = new Date(suggestion.installments[0].dueDate)
+      if (!Number.isNaN(firstDate.getTime())) {
+        setFirstDueDate(firstDate)
+      }
+    }
+
+    toast.success("AI onerisi forma uygulandi.")
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-[#0c1929] border-cyan-500/20 max-w-lg">
@@ -238,6 +302,61 @@ export function ConfirmCustomerPaymentDialog({
               className="bg-slate-900/50 border-slate-700 text-slate-200"
               placeholder="Orn: 10000"
             />
+          </div>
+
+          <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-3 space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="text-xs text-cyan-300 font-bold flex items-center gap-1.5">
+                <Sparkles size={14} />
+                AI Odeme Asistani
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={fetchSuggestion}
+                disabled={suggesting}
+                className="border-cyan-500/30 text-cyan-200 hover:bg-cyan-500/10"
+              >
+                {suggesting ? "Hesaplaniyor..." : "AI Onerisi Al"}
+              </Button>
+            </div>
+
+            {suggestion && (
+              <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-2.5 space-y-2">
+                <div className="flex items-center justify-between gap-2 text-xs">
+                  <span className="font-bold text-slate-200">Mod: {MODE_LABEL[suggestion.mode]}</span>
+                  <span className="text-cyan-300 font-bold">Guven: %{Math.round(suggestion.confidence * 100)}</span>
+                </div>
+                {typeof suggestion.depositAmount === "number" && suggestion.depositAmount > 0 && (
+                  <div className="text-[11px] text-slate-300">
+                    Kapora: {suggestion.depositAmount.toLocaleString("tr-TR")} TL
+                  </div>
+                )}
+                {suggestion.installments.length > 0 && (
+                  <div className="text-[11px] text-slate-300">
+                    Taksit: {suggestion.installments.length} adet
+                  </div>
+                )}
+                {suggestion.reasons.length > 0 && (
+                  <div className="space-y-1">
+                    {suggestion.reasons.slice(0, 3).map((reason, index) => (
+                      <div key={`${reason}-${index}`} className="text-[11px] text-slate-400">
+                        - {reason}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={applySuggestion}
+                  className="w-full bg-cyan-600/80 hover:bg-cyan-500 text-white"
+                >
+                  Oneriyi Uygula
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">

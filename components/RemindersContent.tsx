@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { Bell, Clock, AlertTriangle, UserX, Calendar, TrendingDown, Filter, Plus, CheckCircle, Trash2, CreditCard, Wallet, CheckCircle2 } from "lucide-react"
+import { Bell, Clock, AlertTriangle, UserX, Calendar, TrendingDown, Filter, Plus, CheckCircle, Trash2, CreditCard, Wallet, CheckCircle2, MessageSquare, Copy, Send } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 import { format, parseISO, differenceInDays, isBefore, isToday, addDays } from "date-fns"
 import { tr } from "date-fns/locale"
@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { toast } from "sonner"
 import { useSearchParams } from "next/navigation"
 import { getAmountPaid, getAmountDue, getRemaining } from "@/components/PaymentScheduleDialog"
+import type { AiMessageChannel, AiMessageScenario, AiMessageTone } from "@/lib/ai/types"
 
 interface Client {
     id: string
@@ -81,6 +82,15 @@ export default function RemindersContent() {
     const [newDescription, setNewDescription] = useState('')
     const [newDate, setNewDate] = useState<Date | undefined>(addDays(new Date(), 1))
     const [dialogOpen, setDialogOpen] = useState(false)
+
+    const [messageDialogOpen, setMessageDialogOpen] = useState(false)
+    const [messagePayment, setMessagePayment] = useState<PaymentScheduleWithClient | null>(null)
+    const [messageScenario, setMessageScenario] = useState<AiMessageScenario>('overdue')
+    const [messageTone, setMessageTone] = useState<AiMessageTone>('standard')
+    const [messageChannel, setMessageChannel] = useState<AiMessageChannel>('whatsapp')
+    const [messageDraft, setMessageDraft] = useState("")
+    const [messageReasons, setMessageReasons] = useState<string[]>([])
+    const [messageLoading, setMessageLoading] = useState(false)
 
     // URL parametresinden tab yükle
     useEffect(() => {
@@ -277,6 +287,85 @@ export default function RemindersContent() {
         }
     }
 
+    const openMessageDialog = (payment: PaymentScheduleWithClient, scenario: AiMessageScenario) => {
+        setMessagePayment(payment)
+        setMessageScenario(scenario)
+        setMessageTone('standard')
+        setMessageChannel('whatsapp')
+        setMessageDraft("")
+        setMessageReasons([])
+        setMessageDialogOpen(true)
+    }
+
+    const createMessageDraft = async () => {
+        if (!messagePayment) return
+
+        setMessageLoading(true)
+        try {
+            const response = await fetch('/api/ai/message-draft', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    clientId: messagePayment.client_id,
+                    scenario: messageScenario,
+                    tone: messageTone,
+                    channel: messageChannel
+                })
+            })
+            const data = await response.json().catch(() => ({}))
+            if (!response.ok || !data?.ok || !data?.draft?.text) {
+                throw new Error(data?.error || 'Mesaj onerisi olusturulamadi')
+            }
+
+            setMessageDraft(String(data.draft.text))
+            setMessageReasons(Array.isArray(data.draft.reasons) ? data.draft.reasons : [])
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : 'Beklenmedik hata'
+            toast.error(message)
+        } finally {
+            setMessageLoading(false)
+        }
+    }
+
+    const copyMessageDraft = async () => {
+        if (!messageDraft.trim()) {
+            toast.error("Kopyalanacak mesaj yok.")
+            return
+        }
+
+        try {
+            await navigator.clipboard.writeText(messageDraft)
+            toast.success("Mesaj kopyalandi.")
+        } catch {
+            toast.error("Kopyalama basarisiz.")
+        }
+    }
+
+    const openWhatsAppDraft = () => {
+        if (!messagePayment || !messageDraft.trim()) {
+            toast.error("Mesaj olusturup tekrar deneyin.")
+            return
+        }
+
+        const raw = (messagePayment.clients?.phone || "").replace(/\D/g, '')
+        if (!raw) {
+            toast.error("Musteri telefonu bulunamadi.")
+            return
+        }
+
+        let normalized = raw
+        if (normalized.startsWith('0')) normalized = `90${normalized.slice(1)}`
+        if (!normalized.startsWith('90')) normalized = `90${normalized}`
+
+        window.open(`https://wa.me/${normalized}?text=${encodeURIComponent(messageDraft)}`, '_blank')
+    }
+
+    useEffect(() => {
+        if (!messageDialogOpen || !messagePayment) return
+        createMessageDraft()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [messageDialogOpen, messagePayment, messageScenario, messageTone, messageChannel])
+
     // Uzun süredir gelmeyen müşteriler (otomatik)
     const inactiveClients = useMemo(() => {
         const now = new Date()
@@ -419,6 +508,146 @@ export default function RemindersContent() {
                     </DialogContent>
                 </Dialog>
             </div>
+
+            <Dialog open={messageDialogOpen} onOpenChange={setMessageDialogOpen}>
+                <DialogContent className="bg-[#0c1929] border-cyan-500/20 max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle className="text-slate-100 flex items-center gap-2">
+                            <MessageSquare size={18} className="text-cyan-400" />
+                            AI Mesaj Onerisi
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    <div className="space-y-3">
+                        <div className="p-3 rounded-lg border border-slate-700 bg-slate-900/40">
+                            <div className="text-xs text-slate-500 font-bold">MUSTERI</div>
+                            <div className="text-sm text-slate-200 font-bold">
+                                {messagePayment?.clients?.full_name || messagePayment?.clients?.name || "Musteri"}
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <div className="text-xs text-slate-400 font-bold">Senaryo</div>
+                            <div className="grid grid-cols-2 gap-2">
+                                {[
+                                    { key: 'overdue', label: 'Gecikmis' },
+                                    { key: 'today_due', label: 'Bugun' },
+                                    { key: 'upcoming', label: 'Yaklasan' },
+                                    { key: 'partial_followup', label: 'Kismi Takip' },
+                                ].map((item) => (
+                                    <button
+                                        key={item.key}
+                                        type="button"
+                                        onClick={() => setMessageScenario(item.key as AiMessageScenario)}
+                                        className={cn(
+                                            "px-3 py-2 rounded-lg text-xs font-bold border transition-all",
+                                            messageScenario === item.key
+                                                ? "bg-cyan-500/20 border-cyan-500/40 text-cyan-200"
+                                                : "bg-slate-900/40 border-slate-700 text-slate-400"
+                                        )}
+                                    >
+                                        {item.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <div className="text-xs text-slate-400 font-bold">Ton</div>
+                            <div className="grid grid-cols-3 gap-2">
+                                {[
+                                    { key: 'soft', label: 'Yumusak' },
+                                    { key: 'standard', label: 'Standart' },
+                                    { key: 'firm', label: 'Net' },
+                                ].map((item) => (
+                                    <button
+                                        key={item.key}
+                                        type="button"
+                                        onClick={() => setMessageTone(item.key as AiMessageTone)}
+                                        className={cn(
+                                            "px-3 py-2 rounded-lg text-xs font-bold border transition-all",
+                                            messageTone === item.key
+                                                ? "bg-cyan-500/20 border-cyan-500/40 text-cyan-200"
+                                                : "bg-slate-900/40 border-slate-700 text-slate-400"
+                                        )}
+                                    >
+                                        {item.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <div className="text-xs text-slate-400 font-bold">Kanal</div>
+                            <div className="grid grid-cols-2 gap-2">
+                                {[
+                                    { key: 'whatsapp', label: 'WhatsApp' },
+                                    { key: 'telegram', label: 'Telegram' },
+                                ].map((item) => (
+                                    <button
+                                        key={item.key}
+                                        type="button"
+                                        onClick={() => setMessageChannel(item.key as AiMessageChannel)}
+                                        className={cn(
+                                            "px-3 py-2 rounded-lg text-xs font-bold border transition-all",
+                                            messageChannel === item.key
+                                                ? "bg-cyan-500/20 border-cyan-500/40 text-cyan-200"
+                                                : "bg-slate-900/40 border-slate-700 text-slate-400"
+                                        )}
+                                    >
+                                        {item.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="rounded-lg border border-slate-700 bg-slate-900/50 p-3">
+                            <div className="flex items-center justify-between gap-2 mb-2">
+                                <span className="text-xs text-slate-400 font-bold">Mesaj Taslagi</span>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={createMessageDraft}
+                                    disabled={messageLoading}
+                                    className="border-slate-600 text-slate-300"
+                                >
+                                    {messageLoading ? "Uretiliyor..." : "Mesaj Oner"}
+                                </Button>
+                            </div>
+                            <Textarea
+                                value={messageDraft}
+                                onChange={(event) => setMessageDraft(event.target.value)}
+                                rows={5}
+                                className="bg-slate-950/60 border-slate-700 text-slate-200 resize-none text-xs"
+                            />
+                            {messageReasons.length > 0 && (
+                                <div className="mt-2 space-y-1">
+                                    {messageReasons.slice(0, 3).map((reason, index) => (
+                                        <div key={`${reason}-${index}`} className="text-[11px] text-slate-500">
+                                            - {reason}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    <DialogFooter className="gap-2">
+                        <Button type="button" variant="ghost" className="text-slate-400" onClick={() => setMessageDialogOpen(false)}>
+                            Kapat
+                        </Button>
+                        <Button type="button" onClick={copyMessageDraft} className="bg-slate-700 hover:bg-slate-600 text-white gap-2">
+                            <Copy size={14} />
+                            Kopyala
+                        </Button>
+                        <Button type="button" onClick={openWhatsAppDraft} className="bg-[#25D366] hover:bg-[#22c45e] text-white gap-2">
+                            <Send size={14} />
+                            WhatsApp&apos;a Git
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
@@ -640,6 +869,7 @@ export default function RemindersContent() {
                                         variant="overdue"
                                         onCollect={collectPayment}
                                         onDelete={deletePayment}
+                                        onSuggestMessage={openMessageDialog}
                                     />
                                 ))}
                             </div>
@@ -661,6 +891,7 @@ export default function RemindersContent() {
                                         variant="today"
                                         onCollect={collectPayment}
                                         onDelete={deletePayment}
+                                        onSuggestMessage={openMessageDialog}
                                     />
                                 ))}
                             </div>
@@ -682,6 +913,7 @@ export default function RemindersContent() {
                                         variant="upcoming"
                                         onCollect={collectPayment}
                                         onDelete={deletePayment}
+                                        onSuggestMessage={openMessageDialog}
                                     />
                                 ))}
                             </div>
@@ -703,6 +935,7 @@ export default function RemindersContent() {
                                         variant="paid"
                                         onCollect={collectPayment}
                                         onDelete={deletePayment}
+                                        onSuggestMessage={openMessageDialog}
                                     />
                                 ))}
                             </div>
@@ -853,12 +1086,14 @@ function PaymentCard({
     payment,
     variant,
     onCollect,
-    onDelete
+    onDelete,
+    onSuggestMessage
 }: {
     payment: PaymentScheduleWithClient
     variant: 'overdue' | 'today' | 'upcoming' | 'paid'
     onCollect: (id: string) => void
     onDelete: (id: string) => void
+    onSuggestMessage: (payment: PaymentScheduleWithClient, scenario: AiMessageScenario) => void
 }) {
     const clientName = payment.clients?.full_name || payment.clients?.name || 'Bilinmeyen'
     const clientPhone = payment.clients?.phone || '-'
@@ -869,6 +1104,13 @@ function PaymentCard({
     const remaining = getRemaining(payment)
     const isFullyPaid = remaining <= 0
     const isPartial = !isFullyPaid && amountPaid > 0
+    const suggestedScenario: AiMessageScenario = variant === 'overdue'
+        ? 'overdue'
+        : variant === 'today'
+            ? 'today_due'
+            : variant === 'upcoming'
+                ? 'upcoming'
+                : 'partial_followup'
 
     const colors = {
         overdue: { bg: "bg-red-500/5", border: "border-red-500/30", text: "text-red-400" },
@@ -962,6 +1204,15 @@ function PaymentCard({
                         <CheckCircle2 size={18} />
                     </Button>
                 )}
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onSuggestMessage(payment, suggestedScenario)}
+                    className="h-9 w-9 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 rounded-lg"
+                    title="Mesaj Oner"
+                >
+                    <MessageSquare size={17} />
+                </Button>
                 <WhatsAppButton
                     phone={payment.clients?.phone || null}
                     clientName={clientName}
