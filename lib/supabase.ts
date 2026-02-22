@@ -1,28 +1,39 @@
-
 import { createBrowserClient } from '@supabase/ssr'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+const supabasePublicKey = (
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+)?.trim()
 
 let client
+let supabaseConfigError: string | null = null
 
-try {
-    // Ensure both are strings and have valid length
-    if (
-        typeof supabaseUrl === 'string' &&
-        supabaseUrl.length > 0 &&
-        supabaseUrl !== 'your-project-url' && // Check for default placeholder
-        typeof supabaseAnonKey === 'string' &&
-        supabaseAnonKey.length > 0
-    ) {
-        client = createBrowserClient(supabaseUrl, supabaseAnonKey)
+const configIssues: string[] = []
+if (!supabaseUrl || supabaseUrl === 'your-project-url' || supabaseUrl.includes('buraya-')) {
+    configIssues.push('NEXT_PUBLIC_SUPABASE_URL is missing or placeholder')
+}
+if (!supabasePublicKey || supabasePublicKey.includes('buraya-')) {
+    configIssues.push('NEXT_PUBLIC_SUPABASE_ANON_KEY is missing or placeholder')
+}
+
+if (configIssues.length === 0) {
+    try {
+        client = createBrowserClient(supabaseUrl!, supabasePublicKey!)
+    } catch (error) {
+        supabaseConfigError = error instanceof Error ? error.message : 'Unknown Supabase init error'
+        console.error('Supabase client init failed:', supabaseConfigError)
     }
-} catch {
-    // Supabase baslatma hatasi gizlendi
+} else {
+    supabaseConfigError = configIssues.join('; ')
 }
 
 // Fallback mock client
 const createMockBuilder = () => {
+    const message = supabaseConfigError
+        ? `Supabase not configured: ${supabaseConfigError}`
+        : 'Supabase not configured'
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const builder: any = {
         select: () => builder,
@@ -47,7 +58,7 @@ const createMockBuilder = () => {
         limit: () => builder,
         // Mock 'then' to make it simpler to await
         then: (resolve: (value: { data: unknown[]; error: { message: string } }) => unknown) =>
-            resolve({ data: [], error: { message: 'Supabase not configured' } })
+            resolve({ data: [], error: { message } })
     }
     return builder
 }
@@ -55,10 +66,15 @@ const createMockBuilder = () => {
 const mockClient = {
     from: () => createMockBuilder(),
     auth: {
-        signInWithPassword: () => Promise.resolve({
-            data: { user: null, session: null },
-            error: { message: 'Bağlantı ayarları eksik! Lütfen .env.local dosyasını oluşturun.' }
-        }),
+        signInWithPassword: () =>
+            Promise.resolve({
+                data: { user: null, session: null },
+                error: {
+                    message: supabaseConfigError
+                        ? `Supabase config error: ${supabaseConfigError}`
+                        : 'Supabase config missing'
+                }
+            }),
         getUser: () => Promise.resolve({ data: { user: null }, error: null }),
         getSession: () => Promise.resolve({ data: { session: null }, error: null }),
         onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => { } } } }),
@@ -69,3 +85,4 @@ const mockClient = {
 
 export const supabase = client || mockClient
 export const isSupabaseConfigured = !!client
+export const supabaseInitError = supabaseConfigError

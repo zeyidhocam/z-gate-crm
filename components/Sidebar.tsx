@@ -28,13 +28,13 @@ export function Sidebar({ className, hideBrandText = false }: SidebarProps) {
             const data = await res.json() as any
 
             if (data.ok) {
-                toast.success("Rapor baÅŸarÄ±yla Telegram'a gÃ¶nderildi!")
+                toast.success("Rapor başarıyla Telegram'a gönderildi!")
             } else {
-                toast.error("Rapor gÃ¶nderilemedi: " + (data.error || "Bilinmeyen hata"))
+                toast.error("Rapor gönderilemedi: " + (data.error || "Bilinmeyen hata"))
             }
         } catch {
             // Hata kaydi gizlendi
-            toast.error("Ä°stek sÄ±rasÄ±nda bir hata oluÅŸtu")
+            toast.error("İstek sırasında bir hata oluştu")
         } finally {
             setSendingReport(false)
         }
@@ -78,11 +78,11 @@ export function Sidebar({ className, hideBrandText = false }: SidebarProps) {
         { label: 'Ana Sayfa', icon: LayoutDashboard, path: '/' },
         { label: 'Rezervasyonlar', icon: Calendar, path: '/reservations' },
         { label: 'Takvim', icon: CalendarDays, path: '/calendar' },
-        { label: 'MÃ¼ÅŸteriler', icon: Users, path: '/customers' },
-        { label: 'KayÄ±tlar', icon: Users, path: '/clients' },
+        { label: 'Müşteriler', icon: Users, path: '/customers' },
+        { label: 'Kayıtlar', icon: Users, path: '/clients' },
         { label: 'Finans', icon: DollarSign, path: '/finance' },
-        { label: 'HatÄ±rlatmalar', icon: Bell, path: '/reminders', badge: reminderCount + paymentDueCount },
-        { label: 'KiÅŸisel Kasa Analysis', icon: Wallet, path: '/analysis' },
+        { label: 'Hatırlatmalar', icon: Bell, path: '/reminders', badge: reminderCount + paymentDueCount },
+        { label: 'Kişisel Kasa Analiz', icon: Wallet, path: '/analysis' },
         { label: 'Ayarlar', icon: Settings, path: '/settings' },
     ]
 
@@ -104,7 +104,7 @@ export function Sidebar({ className, hideBrandText = false }: SidebarProps) {
                         >
                             {config.appName}
                         </h1>
-                        <p className="text-xs text-cyan-400/60 font-medium">Yonetim Paneli</p>
+                        <p className="text-xs text-cyan-400/60 font-medium">Yönetim Paneli</p>
                     </div>
                 ) : null}
             </Link>
@@ -165,7 +165,7 @@ export function Sidebar({ className, hideBrandText = false }: SidebarProps) {
                     className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 hover:from-cyan-500/20 hover:to-blue-500/20 border border-cyan-500/20 rounded-xl py-2.5 text-xs font-bold text-cyan-400 transition-all disabled:opacity-50 hover:shadow-[0_0_15px_rgba(34,211,238,0.2)] group"
                 >
                     <Send size={14} className={twMerge("transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5", sendingReport && "animate-pulse")} />
-                    {sendingReport ? "GÃ¶nderiliyor..." : "Manuel Rapor GÃ¶nder"}
+                    {sendingReport ? "Gönderiliyor..." : "Manuel Rapor Gönder"}
                 </button>
                 <div className="px-2 text-[10px] text-slate-600 text-center font-mono">
                     Ocean Elite v1.0
